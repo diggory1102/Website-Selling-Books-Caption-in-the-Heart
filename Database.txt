@@ -1,0 +1,208 @@
+-- =========================================================
+-- 1. KHỞI TẠO CƠ SỞ DỮ LIỆU
+-- =========================================================
+USE master;
+GO
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'web_ban_truyen')
+    DROP DATABASE web_ban_truyen;
+GO
+CREATE DATABASE web_ban_truyen;
+GO
+USE web_ban_truyen;
+GO
+
+-- =========================================================
+-- 2. NHÓM BẢNG ĐỘC LẬP (KHÔNG CÓ KHÓA NGOẠI)
+-- =========================================================
+
+-- Bảng phân quyền 
+CREATE TABLE Role (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL,
+    authority NVARCHAR(100)
+);
+
+-- Bảng tác giả 
+CREATE TABLE Author (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100) NOT NULL,
+    shortDesc NVARCHAR(255),
+    description NVARCHAR(MAX)
+);
+
+-- Bảng nhà xuất bản 
+CREATE TABLE Publisher (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100) NOT NULL,
+    shortDesc NVARCHAR(255),
+    description NVARCHAR(MAX)
+);
+
+-- Bảng phương thức thanh toán 
+CREATE TABLE Payment (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100),
+    content NVARCHAR(255),
+    bankCode VARCHAR(50),
+    trackId VARCHAR(100)
+);
+
+-- Bảng đơn vị vận chuyển 
+CREATE TABLE Delivery (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    deliveryKey NVARCHAR(100)
+);
+
+-- Bảng danh mục (Cải tiến từ ERD gốc)
+CREATE TABLE Category (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100) NOT NULL,
+    description NVARCHAR(255),
+    imageUrl VARCHAR(255)
+);
+
+-- =========================================================
+-- 3. NHÓM BẢNG PHỤ THUỘC CẤP 1
+-- =========================================================
+
+-- Bảng người dùng 
+CREATE TABLE Users (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    userName NVARCHAR(100) NOT NULL,
+    password NVARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    roleId INT FOREIGN KEY REFERENCES Role(id),
+    address NVARCHAR(255),
+    numberPhone VARCHAR(15),
+    isOnline BIT DEFAULT 0
+);
+
+-- Bảng sản phẩm (Nối với Author, Publisher, Category) 
+CREATE TABLE Product (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(200) NOT NULL,
+    authorId INT FOREIGN KEY REFERENCES Author(id),
+    publisherId INT FOREIGN KEY REFERENCES Publisher(id),
+    categoryId INT FOREIGN KEY REFERENCES Category(id),
+    price DECIMAL(18,2) NOT NULL,
+    discount NVARCHAR(50),
+    createdAt DATETIME DEFAULT GETDATE(),
+    updatedAt DATETIME DEFAULT GETDATE(),
+    sold INT DEFAULT 0
+);
+
+-- =========================================================
+-- 4. NHÓM BẢNG PHỤ THUỘC CẤP 2 (TƯƠNG TÁC & GIAO DỊCH)
+-- =========================================================
+
+-- Bảng đánh giá sao 
+CREATE TABLE Rate (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    createdAt DATETIME DEFAULT GETDATE(),
+    updatedAt DATETIME DEFAULT GETDATE(),
+    rating FLOAT CHECK (rating >= 0 AND rating <= 5),
+    status NVARCHAR(50),
+    productId INT FOREIGN KEY REFERENCES Product(id),
+    userId INT FOREIGN KEY REFERENCES Users(id)
+);
+
+-- Bảng bình luận 
+CREATE TABLE Comment (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    comment NVARCHAR(MAX),
+    reply NVARCHAR(MAX),
+    type NVARCHAR(50),
+    productId INT FOREIGN KEY REFERENCES Product(id),
+    userId INT FOREIGN KEY REFERENCES Users(id)
+);
+
+-- Bảng yêu thích 
+CREATE TABLE WishList (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    userId INT FOREIGN KEY REFERENCES Users(id),
+    productId INT FOREIGN KEY REFERENCES Product(id)
+);
+
+-- Bảng giỏ hàng 
+CREATE TABLE Cart (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    status NVARCHAR(50),
+    totalPrice DECIMAL(18,2) DEFAULT 0,
+    userId INT FOREIGN KEY REFERENCES Users(id)
+);
+
+-- Bảng mã giảm giá 
+CREATE TABLE Voucher (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    type NVARCHAR(50),
+    applyFor NVARCHAR(100),
+    content NVARCHAR(MAX),
+    provideTime DATETIME,
+    expiratedTime DATETIME,
+    userId INT FOREIGN KEY REFERENCES Users(id)
+);
+
+-- Bảng đơn hàng (Hóa đơn) 
+CREATE TABLE Bill (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100),
+    totalPrice DECIMAL(18,2) NOT NULL,
+    status BIT DEFAULT 0,
+    paymentId INT FOREIGN KEY REFERENCES Payment(id),
+    deliveryId INT FOREIGN KEY REFERENCES Delivery(id),
+    voucherId INT FOREIGN KEY REFERENCES Voucher(id),
+    userId INT FOREIGN KEY REFERENCES Users(id),
+    createdAt DATETIME DEFAULT GETDATE()
+);
+
+-- Bảng phòng chat 
+CREATE TABLE RoomChat (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    userId INT FOREIGN KEY REFERENCES Users(id),
+    isUser BIT DEFAULT 1
+);
+
+-- Bảng thông báo 
+CREATE TABLE Notification (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    content NVARCHAR(255),
+    type NVARCHAR(50),
+    userId INT FOREIGN KEY REFERENCES Users(id)
+);
+
+-- =========================================================
+-- 5. NHÓM BẢNG CHI TIẾT CUỐI CÙNG
+-- =========================================================
+
+-- Bảng dòng hàng (Chi tiết sản phẩm trong Giỏ/Hóa đơn) 
+CREATE TABLE Line (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    quantity INT NOT NULL,
+    totalPrice DECIMAL(18,2) NOT NULL,
+    status NVARCHAR(50),
+    productId INT FOREIGN KEY REFERENCES Product(id),
+    billId INT FOREIGN KEY REFERENCES Bill(id),
+    cartId INT FOREIGN KEY REFERENCES Cart(id)
+);
+
+-- Bảng lịch sử giao dịch 
+CREATE TABLE TransactionHistory (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    time DATETIME DEFAULT GETDATE(),
+    content NVARCHAR(255),
+    billId INT FOREIGN KEY REFERENCES Bill(id),
+    totalPrice DECIMAL(18,2),
+    userId INT FOREIGN KEY REFERENCES Users(id)
+);
+
+-- Bảng tin nhắn chat 
+CREATE TABLE Message (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    content NVARCHAR(MAX),
+    isDeleted BIT DEFAULT 0,
+    type NVARCHAR(50),
+    createdAt DATETIME DEFAULT GETDATE(),
+    isShop BIT DEFAULT 0,
+    roomChatId INT FOREIGN KEY REFERENCES RoomChat(id)
+);
+GO

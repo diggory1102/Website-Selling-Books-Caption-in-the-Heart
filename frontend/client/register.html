@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Caption In The Heart</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <img src="images/logo.png" alt="Caption In The Heart" onerror="this.src='https://via.placeholder.com/150x60?text=Logo'">
+        </div>
+
+        <div class="search-container">
+            <i class="fa-solid fa-list menu-icon"></i>
+            <div class="search-box">
+                <input type="text" placeholder="">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <div class="nav-item">
+                <i class="fa-regular fa-bell"></i>
+                <span>Thông báo</span>
+            </div>
+            <div class="nav-item">
+                <i class="fa-regular fa-user"></i>
+                <span>Tài khoản</span>
+            </div>
+            <div class="nav-item">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span>Giỏ hàng</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="auth-card">
+            
+            <div class="auth-tabs">
+                <div class="tab">Đăng nhập</div>
+                <div class="tab active">Đăng ký</div>
+            </div>
+
+            <form id="register-form">
+                <div class="input-group">
+                    <label>Số điện thoại/Email</label>
+                    <input type="text" placeholder="Nhập số điện thoại hoặc Email">
+                </div>
+                
+                <div class="input-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" placeholder="Nhập mật khẩu">
+                </div>
+
+                <div class="input-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <input type="password" placeholder="Nhập lại mật khẩu">
+                </div>
+
+                <div class="btn-container">
+                    <button type="button" class="btn-main">Đăng ký</button>
+                </div>
+            </form>
+
+        </div>
+    </main>
+
+</body>
+</html>

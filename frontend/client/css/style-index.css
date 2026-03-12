@@ -41,6 +41,48 @@ body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color);
 .category-popup li a i { color: var(--primary-color); width: 18px; text-align: center; }
 .category-popup li a:hover { background: #f0f9ff; color: #007bff; }
 
+.category-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 220px;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 0 0 8px 8px;
+    z-index: 100;
+    display: none;
+
+    /* THANH CUỘN Ở ĐÂY */
+    max-height: 300px;    /* Chỉ cho hiện khoảng 6-7 dòng, còn lại phải cuộn */
+    overflow-y: auto;     /* Hiện thanh cuộn dọc khi vượt quá 300px */
+    overflow-x: hidden;   /* Chống cuộn ngang */
+}
+
+
+.category-menu {
+    /* ... giữ các thuộc tính cũ như position: absolute, background, v.v. ... */
+    
+    max-height: 350px;    /* Giới hạn chiều cao menu (khoảng 7-8 thể loại đầu) */
+    overflow-y: auto;     /* Hiện thanh cuộn khi danh sách dài hơn 350px */
+    
+    /* Các thuộc tính hỗ trợ hiển thị đẹp hơn */
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Làm cho thanh cuộn trong menu danh mục gọn gàng hơn */
+
+.category-popup::-webkit-scrollbar {
+    width: 6px;
+}
+.category-popup::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+.category-popup::-webkit-scrollbar-track {
+    background: #f9f9f9;
+}
+
 /* BEST SELLER BOX */
 .best-seller-box { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 50px; }
 .box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; }
@@ -112,11 +154,25 @@ body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color);
     overflow-y: auto;
     display: none; /* Mặc định ẩn */
     border: 1px solid #ddd;
+    max-height: 400px;    /* 1. Giới hạn chiều cao tối đa (ví dụ 400px) */
+    overflow-y: auto;     /* 2. Tự động hiện thanh cuộn khi nội dung vượt quá 400px */
 }
 
 /* Lệnh bắt buộc hiển thị từ JavaScript */
 .search-dropdown.show {
     display: block !important; 
+}
+
+/* Tùy chỉnh thanh cuộn cho nhỏ gọn (dành cho trình duyệt Chrome/Edge) */
+.search-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+.search-dropdown::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+.search-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
 }
 
 /* Định dạng từng dòng kết quả */
@@ -345,3 +401,5 @@ body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color);
 .account-item.text-danger:hover {
     background-color: #fff0f0;
 }
+
+

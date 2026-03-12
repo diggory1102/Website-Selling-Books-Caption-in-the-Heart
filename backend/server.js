@@ -111,3 +111,15 @@ app.get('/api/search', async (req, res) => {
         res.status(500).send("Lỗi máy chủ khi tìm kiếm");
     }
 });
+
+// API lấy danh sách tất cả thể loại
+app.get('/api/categories', async (req, res) => {
+    try {
+        let pool = await sql.connect(dbConfig);
+        let result = await pool.request().query("SELECT id, name FROM Categories ORDER BY name ASC");
+        res.json(result.recordset);
+    } catch (err) {
+        console.error("Lỗi lấy danh mục:", err);
+        res.status(500).send("Lỗi Server");
+    }
+});

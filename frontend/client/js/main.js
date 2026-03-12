@@ -173,3 +173,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// ==========================================
+    // 4. XỬ LÝ NÚT THÔNG BÁO
+    // ==========================================
+    const notiBtn = document.getElementById('notiBtn');
+    const notiDropdown = document.getElementById('notiDropdown');
+
+    if (notiBtn && notiDropdown) {
+        notiBtn.addEventListener('click', function(e) {
+            e.preventDefault(); 
+            e.stopPropagation(); // Ngăn sự kiện click bị lây lan ra ngoài
+            
+            // Bật/tắt class 'show' để hiện/ẩn bảng
+            notiDropdown.classList.toggle('show');
+        });
+
+        // Bấm vào bên trong bảng thông báo thì không bị đóng lại
+        notiDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Bấm ra chỗ khác trên trang web -> Tự động đóng bảng thông báo
+        document.addEventListener('click', function(e) {
+            if (!notiBtn.contains(e.target)) {
+                notiDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    // ==========================================
+    // 5. XỬ LÝ NÚT DROPDOWN TÀI KHOẢN
+    // ==========================================
+    const accountBtn = document.getElementById('accountBtn');
+    const accountDropdown = document.getElementById('accountDropdown');
+
+    if (accountBtn && accountDropdown) {
+        accountBtn.addEventListener('click', function(e) {
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            
+            // Mẹo UI: Nếu bảng Thông báo đang mở, tự động đóng nó lại để đỡ rối mắt
+            const notiDropdown = document.getElementById('notiDropdown');
+            if(notiDropdown && notiDropdown.classList.contains('show')) {
+                notiDropdown.classList.remove('show');
+            }
+
+            // Bật/tắt menu tài khoản
+            accountDropdown.classList.toggle('show');
+        });
+
+        // Click bên trong menu không bị đóng
+        accountDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Bấm ra chỗ khác -> Đóng menu tài khoản
+        document.addEventListener('click', function(e) {
+            if (!accountBtn.contains(e.target)) {
+                accountDropdown.classList.remove('show');
+            }
+        });
+    }

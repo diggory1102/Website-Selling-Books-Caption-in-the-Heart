@@ -165,3 +165,183 @@ body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color);
     font-weight: bold;
     margin-top: 4px;
 }
+
+
+/* Khung thả xuống của Thông báo */
+.noti-dropdown {
+    position: absolute;
+    top: calc(100% + 15px); 
+    right: -50px; /* Căn lệch sang trái một chút để không bị lố màn hình */
+    width: 320px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    z-index: 99999;
+    display: none; /* Ẩn mặc định */
+    border: 1px solid #eaeaea;
+    cursor: default; /* Tránh hiện bàn tay khi trỏ vào vùng trống */
+}
+
+/* Lệnh bắt buộc hiển thị từ JavaScript */
+.noti-dropdown.show {
+    display: block;
+}
+
+/* Tạo mũi tên chỉ lên trên khung thông báo */
+.noti-dropdown::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 70px; /* Canh tọa độ mũi tên ngay dưới nút chuông */
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #fff;
+    filter: drop-shadow(0 -1px 1px rgba(0,0,0,0.1));
+}
+
+.noti-header {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.noti-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.noti-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 15px;
+    text-decoration: none;
+    border-bottom: 1px solid #f9f9f9;
+    transition: 0.2s;
+}
+
+.noti-item:hover {
+    background-color: #f5faff;
+}
+
+/* Thông báo chưa đọc có màu nền hồng nhạt/xanh nhạt */
+.noti-item.unread {
+    background-color: #f0f8ff; 
+}
+
+.noti-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Bo tròn ảnh icon */
+    object-fit: contain;
+}
+
+.noti-content p {
+    margin: 0;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Quá 2 dòng sẽ thành dấu ... */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.noti-content .noti-time {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-top: 5px;
+}
+
+.noti-view-all {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    font-size: 13px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    border-top: 1px solid #eee;
+}
+
+.noti-view-all:hover {
+    background-color: #fafafa;
+}
+
+/* --- KHUNG DROPDOWN TÀI KHOẢN --- */
+.account-dropdown {
+    position: absolute;
+    top: calc(100% + 15px);
+    right: -20px; /* Căn phải để nó không tràn ra ngoài viền màn hình */
+    width: 240px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    z-index: 99999;
+    display: none; /* Ẩn mặc định */
+    border: 1px solid #eaeaea;
+    cursor: default;
+}
+
+/* Lệnh bắt buộc hiển thị từ JS */
+.account-dropdown.show {
+    display: block;
+}
+
+/* Mũi tên chỉ lên nút Tài khoản */
+.account-dropdown::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 35px; /* Canh tọa độ mũi tên ngay dưới nút Tài khoản */
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #fff;
+    filter: drop-shadow(0 -1px 1px rgba(0,0,0,0.1));
+}
+
+.account-header {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+.account-item {
+    display: block;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    transition: 0.2s;
+    text-align: left;
+}
+
+.account-item i {
+    width: 20px;
+    margin-right: 8px;
+    color: #888;
+    text-align: center;
+}
+
+.account-item:hover {
+    background-color: #f5faff;
+    color: var(--primary-color);
+}
+
+.account-item:hover i {
+    color: var(--primary-color);
+}
+
+/* Nút Đăng xuất màu đỏ */
+.account-item.text-danger {
+    color: #e74c3c;
+    border-top: 1px solid #eee; /* Đường kẻ phân cách */
+}
+.account-item.text-danger i {
+    color: #e74c3c;
+}
+.account-item.text-danger:hover {
+    background-color: #fff0f0;
+}

@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Xử lý Nút Danh mục (Giữ nguyên logic cũ)
+    // ==========================================
+    // 1. XỬ LÝ NÚT DANH MỤC
+    // ==========================================
     const categoryBtn = document.getElementById('categoryBtn');
     const categoryMenu = document.getElementById('categoryMenu');
 
@@ -15,28 +17,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 2. GỌI API VÀ ĐỔ DỮ LIỆU THỰC TẾ
+    // ==========================================
+    // 2. TẢI DỮ LIỆU BEST SELLER
+    // ==========================================
     const track = document.getElementById('productTrack');
     
     async function loadBestSellers() {
         try {
-            // Gọi đến địa chỉ Backend bạn vừa chạy thành công
             const response = await fetch('http://localhost:5000/api/products/best-sellers');
             const products = await response.json();
 
             if (products.length === 0) return;
 
-            // Xóa trắng track trước khi đổ dữ liệu
             track.innerHTML = '';
 
-            // Vẽ từng thẻ truyện dựa trên dữ liệu từ SQL Server
             products.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'product-card';
+                // Đã cập nhật link ảnh dự phòng cực chuẩn, không lỗi 404
                 card.innerHTML = `
                     <div class="img-box">
                         ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
-                        <img src="${item.imageUrl || 'https://via.placeholder.com/200x250/f8f9fa/ccc?text=Book'}" alt="${item.name}">
+                        <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22250%22%20viewBox%3D%220%200%20200%20250%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23e0e0e0%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20fill%3D%22%23888888%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';" alt="${item.name}">
                     </div>
                     <div class="info-box">
                         <h3 class="name">${item.name}</h3>
@@ -52,27 +54,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 track.appendChild(card);
             });
 
-            // SAU KHI VẼ XONG MỚI CHẠY CAROUSEL
             initCarousel(products.length);
 
         } catch (error) {
-            console.error("Lỗi khi lấy dữ liệu thực tế:", error);
-            track.innerHTML = '<p style="padding: 20px;">Không thể tải dữ liệu truyện...</p>';
+            console.error("Lỗi khi lấy dữ liệu Best Seller:", error);
+            if (track) track.innerHTML = '<p style="padding: 20px;">Không thể tải dữ liệu truyện...</p>';
         }
     }
 
-    // 3. LOGIC CAROUSEL VÔ HẠN (Đã tối ưu cho dữ liệu động)
     function initCarousel(originalLength) {
         const nextBtn = document.getElementById('nextBtn');
         const prevBtn = document.getElementById('prevBtn');
         const cards = Array.from(track.children);
         
-        if (cards.length === 0) return;
+        if (cards.length === 0 || !nextBtn || !prevBtn) return;
 
         const cardWidth = cards[0].offsetWidth + 20; 
         let index = 0;
 
-        // Nhân bản để tạo vòng lặp vô hạn
         cards.forEach(card => {
             const clone = card.cloneNode(true);
             track.appendChild(clone);
@@ -104,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // Hàm vẽ sao
     function renderStars(rating) {
         let starsHtml = '';
         for (let i = 1; i <= 5; i++) {
@@ -115,6 +113,63 @@ document.addEventListener('DOMContentLoaded', function() {
         return starsHtml;
     }
 
-    // Chạy hàm load dữ liệu
-    loadBestSellers();
+    // Chạy hàm load dữ liệu nếu có id productTrack
+    if (track) {
+        loadBestSellers();
+    }
+
+    // ==========================================
+    // 3. XỬ LÝ TÌM KIẾM TRỰC TIẾP (LIVE SEARCH)
+    // ==========================================
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    let timeoutId;
+
+    if (searchInput && searchResults) {
+        searchInput.addEventListener('input', function() {
+            const keyword = this.value.trim();
+
+            if (keyword.length === 0) {
+                searchResults.classList.remove('show');
+                return;
+            }
+
+            clearTimeout(timeoutId);
+
+            timeoutId = setTimeout(async () => {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/search?q=${encodeURIComponent(keyword)}`);
+                    const products = await response.json();
+
+                    if (products.length > 0) {
+                        searchResults.innerHTML = products.map(item => {
+                            const imageSrc = item.imageUrl ? item.imageUrl : ''; 
+                            return `
+                                <a href="#" class="search-item">
+                                        <img src="${imageSrc}" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2240%22%20height%3D%2255%22%20viewBox%3D%220%200%2040%2055%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23e0e0e0%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20font-size%3D%2210%22%20fill%3D%22%23888888%22%3EImg%3C%2Ftext%3E%3C%2Fsvg%3E';" alt="${item.productName}">                                    <div class="search-info">
+                                        <div class="s-name">${item.productName}</div>
+                                        <div class="s-author"><i class="fa-solid fa-pen-nib"></i> ${item.authorName || 'Đang cập nhật'}</div>
+                                        <div class="s-price">${Number(item.price).toLocaleString()}đ</div>
+                                    </div>
+                                </a>
+                            `;
+                        }).join('');
+                        searchResults.classList.add('show');
+                    } else {
+                        searchResults.innerHTML = `<div style="padding: 15px; text-align: center; color: #888;">Không tìm thấy truyện hoặc tác giả "${keyword}"</div>`;
+                        searchResults.classList.add('show');
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi tìm kiếm:", error);
+                }
+            }, 300);
+        });
+
+        // Ẩn bảng kết quả khi click ra ngoài
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.remove('show');
+            }
+        });
+    }
 });

@@ -12,9 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const track = document.getElementById('productTrack');
 
     // ==========================================
-    // 1. QUẢN LÝ CÁC MENU THẢ XUỐNG (DROPDOWNS)
+    // 1. QUẢN LÝ CÁC MENU THẢ XUỐNG
     // ==========================================
-    // Hàm dùng chung để đóng tất cả các menu đang mở
     function closeAllDropdowns() {
         if (categoryMenu) categoryMenu.classList.remove('show');
         if (categoryBtn) categoryBtn.classList.remove('active');
@@ -23,59 +22,45 @@ document.addEventListener('DOMContentLoaded', function() {
         if (searchResults) searchResults.classList.remove('show');
     }
 
-    // Toggle Danh mục
-    if (categoryBtn && categoryMenu) {
-        categoryBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = categoryMenu.classList.contains('show');
-            closeAllDropdowns(); // Đóng các cái khác trước
-            if (!isOpen) {
-                categoryMenu.classList.add('show');
-                categoryBtn.classList.add('active');
-            }
-        });
-    }
-
-    // Toggle Thông báo
-    if (notiBtn && notiDropdown) {
-        notiBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = notiDropdown.classList.contains('show');
-            closeAllDropdowns();
-            if (!isOpen) notiDropdown.classList.add('show');
-        });
-    }
-
-    // Toggle Tài khoản
-    if (accountBtn && accountDropdown) {
-        accountBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = accountDropdown.classList.contains('show');
-            closeAllDropdowns();
-            if (!isOpen) accountDropdown.classList.add('show');
-        });
-    }
-
-    // Click ra ngoài thì đóng hết
-    document.addEventListener('click', () => {
-        closeAllDropdowns();
-    });
-
-    // Ngăn việc click bên trong bảng menu làm nó bị đóng
-    [categoryMenu, notiDropdown, accountDropdown, searchResults].forEach(menu => {
-        if (menu) {
-            menu.addEventListener('click', (e) => e.stopPropagation());
+    const setupToggle = (btn, dropdown) => {
+        if (btn && dropdown) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = dropdown.classList.contains('show');
+                closeAllDropdowns();
+                if (!isOpen) {
+                    dropdown.classList.add('show');
+                    if(btn === categoryBtn) btn.classList.add('active');
+                }
+            });
         }
+    };
+
+    setupToggle(categoryBtn, categoryMenu);
+    setupToggle(notiBtn, notiDropdown);
+    setupToggle(accountBtn, accountDropdown);
+
+    document.addEventListener('click', () => closeAllDropdowns());
+    [categoryMenu, notiDropdown, accountDropdown, searchResults].forEach(menu => {
+        if (menu) menu.addEventListener('click', (e) => e.stopPropagation());
     });
 
     // ==========================================
-    // 2. TỰ ĐỘNG TẢI DANH MỤC VÀ BEST SELLER
+    // 2. TẢI DANH MỤC TỪ DATABASE
     // ==========================================
     async function loadCategories() {
         if (!categoryMenu) return;
         try {
-            const response = await fetch('http://localhost:5000/api/categories');
+            const response = await fetch(`http://localhost:5000/api/categories?t=${Date.now()}`); 
             const categories = await response.json();
+
+            categoryMenu.innerHTML = ""; 
+
+            if (categories.length === 0) {
+                categoryMenu.innerHTML = '<li><a href="#">Chưa có danh mục</a></li>';
+                return;
+            }
+
             categoryMenu.innerHTML = categories.map(cat => `
                 <li>
                     <a href="category.html?id=${cat.id}">
@@ -83,14 +68,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     </a>
                 </li>
             `).join('');
-        } catch (error) { console.error("Lỗi tải danh mục:", error); }
+            console.log("✅ Đã đồng bộ Danh mục từ DB");
+        } catch (error) { 
+            console.error("Lỗi tải danh mục:", error);
+            categoryMenu.innerHTML = '<li><a href="#">Lỗi kết nối Server</a></li>';
+        }
     }
 
+    // ==========================================
+    // 3. TẢI DỮ LIỆU BEST SELLER
+    // ==========================================
     async function loadBestSellers() {
         if (!track) return;
         try {
             const response = await fetch('http://localhost:5000/api/products/best-sellers');
             const products = await response.json();
+            
+            if (!products || products.length === 0) {
+                track.innerHTML = '<p>Đang cập nhật truyện...</p>';
+                return;
+            }
+
             track.innerHTML = products.map(item => `
                 <div class="product-card">
                     <div class="img-box">
@@ -109,16 +107,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `).join('');
-            initCarousel(products.length);
-        } catch (error) { console.error("Lỗi Best Seller:", error); }
+
+            initCarousel(products.length); // Hàm này giờ đã có
+            console.log("✅ Đã tải xong Best Sellers");
+        } catch (error) { 
+            console.error("Lỗi Best Seller:", error); 
+        }
     }
 
     // ==========================================
-    // 3. XỬ LÝ TÌM KIẾM (LIVE SEARCH & BUTTON CLICK)
+    // 4. XỬ LÝ TÌM KIẾM (LIVE SEARCH)
     // ==========================================
-    let timeoutId;
-
     if (searchInput && searchResults) {
+        let timeoutId;
         searchInput.addEventListener('input', function() {
             const keyword = this.value.trim();
             if (keyword.length === 0) {
@@ -132,8 +133,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const products = await response.json();
                     if (products.length > 0) {
                         searchResults.innerHTML = products.map(item => `
-                            <a href="#" class="search-item">
-                                <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2240%22%20height%3D%2255%22%20viewBox%3D%220%200%2040%2055%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23e0e0e0%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%2210%22%20fill%3D%22%23888888%22%3EImg%3C%2Ftext%3E%3C%2Fsvg%3E';" alt="${item.productName}">
+                            <a href="detail.html?id=${item.id}" class="search-item">
+                                <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2240%22%20height%3D%2255%22%20viewBox%3D%220%200%2040%2055%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23e0e0e0%22%2F%3E%3C/svg%3E';" alt="${item.productName}">
                                 <div class="search-info">
                                     <div class="s-name">${item.productName}</div>
                                     <div class="s-author"><i class="fa-solid fa-pen-nib"></i> ${item.authorName || 'Đang cập nhật'}</div>
@@ -146,57 +147,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch (error) { console.error("Lỗi tìm kiếm:", error); }
             }, 300);
         });
-
-        document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.classList.remove('show');
-            }
-        });
     }
+
     // ==========================================
-    // 4. LOGIC CAROUSEL & KHỞI CHẠY
+    // 5. CAROUSEL TRƯỢT
     // ==========================================
     function initCarousel(originalLength) {
         const nextBtn = document.getElementById('nextBtn');
         const prevBtn = document.getElementById('prevBtn');
         if (!track || !nextBtn || !prevBtn || originalLength === 0) return;
 
-        const cards = Array.from(track.children);
-        const cardWidth = cards[0].offsetWidth + 20; 
+        let cardWidth = track.querySelector('.product-card').offsetWidth + 20;
         let index = 0;
 
+        const cards = Array.from(track.children);
         cards.forEach(card => track.appendChild(card.cloneNode(true)));
 
-        function updateSlider() {
+        const moveSlider = () => {
             track.style.transition = "transform 0.5s ease-in-out";
             track.style.transform = `translateX(-${index * cardWidth}px)`;
-            if (index >= originalLength) {
-                setTimeout(() => {
-                    track.style.transition = "none";
-                    index = 0;
-                    track.style.transform = `translateX(0)`;
-                }, 500);
-            }
-        }
-        nextBtn.onclick = () => { index++; updateSlider(); };
-        prevBtn.onclick = () => {
-            if (index <= 0) {
-                index = originalLength;
-                track.style.transition = "none";
-                track.style.transform = `translateX(-${index * cardWidth}px)`;
-                track.offsetWidth; 
-            }
-            index--;
-            updateSlider();
         };
+
+        track.addEventListener('transitionend', () => {
+            if (index >= originalLength) {
+                track.style.transition = "none";
+                index = 0;
+                track.style.transform = `translateX(0)`;
+            }
+            if (index < 0) {
+                track.style.transition = "none";
+                index = originalLength - 1;
+                track.style.transform = `translateX(-${index * cardWidth}px)`;
+            }
+        });
+
+        nextBtn.onclick = () => { index++; moveSlider(); };
+        prevBtn.onclick = () => { index--; moveSlider(); };
     }
 
-    // Chạy các hàm tải dữ liệu ban đầu
+    // QUAN TRỌNG: GỌI HÀM ĐỂ CHẠY KHI TẢI TRANG
     loadCategories();
     loadBestSellers();
 });
-
-
-
-
-

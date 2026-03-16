@@ -1,76 +1,95 @@
 const express = require('express');
 const cors = require('cors');
-const sql = require('mssql'); 
 require('dotenv').config();
 
-// Chỉ cần nạp file db.js để nó tự động mở kết nối (Không cần gán biến)
-require('./config/db'); 
+// IMPORT CÁC BẢNG (MODELS) TỪ FILE database.js
+const { Category, Product } = require('./database');
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-app.use(cors({
-    origin: '*', 
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-    allowedHeaders: ['Content-Type', 'Authorization']
-})); 
-app.use(express.json()); 
+// ==========================================
+// ROUTE FAKE DỮ LIỆU (Chạy 1 lần trên web)
+// ==========================================
+app.get('/api/setup', async (req, res) => {
+    try {
+        await Category.deleteMany({}); 
+        await Product.deleteMany({});
 
-app.get('/', (req, res) => {
-    res.send("🚀 Chào mừng đến với Backend của Caption In The Heart!");
+        const catManga = await Category.create({ name: 'Manga' });
+        const catHanhDong = await Category.create({ name: 'Hành Động' });
+        const catTrinhTham = await Category.create({ name: 'Trinh Thám' });
+
+        await Product.create([
+            { name: 'One Piece - Tập 101', authorName: 'Eiichiro Oda', price: 30000, sold: 5000, imageUrl: 'images/one-piece.png', categoryId: catManga._id },
+            { name: 'Thám Tử Lừng Danh Conan', authorName: 'Gosho Aoyama', price: 25000, discount: '-10%', sold: 3200, imageUrl: 'images/conan.png', categoryId: catTrinhTham._id },
+            { name: 'Doraemon - Truyện Ngắn', authorName: 'Fujiko F. Fujio', price: 20000, sold: 4800, imageUrl: 'images/doraemon.png', categoryId: catManga._id },
+            { name: 'Naruto - Tập Cuối', authorName: 'Masashi Kishimoto', price: 22000, discount: '-5%', sold: 2100, imageUrl: 'images/naruto.png', categoryId: catHanhDong._id },
+            { name: 'Thanh Gươm Diệt Quỷ', authorName: 'Koyoharu Gotouge', price: 25000, discount: '-15%', sold: 1800, imageUrl: 'images/diet-quy.png', categoryId: catHanhDong._id },
+            { name: 'Chú Thuật Hồi Chiến', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id }
+        ]);
+        res.send("<h1>✅ Đã tạo dữ liệu MongoDB thành công! Hãy quay lại trang chủ web ấn F5.</h1>");
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
 
-// 1. API Lấy Danh Mục
+// ==========================================
+// CÁC ROUTE API CHÍNH DÀNH CHO TRANG WEB
+// ==========================================
+app.get('/', (req, res) => res.send("🚀 Backend API đang chạy tốt!"));
+
 app.get('/api/categories', async (req, res) => {
     try {
-        // Dùng trực tiếp hàm query của sql (Global Connection)
-        let result = await sql.query("SELECT id, name FROM Category ORDER BY name ASC");
-        res.json(result.recordset);
+        const categories = await Category.find().sort({ name: 1 });
+        res.json(categories);
     } catch (err) {
-        console.error("Lỗi lấy danh mục:", err);
-        res.status(500).send("Lỗi Server");
+        res.status(500).json({ error: "Lỗi Server" });
     }
 });
 
-// 2. API Lấy Best Sellers
 app.get('/api/products/best-sellers', async (req, res) => {
     try {
-        let result = await sql.query('SELECT TOP 8 * FROM Product ORDER BY sold DESC'); 
-        res.json(result.recordset);
+        const products = await Product.find().sort({ sold: -1 }).limit(8); 
+        res.json(products);
     } catch (err) {
-        console.error("Lỗi SQL chi tiết (Best Seller):", err);
-        res.status(500).send("Lỗi lấy dữ liệu từ SQL Server");
+        res.status(500).json({ error: "Lỗi Server" });
     }
 });
 
-// 3. API Tìm Kiếm
 app.get('/api/search', async (req, res) => {
     try {
         const keyword = req.query.q; 
         if (!keyword) return res.json([]); 
 
-        console.log(`\n👉 Đang tìm kiếm từ khóa: "${keyword}"`); 
+        const products = await Product.find({
+            $or: [
+                { name: { $regex: keyword, $options: 'i' } }, 
+                { authorName: { $regex: keyword, $options: 'i' } }
+            ]
+        }).limit(5);
 
-        // Tạo Request trực tiếp để truyền tham số chống hack
-        let request = new sql.Request();
-        request.input('keyword', sql.NVarChar, `%${keyword}%`);
-        let result = await request.query(`
-                SELECT TOP 5 p.id, p.name AS productName, p.price, p.imageUrl, a.name AS authorName
-                FROM Product p
-                LEFT JOIN Author a ON p.authorId = a.id
-                WHERE p.name LIKE @keyword OR a.name LIKE @keyword
-            `);
-            
-        console.log(`✅ Đã tìm thấy: ${result.recordset.length} kết quả từ Database.`); 
-        res.json(result.recordset);
+        const formattedProducts = products.map(p => ({
+            id: p.id,
+            productName: p.name,
+            price: p.price,
+            imageUrl: p.imageUrl,
+            authorName: p.authorName
+        }));
+
+        res.json(formattedProducts);
     } catch (err) {
-        console.error("❌ Lỗi SQL khi tìm kiếm:", err);
-        res.status(500).send("Lỗi máy chủ khi tìm kiếm");
+        res.status(500).json({ error: "Lỗi Server" });
     }
 });
 
+// ==========================================
+// KHỞI ĐỘNG SERVER
+// ==========================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`\n===========================================`);
-    console.log(`🌐 Server đang chạy tại: http://localhost:${PORT}`);
+    console.log(`🌐 Server API đang lắng nghe tại cổng: ${PORT}`);
     console.log(`===========================================\n`);
 });

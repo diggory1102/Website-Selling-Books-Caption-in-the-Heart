@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadCategories() {
         if (!categoryMenu) return;
         try {
-            // ĐÃ SỬA: localhost -> 127.0.0.1
             const response = await fetch(`http://127.0.0.1:5000/api/categories?t=${Date.now()}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const categories = await response.json();
@@ -65,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 categoryMenu.innerHTML = categories.map(cat => 
                     `<li><a href="category.html?id=${cat.id}">${cat.name}</a></li>`
                 ).join('');
-                console.log("✅ Đã đồng bộ Danh mục từ DB");
             } else {
                 categoryMenu.innerHTML = '<li><a href="#">Đang cập nhật...</a></li>';
             }
@@ -81,7 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadBestSellers() {
         if (!track) return;
         try {
-            // ĐÃ SỬA: localhost -> 127.0.0.1
             const response = await fetch('http://127.0.0.1:5000/api/products/best-sellers');
             const products = await response.json();
             
@@ -94,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="product-card">
                     <div class="img-box">
                         ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
-                        <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22250%22%20viewBox%3D%220%200%20200%20250%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23eee%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%2214%22%20fill%3D%22%23999%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';" alt="${item.name}">
+                        <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/200x250?text=No+Image';" alt="${item.name}">
                     </div>
                     <div class="info-box">
                         <h3 class="name">${item.name}</h3>
@@ -110,7 +107,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `).join('');
 
             initCarousel(products.length); 
-            console.log("✅ Đã tải xong Best Sellers");
         } catch (error) { 
             console.error("Lỗi Best Seller:", error); 
         }
@@ -130,14 +126,13 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(async () => {
                 try {
-                    // ĐÃ SỬA: localhost -> 127.0.0.1
                     const response = await fetch(`http://127.0.0.1:5000/api/search?q=${encodeURIComponent(keyword)}`);
                     const products = await response.json();
 
                     if (products.length > 0) {
                         searchResults.innerHTML = products.map(item => `
                             <div class="search-item" onclick="window.location.href='detail.html?id=${item.id}'">
-                                <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22250%22%20viewBox%3D%220%200%20200%20250%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23eee%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%2214%22%20fill%3D%22%23999%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';" alt="${item.name}">
+                                <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/50x70?text=No+Img';">
                                 <div class="search-info">
                                     <h4>${item.productName}</h4>
                                     <p class="author">${item.authorName || 'Đang cập nhật'}</p>
@@ -152,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch (err) {
                     console.error("Lỗi tìm kiếm:", err);
                 }
-            }, 300); // Đợi 300ms sau khi ngừng gõ mới gọi API
+            }, 300);
         });
     }
 
@@ -193,8 +188,113 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ==========================================
-    // KHỞI CHẠY KHI VÀO TRANG
+    // 6. KIỂM TRA ĐĂNG NHẬP VÀ ĐỔI MENU TÀI KHOẢN
+    // ==========================================
+    function checkLoginStatus() {
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userRoleDisplay = document.getElementById('userRoleDisplay');
+        const accountList = document.querySelector('.account-list');
+        
+        // Lấy thông tin người dùng từ bộ nhớ
+        const userStr = localStorage.getItem('currentUser');
+        
+        if (userStr) {
+            // ---> TRƯỜNG HỢP 1: ĐÃ ĐĂNG NHẬP
+            const user = JSON.parse(userStr);
+            
+            // 1. Đổi tên hiển thị
+            if (userNameDisplay) userNameDisplay.textContent = `Chào, ${user.fullName || user.userName}`;
+            if (userRoleDisplay) userRoleDisplay.textContent = "Khách hàng thành viên";
+            
+            // 2. Hiển thị Menu của Thành viên (Có Hồ sơ, Đơn hàng, Đăng xuất)
+            if (accountList) {
+                accountList.innerHTML = `
+                    <a href="profile.html" class="account-item"><i class="fa-solid fa-address-card"></i> Hồ sơ của tôi</a>
+                    <a href="orders.html" class="account-item"><i class="fa-solid fa-box-open"></i> Đơn hàng của tôi</a>
+                    <a href="#" class="account-item" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+                `;
+
+                // Bắt sự kiện cho nút Đăng xuất
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser'); // Xóa trí nhớ
+                    window.location.reload(); // Tải lại trang web về trạng thái Khách
+                });
+            }
+
+        } else {
+            // ---> TRƯỜNG HỢP 2: CHƯA ĐĂNG NHẬP (LÀ KHÁCH)
+            
+            // 1. Đặt lại chữ hiển thị
+            if (userNameDisplay) userNameDisplay.textContent = "Chào, Khách";
+            if (userRoleDisplay) userRoleDisplay.textContent = "Vui lòng đăng nhập";
+            
+            // 2. Hiển thị Menu của Khách (Chỉ có Đăng nhập và Đăng ký)
+            if (accountList) {
+                accountList.innerHTML = `
+                    <a href="login.html" class="account-item"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>
+                    <a href="signup.html" class="account-item"><i class="fa-solid fa-user-plus"></i> Đăng ký</a>
+                `;
+            }
+        }
+    }
+
+    // ==========================================
+    // 6. KIỂM TRA ĐĂNG NHẬP VÀ ĐỔI MENU TÀI KHOẢN
+    // ==========================================
+    function checkLoginStatus() {
+        // --- ĐOẠN MÃ MỚI: Bắt dữ liệu từ Google/Facebook trả về trên URL ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const socialUser = urlParams.get('socialUser');
+        if (socialUser) {
+            // Lưu vào bộ nhớ
+            localStorage.setItem('currentUser', decodeURIComponent(socialUser));
+            // Xóa đoạn loằng ngoằng trên thanh địa chỉ đi cho đẹp
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        // -------------------------------------------------------------------
+
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userRoleDisplay = document.getElementById('userRoleDisplay');
+        const accountList = document.querySelector('.account-list');
+        
+        const userStr = localStorage.getItem('currentUser');
+        
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (userNameDisplay) userNameDisplay.textContent = `Chào, ${user.fullName || user.userName}`;
+            if (userRoleDisplay) userRoleDisplay.textContent = "Khách hàng thành viên";
+            
+            if (accountList) {
+                accountList.innerHTML = `
+                    <a href="profile.html" class="account-item"><i class="fa-solid fa-address-card"></i> Hồ sơ của tôi</a>
+                    <a href="orders.html" class="account-item"><i class="fa-solid fa-box-open"></i> Đơn hàng của tôi</a>
+                    <a href="#" class="account-item" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+                `;
+
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.reload(); 
+                });
+            }
+        } else {
+            if (userNameDisplay) userNameDisplay.textContent = "Chào, Khách";
+            if (userRoleDisplay) userRoleDisplay.textContent = "Vui lòng đăng nhập";
+            
+            if (accountList) {
+                accountList.innerHTML = `
+                    <a href="login.html" class="account-item"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>
+                    <a href="signup.html" class="account-item"><i class="fa-solid fa-user-plus"></i> Đăng ký</a>
+                `;
+            }
+        }
+    }
+
+    // ==========================================
+    // KHỞI CHẠY CÁC HÀM KHI VÀO TRANG
     // ==========================================
     loadCategories();
     loadBestSellers();
+    checkLoginStatus(); // Gọi hàm kiểm tra đăng nhập
 });

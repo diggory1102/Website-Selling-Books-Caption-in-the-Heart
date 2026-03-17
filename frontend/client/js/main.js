@@ -10,92 +10,92 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchBtn = document.getElementById('searchBtn');
     const searchResults = document.getElementById('searchResults');
     const track = document.getElementById('productTrack');
+    const cartBtn = document.getElementById('cartBtn');
+    const cartDropdown = document.getElementById('cartDropdown');
 
     // ==========================================
-    // 1. QUẢN LÝ CÁC MENU THẢ XUỐNG (DROPDOWNS)
+    // 1. QUẢN LÝ CÁC MENU THẢ XUỐNG
     // ==========================================
-    // Hàm dùng chung để đóng tất cả các menu đang mở
     function closeAllDropdowns() {
         if (categoryMenu) categoryMenu.classList.remove('show');
         if (categoryBtn) categoryBtn.classList.remove('active');
         if (notiDropdown) notiDropdown.classList.remove('show');
         if (accountDropdown) accountDropdown.classList.remove('show');
         if (searchResults) searchResults.classList.remove('show');
+        if (cartDropdown) cartDropdown.classList.remove('show');
     }
 
-    // Toggle Danh mục
-    if (categoryBtn && categoryMenu) {
-        categoryBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = categoryMenu.classList.contains('show');
-            closeAllDropdowns(); // Đóng các cái khác trước
-            if (!isOpen) {
-                categoryMenu.classList.add('show');
-                categoryBtn.classList.add('active');
-            }
-        });
-    }
+    const setupToggle = (btn, dropdown) => {
+        if (btn && dropdown) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = dropdown.classList.contains('show');
+                closeAllDropdowns();
+                if (!isOpen) {
+                    dropdown.classList.add('show');
+                    if (btn === categoryBtn) btn.classList.add('active');
+                }
+            });
+        }
+    };
 
-    // Toggle Thông báo
-    if (notiBtn && notiDropdown) {
-        notiBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = notiDropdown.classList.contains('show');
+    setupToggle(categoryBtn, categoryMenu);
+    setupToggle(notiBtn, notiDropdown);
+    setupToggle(accountBtn, accountDropdown);
+    setupToggle(cartBtn, cartDropdown);
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-bar')) {
+            if (searchResults) searchResults.classList.remove('show');
+        }
+        if (!e.target.closest('.header-left') && 
+            !e.target.closest('.icon-group')) {
             closeAllDropdowns();
-            if (!isOpen) notiDropdown.classList.add('show');
-        });
-    }
-
-    // Toggle Tài khoản
-    if (accountBtn && accountDropdown) {
-        accountBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = accountDropdown.classList.contains('show');
-            closeAllDropdowns();
-            if (!isOpen) accountDropdown.classList.add('show');
-        });
-    }
-
-    // Click ra ngoài thì đóng hết
-    document.addEventListener('click', () => {
-        closeAllDropdowns();
-    });
-
-    // Ngăn việc click bên trong bảng menu làm nó bị đóng
-    [categoryMenu, notiDropdown, accountDropdown, searchResults].forEach(menu => {
-        if (menu) {
-            menu.addEventListener('click', (e) => e.stopPropagation());
         }
     });
 
     // ==========================================
-    // 2. TỰ ĐỘNG TẢI DANH MỤC VÀ BEST SELLER
+    // 2. TẢI DANH MỤC TỪ BACKEND
     // ==========================================
     async function loadCategories() {
         if (!categoryMenu) return;
         try {
-            const response = await fetch('http://localhost:5000/api/categories');
+            const response = await fetch(`http://127.0.0.1:5000/api/categories?t=${Date.now()}`);
+            if (!response.ok) throw new Error('Network response was not ok');
             const categories = await response.json();
-            categoryMenu.innerHTML = categories.map(cat => `
-                <li>
-                    <a href="category.html?id=${cat.id}">
-                        <i class="fa-solid fa-tags"></i> ${cat.name}
-                    </a>
-                </li>
-            `).join('');
-        } catch (error) { console.error("Lỗi tải danh mục:", error); }
+            
+            if (categories && categories.length > 0) {
+                categoryMenu.innerHTML = categories.map(cat => 
+                    `<li><a href="category.html?id=${cat.id}">${cat.name}</a></li>`
+                ).join('');
+            } else {
+                categoryMenu.innerHTML = '<li><a href="#">Đang cập nhật...</a></li>';
+            }
+        } catch (error) {
+            console.error("Lỗi tải danh mục:", error);
+            categoryMenu.innerHTML = '<li><a href="#">Lỗi kết nối Server</a></li>';
+        }
     }
 
+    // ==========================================
+    // 3. TẢI SẢN PHẨM BEST SELLERS
+    // ==========================================
     async function loadBestSellers() {
         if (!track) return;
         try {
-            const response = await fetch('http://localhost:5000/api/products/best-sellers');
+            const response = await fetch('http://127.0.0.1:5000/api/products/best-sellers');
             const products = await response.json();
+            
+            if (!products || products.length === 0) {
+                track.innerHTML = '<p>Đang cập nhật truyện...</p>';
+                return;
+            }
+
             track.innerHTML = products.map(item => `
                 <div class="product-card">
                     <div class="img-box">
                         ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
-                        <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22250%22%20viewBox%3D%220%200%20200%20250%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23eee%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%2214%22%20fill%3D%22%23999%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';" alt="${item.name}">
+                        <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/200x250?text=No+Image';" alt="${item.name}">
                     </div>
                     <div class="info-box">
                         <h3 class="name">${item.name}</h3>
@@ -109,16 +109,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `).join('');
-            initCarousel(products.length);
-        } catch (error) { console.error("Lỗi Best Seller:", error); }
+
+            initCarousel(products.length); 
+        } catch (error) { 
+            console.error("Lỗi Best Seller:", error); 
+        }
     }
 
     // ==========================================
-    // 3. XỬ LÝ TÌM KIẾM (LIVE SEARCH & BUTTON CLICK)
+    // 4. XỬ LÝ TÌM KIẾM (LIVE SEARCH)
     // ==========================================
-    let timeoutId;
-
     if (searchInput && searchResults) {
+        let timeoutId;
         searchInput.addEventListener('input', function() {
             const keyword = this.value.trim();
             if (keyword.length === 0) {
@@ -128,75 +130,170 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(async () => {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/search?q=${encodeURIComponent(keyword)}`);
+                    const response = await fetch(`http://127.0.0.1:5000/api/search?q=${encodeURIComponent(keyword)}`);
                     const products = await response.json();
+
                     if (products.length > 0) {
                         searchResults.innerHTML = products.map(item => `
-                            <a href="#" class="search-item">
-                                <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2240%22%20height%3D%2255%22%20viewBox%3D%220%200%2040%2055%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23e0e0e0%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-size%3D%2210%22%20fill%3D%22%23888888%22%3EImg%3C%2Ftext%3E%3C%2Fsvg%3E';" alt="${item.productName}">
+                            <div class="search-item" onclick="window.location.href='detail.html?id=${item.id}'">
+                                <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/50x70?text=No+Img';">
                                 <div class="search-info">
-                                    <div class="s-name">${item.productName}</div>
-                                    <div class="s-author"><i class="fa-solid fa-pen-nib"></i> ${item.authorName || 'Đang cập nhật'}</div>
-                                    <div class="s-price">${Number(item.price).toLocaleString()}đ</div>
+                                    <h4>${item.productName}</h4>
+                                    <p class="author">${item.authorName || 'Đang cập nhật'}</p>
+                                    <p class="price">${Number(item.price).toLocaleString()}đ</p>
                                 </div>
-                            </a>
-                        `).join('');
-                        searchResults.classList.add('show');
+                            </div>
+                        `).join('') + `<div class="search-more"><a href="search.html?q=${encodeURIComponent(keyword)}">Xem tất cả kết quả</a></div>`;
+                    } else {
+                        searchResults.innerHTML = `<div class="search-empty">Không tìm thấy "${keyword}"</div>`;
                     }
-                } catch (error) { console.error("Lỗi tìm kiếm:", error); }
+                    searchResults.classList.add('show');
+                } catch (err) {
+                    console.error("Lỗi tìm kiếm:", err);
+                }
             }, 300);
         });
-
-        document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.classList.remove('show');
-            }
-        });
     }
+
     // ==========================================
-    // 4. LOGIC CAROUSEL & KHỞI CHẠY
+    // 5. CAROUSEL TRƯỢT
     // ==========================================
     function initCarousel(originalLength) {
         const nextBtn = document.getElementById('nextBtn');
         const prevBtn = document.getElementById('prevBtn');
         if (!track || !nextBtn || !prevBtn || originalLength === 0) return;
 
-        const cards = Array.from(track.children);
-        const cardWidth = cards[0].offsetWidth + 20; 
+        let cardWidth = track.querySelector('.product-card').offsetWidth + 20;
         let index = 0;
 
+        const cards = Array.from(track.children);
         cards.forEach(card => track.appendChild(card.cloneNode(true)));
 
-        function updateSlider() {
+        const moveSlider = () => {
             track.style.transition = "transform 0.5s ease-in-out";
             track.style.transform = `translateX(-${index * cardWidth}px)`;
-            if (index >= originalLength) {
-                setTimeout(() => {
-                    track.style.transition = "none";
-                    index = 0;
-                    track.style.transform = `translateX(0)`;
-                }, 500);
-            }
-        }
-        nextBtn.onclick = () => { index++; updateSlider(); };
-        prevBtn.onclick = () => {
-            if (index <= 0) {
-                index = originalLength;
-                track.style.transition = "none";
-                track.style.transform = `translateX(-${index * cardWidth}px)`;
-                track.offsetWidth; 
-            }
-            index--;
-            updateSlider();
         };
+
+        track.addEventListener('transitionend', () => {
+            if (index >= originalLength) {
+                track.style.transition = "none";
+                index = 0;
+                track.style.transform = `translateX(0)`;
+            }
+            if (index < 0) {
+                track.style.transition = "none";
+                index = originalLength - 1;
+                track.style.transform = `translateX(-${index * cardWidth}px)`;
+            }
+        });
+
+        nextBtn.onclick = () => { index++; moveSlider(); };
+        prevBtn.onclick = () => { index--; moveSlider(); };
     }
 
-    // Chạy các hàm tải dữ liệu ban đầu
+// ==========================================
+    // 6. KIỂM TRA ĐĂNG NHẬP VÀ ĐỔI MENU TÀI KHOẢN
+    // ==========================================
+    function checkLoginStatus() {
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userRoleDisplay = document.getElementById('userRoleDisplay');
+        const accountList = document.querySelector('.account-list');
+        
+        const userStr = localStorage.getItem('currentUser');
+        
+        if (userStr) {
+            // ---> TRƯỜNG HỢP 1: ĐÃ ĐĂNG NHẬP
+            const user = JSON.parse(userStr);
+            
+            if (userNameDisplay) userNameDisplay.textContent = `Chào, ${user.fullName || user.userName}`;
+            if (userRoleDisplay) userRoleDisplay.textContent = "Khách hàng thành viên";
+            
+            if (accountList) {
+                // ĐÃ THÊM DANH SÁCH YÊU THÍCH VÀO ĐÂY
+                accountList.innerHTML = `
+                    <a href="profile.html" class="account-item"><i class="fa-solid fa-address-card"></i> Hồ sơ của tôi</a>
+                    <a href="orders.html" class="account-item"><i class="fa-solid fa-box-open"></i> Đơn hàng của tôi</a>
+                    <a href="wishlist.html" class="account-item"><i class="fa-solid fa-heart"></i> Danh sách yêu thích</a>
+                    <a href="#" class="account-item text-danger" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+                `;
+
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.reload(); 
+                });
+            }
+        } else {
+            // ---> TRƯỜNG HỢP 2: LÀ KHÁCH (CHƯA ĐĂNG NHẬP)
+            if (userNameDisplay) userNameDisplay.textContent = "Chào, Khách";
+            if (userRoleDisplay) userRoleDisplay.textContent = "Vui lòng đăng nhập";
+            
+            if (accountList) {
+                accountList.innerHTML = `
+                    <a href="login.html" class="account-item"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>
+                    <a href="signup.html" class="account-item"><i class="fa-solid fa-user-plus"></i> Đăng ký</a>
+                `;
+            }
+        }
+    }
+
+    // ==========================================
+    // 6. KIỂM TRA ĐĂNG NHẬP VÀ ĐỔI MENU TÀI KHOẢN
+    // ==========================================
+    function checkLoginStatus() {
+        // --- ĐOẠN MÃ MỚI: Bắt dữ liệu từ Google/Facebook trả về trên URL ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const socialUser = urlParams.get('socialUser');
+        if (socialUser) {
+            // Lưu vào bộ nhớ
+            localStorage.setItem('currentUser', decodeURIComponent(socialUser));
+            // Xóa đoạn loằng ngoằng trên thanh địa chỉ đi cho đẹp
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        // -------------------------------------------------------------------
+
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userRoleDisplay = document.getElementById('userRoleDisplay');
+        const accountList = document.querySelector('.account-list');
+        
+        const userStr = localStorage.getItem('currentUser');
+        
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (userNameDisplay) userNameDisplay.textContent = `Chào, ${user.fullName || user.userName}`;
+            if (userRoleDisplay) userRoleDisplay.textContent = "Khách hàng thành viên";
+            
+            if (accountList) {
+                accountList.innerHTML = `
+                    <a href="profile.html" class="account-item"><i class="fa-solid fa-address-card"></i> Hồ sơ của tôi</a>
+                    <a href="orders.html" class="account-item"><i class="fa-solid fa-box-open"></i> Đơn hàng của tôi</a>
+                    <a href="wishlist.html" class="account-item"><i class="fa-solid fa-heart"></i> Danh sách yêu thích</a>
+                    <a href="#" class="account-item" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+                `;
+
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.reload(); 
+                });
+            }
+        } else {
+            if (userNameDisplay) userNameDisplay.textContent = "Chào, Khách";
+            if (userRoleDisplay) userRoleDisplay.textContent = "Vui lòng đăng nhập";
+            
+            if (accountList) {
+                accountList.innerHTML = `
+                    <a href="login.html" class="account-item"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>
+                    <a href="signup.html" class="account-item"><i class="fa-solid fa-user-plus"></i> Đăng ký</a>
+                `;
+            }
+        }
+    }
+
+    // ==========================================
+    // KHỞI CHẠY CÁC HÀM KHI VÀO TRANG
+    // ==========================================
     loadCategories();
     loadBestSellers();
+    checkLoginStatus(); // Gọi hàm kiểm tra đăng nhập
 });
-
-
-
-
-

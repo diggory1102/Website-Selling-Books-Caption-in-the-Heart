@@ -1,125 +1,281 @@
-// 1. Import các thư viện
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const bcrypt = require('bcryptjs'); 
+const { User } = require('./database'); // Đảm bảo đã import User từ database.js
 const express = require('express');
 const cors = require('cors');
-const sql = require('mssql'); // Thêm dòng này để dùng được biến 'sql'
 require('dotenv').config();
 
-// 2. Import cấu hình database từ file riêng
-// Đảm bảo file ./config/db.js của bạn có export biến 'config'
-const dbConfig = require('./config/db'); 
+// IMPORT CÁC BẢNG (MODELS) TỪ FILE database.js
+const { Category, Product } = require('./database');
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-// 3. Cài đặt Middleware (Chỉ khai báo MỘT LẦN duy nhất)
-app.use(cors({
-    origin: '*', // Cho phép mọi nguồn (Frontend) truy cập
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Cho phép các phương thức
-    allowedHeaders: ['Content-Type', 'Authorization']
-})); 
-app.use(express.json()); 
+// Cấu hình Session (bắt buộc để dùng Passport)
+app.use(session({ secret: 'caption-in-the-heart-secret', resave: false, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
 
-// 4. Các API Routes
-// API thử nghiệm
-app.get('/', (req, res) => {
-    res.send("🚀 Chào mừng đến với Backend của Caption In The Heart!");
-});
+// Hỗ trợ Passport đóng gói và giải nén dữ liệu User
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
 
-// API lấy sản phẩm Best Seller (Đã sửa lỗi kết nối)
-app.get('/api/products/best-sellers', async (req, res) => {
+// ==========================================
+// ROUTE FAKE DỮ LIỆU (Chạy 1 lần trên web)
+// ==========================================
+app.get('/api/setup', async (req, res) => {
     try {
-        // Sử dụng dbConfig đã import ở trên
-        let pool = await sql.connect(dbConfig);
-        let result = await pool.request()
-            .query('SELECT TOP 8 * FROM Product ORDER BY sold DESC'); 
-        
-        res.json(result.recordset);
+        await Category.deleteMany({}); 
+        await Product.deleteMany({});
+
+        const catManga = await Category.create({ name: 'Manga' });
+        const catHanhDong = await Category.create({ name: 'Hành Động' });
+        const catTrinhTham = await Category.create({ name: 'Trinh Thám' });
+
+        await Product.create([
+            { name: 'One Piece - Tập 101', authorName: 'Eiichiro Oda', price: 30000, sold: 5000, imageUrl: 'images/one-piece.png', categoryId: catManga._id },
+            { name: 'Thám Tử Lừng Danh Conan', authorName: 'Gosho Aoyama', price: 25000, discount: '-10%', sold: 3200, imageUrl: 'images/conan.png', categoryId: catTrinhTham._id },
+            { name: 'Doraemon - Truyện Ngắn', authorName: 'Fujiko F. Fujio', price: 20000, sold: 4800, imageUrl: 'images/doraemon.png', categoryId: catManga._id },
+            { name: 'Naruto - Tập Cuối', authorName: 'Masashi Kishimoto', price: 22000, discount: '-5%', sold: 2100, imageUrl: 'images/naruto.png', categoryId: catHanhDong._id },
+            { name: 'Thanh Gươm Diệt Quỷ', authorName: 'Koyoharu Gotouge', price: 25000, discount: '-15%', sold: 1800, imageUrl: 'images/diet-quy.png', categoryId: catHanhDong._id },
+            { name: 'Chú Thuật Hồi Chiến', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id }
+        ]);
+        res.send("<h1>✅ Đã tạo dữ liệu MongoDB thành công! Hãy quay lại trang chủ web ấn F5.</h1>");
     } catch (err) {
-        console.error("Lỗi SQL chi tiết:", err);
-        res.status(500).send("Lỗi lấy dữ liệu từ SQL Server: " + err.message);
+        res.status(500).send(err.message);
     }
 });
 
+// ==========================================
+// CÁC ROUTE API CHÍNH DÀNH CHO TRANG WEB
+// ==========================================
+app.get('/', (req, res) => res.send("🚀 Backend API đang chạy tốt!"));
 
-// API Tìm kiếm thông minh
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await Category.find().sort({ name: 1 });
+        res.json(categories);
+    } catch (err) {
+        res.status(500).json({ error: "Lỗi Server" });
+    }
+});
+
+app.get('/api/products/best-sellers', async (req, res) => {
+    try {
+        const products = await Product.find().sort({ sold: -1 }).limit(8); 
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ error: "Lỗi Server" });
+    }
+});
+
 app.get('/api/search', async (req, res) => {
     try {
         const keyword = req.query.q; 
         if (!keyword) return res.json([]); 
 
-        // 1. In ra từ khóa để xem Frontend có gửi lên đúng không
-        console.log(`\n👉 Đang tìm kiếm từ khóa: "${keyword}"`); 
+        const products = await Product.find({
+            $or: [
+                { name: { $regex: keyword, $options: 'i' } }, 
+                { authorName: { $regex: keyword, $options: 'i' } }
+            ]
+        }).limit(5);
 
-        let pool = await sql.connect(dbConfig);
-        
-        let result = await pool.request()
-            .input('keyword', sql.NVarChar, `%${keyword}%`) 
-            .query(`
-                SELECT TOP 5 
-                    p.id, 
-                    p.name AS productName, 
-                    p.price, 
-                    p.imageUrl, 
-                    a.name AS authorName
-                FROM Product p
-                LEFT JOIN Author a ON p.authorId = a.id
-                WHERE p.name LIKE @keyword 
-                   OR a.name LIKE @keyword
-            `);
-            
-        // 2. In ra số lượng kết quả tìm được từ SQL
-        console.log(`✅ Đã tìm thấy: ${result.recordset.length} kết quả từ Database.`); 
-        
-        res.json(result.recordset);
+        const formattedProducts = products.map(p => ({
+            id: p.id,
+            productName: p.name,
+            price: p.price,
+            imageUrl: p.imageUrl,
+            authorName: p.authorName
+        }));
+
+        res.json(formattedProducts);
     } catch (err) {
-        console.error("❌ Lỗi SQL khi tìm kiếm:", err);
-        res.status(500).send("Lỗi máy chủ khi tìm kiếm");
+        res.status(500).json({ error: "Lỗi Server" });
     }
 });
 
-// 5. Bật máy chủ lắng nghe
-const PORT = process.env.PORT || 5000;
+// ==========================================
+// API XÁC THỰC NGƯỜI DÙNG (AUTH)
+// ==========================================
 
+// 1. ĐĂNG KÝ (Register)
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { userName, email, password, fullName } = req.body;
+        
+        // Kiểm tra xem User hoặc Email đã tồn tại chưa
+        const userExists = await User.findOne({ $or: [{ userName }, { email }] });
+        if (userExists) {
+            return res.status(400).json({ success: false, message: "Tên đăng nhập hoặc Email đã được sử dụng!" });
+        }
+
+        // Mã hóa mật khẩu
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Lưu vào Database
+        await User.create({
+            userName, 
+            email, 
+            fullName, 
+            password: hashedPassword // Lưu pass đã mã hóa
+        });
+
+        res.json({ success: true, message: "Đăng ký thành công! Hãy đăng nhập." });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
+
+// 2. ĐĂNG NHẬP (Login)
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { userName, password } = req.body;
+
+        // Tìm User trong DB
+        const user = await User.findOne({ userName });
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Tài khoản không tồn tại!" });
+        }
+
+        // So sánh mật khẩu
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Sai mật khẩu!" });
+        }
+
+        // Nếu đúng, trả về thông tin user (không trả về pass)
+        res.json({ 
+            success: true, 
+            message: "Đăng nhập thành công!",
+            user: { id: user._id, userName: user.userName, fullName: user.fullName, role: user.roleId }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
+
+// 3. QUÊN MẬT KHẨU (Gửi email - Tạm thời mô phỏng)
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Email này chưa được đăng ký!" });
+        }
+
+        // Trong thực tế, bạn sẽ dùng thư viện Nodemailer để gửi link reset qua email.
+        // Ở đây ta mô phỏng việc gửi thành công:
+        res.json({ success: true, message: "Hướng dẫn lấy lại mật khẩu đã được gửi vào email của bạn!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
+
+// ==========================================
+// CẤU HÌNH ĐĂNG NHẬP GOOGLE
+// ==========================================
+passport.use(new GoogleStrategy({
+    clientID: 'ĐIỀN_GOOGLE_CLIENT_ID_CỦA_BẠN_VÀO_ĐÂY', // Sẽ lấy từ Google Cloud Console
+    clientSecret: 'ĐIỀN_GOOGLE_CLIENT_SECRET_CỦA_BẠN_VÀO_ĐÂY',
+    callbackURL: "http://127.0.0.1:5000/api/auth/google/callback"
+  },
+  async (accessToken, refreshToken, profile, done) => {
+      try {
+          // Lấy email và tên từ Google
+          const email = profile.emails[0].value;
+          const fullName = profile.displayName;
+          
+          // Kiểm tra xem user có trong DB chưa
+          let user = await User.findOne({ email: email });
+          
+          if (!user) {
+              // Nếu chưa có, tự động tạo tài khoản mới
+              const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
+              const autoUserName = email.split('@')[0] + Math.floor(Math.random() * 1000); // Tạo userName ngẫu nhiên từ email
+              
+              user = await User.create({
+                  fullName: fullName,
+                  email: email,
+                  userName: autoUserName,
+                  password: randomPassword
+              });
+          }
+          return done(null, user);
+      } catch (err) {
+          return done(err, null);
+      }
+  }
+));
+
+// API kích hoạt đăng nhập Google
+app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// API nhận kết quả từ Google trả về
+app.get('/api/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: 'http://127.0.0.1:5500/login.html' }),
+  function(req, res) {
+      // Đăng nhập thành công -> Gói thông tin user đẩy về giao diện (Frontend)
+      const userInfo = {
+          id: req.user._id,
+          userName: req.user.userName,
+          fullName: req.user.fullName,
+          role: req.user.roleId
+      };
+      // Chuyển hướng về trang chủ kèm theo dữ liệu mã hóa trên thanh URL
+      const userStr = encodeURIComponent(JSON.stringify(userInfo));
+      res.redirect(`http://127.0.0.1:5500/index.html?socialUser=${userStr}`);
+  }
+);
+
+// ==========================================
+// CẤU HÌNH ĐĂNG NHẬP FACEBOOK (Tương tự Google)
+// ==========================================
+passport.use(new FacebookStrategy({
+    clientID: 'ĐIỀN_FACEBOOK_APP_ID_CỦA_BẠN_VÀO_ĐÂY', // Sẽ lấy từ Meta for Developers
+    clientSecret: 'ĐIỀN_FACEBOOK_APP_SECRET_CỦA_BẠN_VÀO_ĐÂY',
+    callbackURL: "http://127.0.0.1:5000/api/auth/facebook/callback",
+    profileFields: ['id', 'displayName', 'emails']
+  },
+  async (accessToken, refreshToken, profile, done) => {
+      try {
+          const email = profile.emails ? profile.emails[0].value : `${profile.id}@facebook.com`;
+          const fullName = profile.displayName;
+          
+          let user = await User.findOne({ email: email });
+          if (!user) {
+              const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
+              const autoUserName = 'fb_' + profile.id; 
+              user = await User.create({ fullName, email, userName: autoUserName, password: randomPassword });
+          }
+          return done(null, user);
+      } catch (err) { return done(err, null); }
+  }
+));
+
+app.get('/api/auth/facebook', passport.authenticate('facebook', { scope: ['email'] }));
+app.get('/api/auth/facebook/callback', 
+  passport.authenticate('facebook', { failureRedirect: 'http://127.0.0.1:5500/login.html' }),
+  function(req, res) {
+      const userInfo = { id: req.user._id, userName: req.user.userName, fullName: req.user.fullName };
+      const userStr = encodeURIComponent(JSON.stringify(userInfo));
+      res.redirect(`http://127.0.0.1:5500/index.html?socialUser=${userStr}`);
+  }
+);
+
+
+// ==========================================
+// KHỞI ĐỘNG SERVER
+// ==========================================
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`\n===========================================`);
-    console.log(`🌐 Server đang chạy tại: http://localhost:${PORT}`);
+    console.log(`🌐 Server API đang lắng nghe tại cổng: ${PORT}`);
     console.log(`===========================================\n`);
-});
-
-
-// API Tìm kiếm thông minh (Tên truyện hoặc Tên tác giả)
-app.get('/api/search', async (req, res) => {
-    try {
-        const keyword = req.query.q; // Lấy từ khóa từ Frontend gửi lên
-        if (!keyword) return res.json([]); // Nếu không gõ gì thì trả về mảng rỗng
-
-        let pool = await sql.connect(dbConfig);
-        
-        // Dùng LIKE '%từ_khóa%' để tìm kiếm chứa chuỗi
-        // Dùng tham số @keyword để chống hack (SQL Injection)
-        let result = await pool.request()
-            .input('keyword', sql.NVarChar, `%${keyword}%`)
-            .query(`
-                SELECT TOP 5 p.id, p.name AS productName, p.price, p.imageUrl, a.name AS authorName
-                FROM Product p
-                LEFT JOIN Author a ON p.authorId = a.id
-                WHERE p.name LIKE @keyword OR a.name LIKE @keyword
-            `);
-            
-        res.json(result.recordset);
-    } catch (err) {
-        console.error("Lỗi tìm kiếm:", err);
-        res.status(500).send("Lỗi máy chủ khi tìm kiếm");
-    }
-});
-
-// API lấy danh sách tất cả thể loại
-app.get('/api/categories', async (req, res) => {
-    try {
-        let pool = await sql.connect(dbConfig);
-        let result = await pool.request().query("SELECT id, name FROM Categories ORDER BY name ASC");
-        res.json(result.recordset);
-    } catch (err) {
-        console.error("Lỗi lấy danh mục:", err);
-        res.status(500).send("Lỗi Server");
-    }
 });

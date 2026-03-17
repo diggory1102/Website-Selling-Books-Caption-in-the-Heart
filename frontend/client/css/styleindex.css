@@ -21,7 +21,71 @@ body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color);
 .action-item i { font-size: 20px; margin-bottom: 4px; }
 .cart-btn { position: relative; }
 .cart-count { position: absolute; top: -5px; right: 0; background: var(--secondary-color); color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; }
+/* ==========================================
+   MENU GIỎ HÀNG (DẠNG NÚT BẤM CƠ BẢN)
+   ========================================== */
+.cart-dropdown-simple {
+    position: absolute;
+    top: calc(100% + 15px);
+    right: -10px; /* Ép sát mép phải để cân đối với nút bấm */
+    width: 200px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15); /* Đổ bóng giống menu Tài khoản */
+    z-index: 99999;
+    display: none; /* Ẩn mặc định, JS sẽ gọi nó lên */
+    border: 1px solid #eaeaea;
+}
 
+/* Lệnh bắt buộc để JS có thể bật/tắt menu */
+.cart-dropdown-simple.show { 
+    display: block; 
+}
+
+/* Tạo mũi tên nhỏ chỉ lên trên nút Giỏ hàng */
+.cart-dropdown-simple::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 35px; /* Căn tọa độ mũi tên */
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #fff;
+    filter: drop-shadow(0 -1px 1px rgba(0,0,0,0.1));
+}
+
+/* Định dạng các nút bấm bên trong menu */
+.cart-dropdown-simple .account-item {
+    display: block;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 14px;
+    font-weight: 500;
+    transition: 0.3s;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-dropdown-simple .account-item:last-child {
+    border-bottom: none; /* Nút cuối không cần viền dưới */
+}
+
+.cart-dropdown-simple .account-item i {
+    width: 20px;
+    color: #666;
+    margin-right: 5px;
+    transition: 0.3s;
+}
+
+/* Hiệu ứng khi người dùng di chuột qua (Sáng lên màu xanh) */
+.cart-dropdown-simple .account-item:hover {
+    background-color: #f9f9f9;
+    color: var(--primary-color); 
+}
+
+.cart-dropdown-simple .account-item:hover i {
+    color: var(--primary-color);
+}
 
 /* HERO - DANH MỤC */
 .hero-bar { margin: 20px 0; }
@@ -105,6 +169,8 @@ body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color);
 .stars { color: #f1c40f; font-size: 12px; margin-bottom: 8px; }
 .price-group .now { color: var(--secondary-color); font-size: 18px; font-weight: 700; }
 .price-group .old { color: #bbb; text-decoration: line-through; font-size: 12px; margin-left: 10px; }
+
+
 
 /* NAVIGATION BUTTONS */
 .nav-btn {
@@ -401,5 +467,3 @@ body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color);
 .account-item.text-danger:hover {
     background-color: #fff0f0;
 }
-
-

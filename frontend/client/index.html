@@ -6,7 +6,7 @@
     <title>Caption In The Heart - Thế giới truyện tranh</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/styleindex.css">
 </head>
 <body>
 
@@ -19,8 +19,8 @@
             </div>
 
             <div class="search-bar">
-                <input type="text" id="searchInput" name="search" autocomplete="off" placeholder="Tìm kiếm truyện tranh, tác giả...">
-                <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                <input style="border-radius: 15px;" type="text" id="searchInput" name="search" autocomplete="off" placeholder="Tìm kiếm truyện tranh, tác giả...">
+                <button style="border-radius: 5px;" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
                 
                 <div id="searchResults" class="search-dropdown"></div>
             </div>
@@ -29,7 +29,8 @@
                 <div class="action-item" id="notiBtn" style="position: relative; cursor: pointer;">
                     <div class="icon-wrap">
                         <i class="fa-regular fa-bell"></i>
-                        </div>
+                    </div>
+                    
                     <span>Thông báo</span>
 
                     <div id="notiDropdown" class="noti-dropdown">
@@ -54,6 +55,7 @@
                         <a href="notifications.html" class="noti-view-all">Xem tất cả</a>
                     </div>
                 </div>
+
                 <div class="action-item" id="accountBtn" style="position: relative; cursor: pointer;">
                     <div class="icon-wrap">
                         <i class="fa-regular fa-user"></i>
@@ -62,8 +64,8 @@
 
                     <div id="accountDropdown" class="account-dropdown">
                         <div class="account-header">
-                            <strong>Chào, Nguyễn Văn A</strong>
-                            <span style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Khách hàng thành viên</span>
+                            <strong id="userNameDisplay">Chào, Khách</strong> 
+                            <span id="userRoleDisplay" style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Vui lòng đăng nhập</span>
                         </div>
                         <div class="account-list">
                             <a href="addresses.html" class="account-item">
@@ -72,17 +74,35 @@
                             <a href="#" class="account-item">
                                 <i class="fa-solid fa-box-open"></i> Đơn hàng của tôi
                             </a>
-                            <a href="login.html" class="account-item text-danger">
-                                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                            <a href="wishlist.html" class="account-item" style="text-align: left;">
+                                <i class="fa-solid fa-heart"></i> Danh sách yêu thích
                             </a>
                         </div>
                     </div>
                 </div>
-                <a href="cart.html" class="action-item cart-btn">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                    <span class="cart-count">0</span>
+
+                <div class="action-item" id="cartBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
                     <span>Giỏ hàng</span>
-                </a>
+                    
+                    <div id="cartDropdown" class="cart-dropdown-simple">
+                        <a href="cart.html" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-basket-shopping"></i> Giỏ hàng của tôi
+                        </a>
+                        <a href="reviews.html" class="account-item" style="text-align: left;">
+                            <i class="fa-regular fa-star"></i> Đánh giá
+                        </a>
+                        <a href="purchased.html" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-box-open"></i> Đã mua
+                        </a>
+                        <a href="cancelled.html" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-ban"></i> Đã huỷ
+                        </a>
+                    </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -94,6 +114,7 @@
                 <button class="category-btn" id="categoryBtn">
                     <i class="fa-solid fa-bars"></i>
                     <span>Danh mục</span>
+                    
                     <i class="fa-solid fa-chevron-down arrow"></i>
                 </button>
                 <ul class="category-popup" id="categoryMenu"></ul>

@@ -1,4 +1,0 @@
-﻿id,username,password,fullName,email,role,createdAt
-1,admin,admin123,Quản trị viên,admin@example.com,admin,2026-01-01
-2,khachhang1,pass123,Nguyễn Văn A,vana@gmail.com,user,2026-02-15
-3,khachhang2,pass456,Trần Thị B,thib@gmail.com,user,2026-03-01

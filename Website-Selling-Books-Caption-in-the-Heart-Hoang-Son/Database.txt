@@ -1,0 +1,118 @@
+USE master;
+GO
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'web_ban_truyen')
+BEGIN
+    ALTER DATABASE web_ban_truyen SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE web_ban_truyen;
+END
+GO
+CREATE DATABASE web_ban_truyen;
+GO
+USE web_ban_truyen;
+GO
+
+-- =============================================
+-- NHÓM 1: CẤU HÌNH & DANH MỤC GỐC
+-- =============================================
+CREATE TABLE [Role] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL,
+    authority NVARCHAR(100)
+);
+
+CREATE TABLE [Category] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100) NOT NULL,
+    description NVARCHAR(255),
+    imageUrl VARCHAR(255)
+);
+
+CREATE TABLE [Author] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100) NOT NULL,
+    shortDesc NVARCHAR(255),
+    description NVARCHAR(MAX)
+);
+
+CREATE TABLE [Publisher] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100) NOT NULL,
+    shortDesc NVARCHAR(255),
+    description NVARCHAR(MAX)
+);
+
+-- =============================================
+-- NHÓM 2: NGƯỜI DÙNG & TƯƠNG TÁC
+-- =============================================
+CREATE TABLE [Users] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    userName NVARCHAR(100) NOT NULL UNIQUE,
+    password NVARCHAR(255) NOT NULL,
+    fullName NVARCHAR(255),
+    email VARCHAR(100) NOT NULL UNIQUE,
+    roleId INT FOREIGN KEY REFERENCES [Role](id),
+    address NVARCHAR(MAX),
+    numberPhone VARCHAR(15),
+    isOnline BIT DEFAULT 0,
+    createdAt DATETIME DEFAULT GETDATE()
+);
+
+-- =============================================
+-- NHÓM 3: SẢN PHẨM & KHO HÀNG
+-- =============================================
+CREATE TABLE [Product] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(200) NOT NULL,
+    authorId INT FOREIGN KEY REFERENCES Author(id),
+    publisherId INT FOREIGN KEY REFERENCES Publisher(id),
+    categoryId INT FOREIGN KEY REFERENCES Category(id),
+    price DECIMAL(18,2) NOT NULL DEFAULT 0,
+    discount NVARCHAR(50),
+    sold INT DEFAULT 0,
+    imageUrl NVARCHAR(500),
+    createdAt DATETIME DEFAULT GETDATE(),
+    updatedAt DATETIME DEFAULT GETDATE()
+);
+
+-- =============================================
+-- NHÓM 4: GIAO DỊCH & HÓA ĐƠN
+-- =============================================
+CREATE TABLE [Payment] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100),
+    content NVARCHAR(255)
+);
+
+CREATE TABLE [Delivery] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    deliveryKey NVARCHAR(100)
+);
+
+CREATE TABLE [Bill] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    userId INT FOREIGN KEY REFERENCES [Users](id),
+    paymentId INT FOREIGN KEY REFERENCES [Payment](id),
+    deliveryId INT FOREIGN KEY REFERENCES [Delivery](id),
+    totalPrice DECIMAL(18,2) NOT NULL,
+    status NVARCHAR(50) DEFAULT N'Chờ xử lý',
+    createdAt DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE [Line] ( -- Chi tiết hóa đơn
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    productId INT FOREIGN KEY REFERENCES [Product](id),
+    billId INT FOREIGN KEY REFERENCES [Bill](id),
+    quantity INT NOT NULL,
+    priceAtPurchase DECIMAL(18,2) NOT NULL -- Lưu giá tại thời điểm mua
+);
+
+-- =============================================
+-- NHÓM 5: ĐÁNH GIÁ & BÌNH LUẬN
+-- =============================================
+CREATE TABLE [Rate] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    productId INT FOREIGN KEY REFERENCES Product(id),
+    userId INT FOREIGN KEY REFERENCES Users(id),
+    rating FLOAT CHECK (rating >= 0 AND rating <= 5),
+    createdAt DATETIME DEFAULT GETDATE()
+);

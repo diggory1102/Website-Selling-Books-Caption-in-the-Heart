@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchBtn = document.getElementById('searchBtn');
     const searchResults = document.getElementById('searchResults');
     const track = document.getElementById('productTrack');
+    const cartBtn = document.getElementById('cartBtn');
+    const cartDropdown = document.getElementById('cartDropdown');
 
     // ==========================================
     // 1. QUẢN LÝ CÁC MENU THẢ XUỐNG
@@ -20,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (notiDropdown) notiDropdown.classList.remove('show');
         if (accountDropdown) accountDropdown.classList.remove('show');
         if (searchResults) searchResults.classList.remove('show');
+        if (cartDropdown) cartDropdown.classList.remove('show');
     }
 
     const setupToggle = (btn, dropdown) => {
@@ -39,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupToggle(categoryBtn, categoryMenu);
     setupToggle(notiBtn, notiDropdown);
     setupToggle(accountBtn, accountDropdown);
+    setupToggle(cartBtn, cartDropdown);
 
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.search-bar')) {
@@ -187,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
         prevBtn.onclick = () => { index--; moveSlider(); };
     }
 
-    // ==========================================
+// ==========================================
     // 6. KIỂM TRA ĐĂNG NHẬP VÀ ĐỔI MENU TÀI KHOẢN
     // ==========================================
     function checkLoginStatus() {
@@ -195,41 +199,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const userRoleDisplay = document.getElementById('userRoleDisplay');
         const accountList = document.querySelector('.account-list');
         
-        // Lấy thông tin người dùng từ bộ nhớ
         const userStr = localStorage.getItem('currentUser');
         
         if (userStr) {
             // ---> TRƯỜNG HỢP 1: ĐÃ ĐĂNG NHẬP
             const user = JSON.parse(userStr);
             
-            // 1. Đổi tên hiển thị
             if (userNameDisplay) userNameDisplay.textContent = `Chào, ${user.fullName || user.userName}`;
             if (userRoleDisplay) userRoleDisplay.textContent = "Khách hàng thành viên";
             
-            // 2. Hiển thị Menu của Thành viên (Có Hồ sơ, Đơn hàng, Đăng xuất)
             if (accountList) {
+                // ĐÃ THÊM DANH SÁCH YÊU THÍCH VÀO ĐÂY
                 accountList.innerHTML = `
                     <a href="profile.html" class="account-item"><i class="fa-solid fa-address-card"></i> Hồ sơ của tôi</a>
                     <a href="orders.html" class="account-item"><i class="fa-solid fa-box-open"></i> Đơn hàng của tôi</a>
-                    <a href="#" class="account-item" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+                    <a href="wishlist.html" class="account-item"><i class="fa-solid fa-heart"></i> Danh sách yêu thích</a>
+                    <a href="#" class="account-item text-danger" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
                 `;
 
-                // Bắt sự kiện cho nút Đăng xuất
                 document.getElementById('logoutBtn').addEventListener('click', function(e) {
                     e.preventDefault();
-                    localStorage.removeItem('currentUser'); // Xóa trí nhớ
-                    window.location.reload(); // Tải lại trang web về trạng thái Khách
+                    localStorage.removeItem('currentUser');
+                    window.location.reload(); 
                 });
             }
-
         } else {
-            // ---> TRƯỜNG HỢP 2: CHƯA ĐĂNG NHẬP (LÀ KHÁCH)
-            
-            // 1. Đặt lại chữ hiển thị
+            // ---> TRƯỜNG HỢP 2: LÀ KHÁCH (CHƯA ĐĂNG NHẬP)
             if (userNameDisplay) userNameDisplay.textContent = "Chào, Khách";
             if (userRoleDisplay) userRoleDisplay.textContent = "Vui lòng đăng nhập";
             
-            // 2. Hiển thị Menu của Khách (Chỉ có Đăng nhập và Đăng ký)
             if (accountList) {
                 accountList.innerHTML = `
                     <a href="login.html" class="account-item"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>
@@ -269,6 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 accountList.innerHTML = `
                     <a href="profile.html" class="account-item"><i class="fa-solid fa-address-card"></i> Hồ sơ của tôi</a>
                     <a href="orders.html" class="account-item"><i class="fa-solid fa-box-open"></i> Đơn hàng của tôi</a>
+                    <a href="wishlist.html" class="account-item"><i class="fa-solid fa-heart"></i> Danh sách yêu thích</a>
                     <a href="#" class="account-item" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
                 `;
 

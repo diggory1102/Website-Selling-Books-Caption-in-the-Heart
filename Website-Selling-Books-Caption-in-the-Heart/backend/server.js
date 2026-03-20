@@ -24,6 +24,8 @@ app.use(passport.session());
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
+
+
 // ==========================================
 // ROUTE FAKE DỮ LIỆU (Chạy 1 lần trên web)
 // ==========================================
@@ -326,6 +328,77 @@ app.get('/api/wishlist/details/:userId', async (req, res) => {
     }
 });
 
+
+const { execFile } = require('child_process'); // Import thư viện gọi file C++
+const path = require('path');
+
+// ==========================================
+// API: ĐĂNG NHẬP CỔNG ADMIN/NHÂN VIÊN (Gọi C++)
+// ==========================================
+app.post('/api/auth/admin-login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // 1. KIỂM TRA MONGODB
+        // Lưu ý: Có .populate('roleId') để lấy tên Role (Admin, Staff, Customer)
+        const user = await User.findOne({ email }).populate('roleId');
+        
+        if (!user) {
+            return res.status(401).json({ success: false, message: "Email không tồn tại!" });
+        }
+
+        // Kiểm tra Pass (Giả sử bạn dùng bcrypt)
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: "Sai mật khẩu!" });
+        }
+
+        // Lấy tên chức vụ từ DB (Ví dụ: 'admin', 'staff', hoặc 'customer')
+        const roleName = user.roleId ? user.roleId.name.toLowerCase() : "customer";
+
+        // 2. GỌI C++ ĐỂ XỬ LÝ PHÂN QUYỀN (OOP)
+        // Đường dẫn trỏ tới file exe vừa compile ở bước 1
+        const cppExePath = path.join(__dirname, '../cpp_auth_core/auth_system.exe'); 
+
+        // Gọi C++ và truyền 2 tham số: Email và Tên chức vụ
+        execFile(cppExePath, [email, roleName], (error, stdout, stderr) => {
+            if (error) {
+                console.error("Lỗi khi chạy C++:", error);
+                return res.status(500).json({ success: false, message: "Lỗi hệ thống lõi C++" });
+            }
+
+            // stdout chính là kết quả C++ in ra (chuỗi JSON)
+            try {
+                const cppResult = JSON.parse(stdout.trim());
+                
+                // Nếu C++ cho phép (Admin hoặc Staff)
+                if (cppResult.success) {
+                    res.json({
+                        success: true,
+                        message: cppResult.message,
+                        role: cppResult.role,
+                        user: {
+                            id: user._id,
+                            fullName: user.fullName,
+                            email: user.email
+                        }
+                    });
+                } else {
+                    // Nếu C++ chặn (Customer)
+                    res.status(403).json({
+                        success: false,
+                        message: cppResult.message // C++ báo: "Chào khách hàng, bạn không có quyền..."
+                    });
+                }
+            } catch (parseErr) {
+                res.status(500).json({ success: false, message: "C++ trả về sai định dạng" });
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // ==========================================
 // KHỞI ĐỘNG SERVER

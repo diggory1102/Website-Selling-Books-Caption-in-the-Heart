@@ -1,7 +1,11 @@
-#include <iostream> // Thư viện nhập xuất dữ liệu
+#include "Admin.h"
 
-int main() {
-    // std::cout được sử dụng để in ra màn hình
-    std::cout << "Hello, World!" << std::endl;
-    return 0; // Trả về 0 để báo hiệu chương trình kết thúc thành công
+Admin::Admin(string e) : User(e, "Admin") {}
+
+bool Admin::canAccessAdminPanel() {
+    return true;
+}
+
+string Admin::getWelcomeMessage() {
+    return "Chào Admin, chuyển hướng đến Bảng điều khiển Tổng.";
 }

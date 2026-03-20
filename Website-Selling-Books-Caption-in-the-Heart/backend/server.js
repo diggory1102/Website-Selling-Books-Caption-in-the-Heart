@@ -6,6 +6,8 @@ const bcrypt = require('bcryptjs');
 const { User } = require('./database'); // Đảm bảo đã import User từ database.js
 const express = require('express');
 const cors = require('cors');
+const { execFile } = require('child_process');
+const path = require('path');
 require('dotenv').config();
 
 // IMPORT CÁC BẢNG (MODELS) TỪ FILE database.js
@@ -328,9 +330,6 @@ app.get('/api/wishlist/details/:userId', async (req, res) => {
     }
 });
 
-
-const { execFile } = require('child_process'); // Import thư viện gọi file C++
-const path = require('path');
 
 // ==========================================
 // API: ĐĂNG NHẬP CỔNG ADMIN/NHÂN VIÊN (Gọi C++)

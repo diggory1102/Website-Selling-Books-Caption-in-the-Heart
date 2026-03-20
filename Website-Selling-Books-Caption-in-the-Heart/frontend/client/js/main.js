@@ -310,16 +310,25 @@ document.addEventListener('DOMContentLoaded', async function() {
         const wishlistBtn = document.querySelector('.user-actions a[href="wishlist.html"]');
         
         const userStr = localStorage.getItem('currentUser');
-        
+        // THÊM MỚI: Lấy role đã lưu từ admin-login.js (kết quả của lõi C++)
+        const userRole = localStorage.getItem('userRole'); 
+
         if (userStr) {
             const user = JSON.parse(userStr);
             if (notiBtn) notiBtn.style.display = '';
             if (cartBtn) cartBtn.style.display = '';
             if (wishlistBtn) wishlistBtn.style.display = '';
 
+            // XỬ LÝ CHỨC DANH HIỂN THỊ
+            let roleName = "Khách hàng thành viên";
+            if (userRole === 'admin') roleName = "Quản trị viên";
+            if (userRole === 'staff') roleName = "Nhân viên hệ thống";
+
             const avatarUrl = user.picture || user.avatar || user.photo; 
             if (userNameDisplay) userNameDisplay.textContent = `Chào, ${user.fullName || user.userName || user.name || 'Thành viên'}`;
-            if (userRoleDisplay) userRoleDisplay.textContent = "Khách hàng thành viên";
+            
+            // CẬP NHẬT: Thay vì hardcode, ta dùng biến roleName
+            if (userRoleDisplay) userRoleDisplay.textContent = roleName;
             
             if (avatarUrl) {
                 const accountIconWrap = document.querySelector('#accountBtn .icon-wrap');
@@ -336,14 +345,21 @@ document.addEventListener('DOMContentLoaded', async function() {
                         <img src="${avatarUrl}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
                         <div>
                             <strong id="userNameDisplay">Chào, ${user.fullName || user.userName || user.name || 'Thành viên'}</strong> 
-                            <span id="userRoleDisplay" style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Khách hàng thành viên</span>
+                            <span id="userRoleDisplay" style="font-size: 12px; color: #888; display: block; margin-top: 3px;">${roleName}</span>
                         </div>
                     `;
                 }
             }
 
             if (accountList) {
+                // THÊM MỚI: Kiểm tra nếu là Admin/Staff thì hiện thêm nút dẫn vào Dashboard
+                let adminItem = "";
+                if (userRole === 'admin' || userRole === 'staff') {
+                    adminItem = `<a href="../admin/admin-dashboard.html" class="account-item" style="color: #e74c3c; font-weight: bold;"><i class="fa-solid fa-user-shield"></i> Trang Quản trị</a>`;
+                }
+
                 accountList.innerHTML = `
+                    ${adminItem}
                     <a href="profile.html" class="account-item"><i class="fa-solid fa-address-card"></i> Hồ sơ của tôi</a>
                     <a href="orders.html" class="account-item"><i class="fa-solid fa-box-open"></i> Đơn hàng của tôi</a>
                     <a href="wishlist.html" class="account-item"><i class="fa-solid fa-heart"></i> Danh sách yêu thích</a>
@@ -353,12 +369,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 document.getElementById('logoutBtn').addEventListener('click', function(e) {
                     e.preventDefault();
                     localStorage.removeItem('currentUser');
-                    // Khi đăng xuất, dọn dẹp sạch cả cái két tạm trong LocalStorage (nếu còn sót)
+                    // THÊM MỚI: Xóa luôn role khi đăng xuất để bảo mật
+                    localStorage.removeItem('userRole'); 
                     localStorage.removeItem('user_wishlist');
                     window.location.reload(); 
                 });
             }
         } else {
+            // ... Các phần hiển thị khi chưa đăng nhập giữ nguyên ...
             if (notiBtn) notiBtn.style.display = 'none';
             if (cartBtn) cartBtn.style.display = 'none';
             if (wishlistBtn) wishlistBtn.style.display = 'none';

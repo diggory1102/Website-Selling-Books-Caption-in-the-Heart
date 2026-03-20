@@ -271,6 +271,63 @@ app.get('/api/auth/facebook/callback',
 
 
 // ==========================================
+// API 1: LẤY DANH SÁCH YÊU THÍCH CỦA USER
+// ==========================================
+app.get('/api/wishlist/:userId', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        if (!user) return res.status(404).json({ message: "Không tìm thấy user" });
+        
+        // Mongoose tự động chuyển mảng ObjectId thành mảng String khi gửi về Client
+        res.json(user.wishlist || []);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// API 2: BẤM TIM (THÊM / XÓA) - Xử lý chuẩn ObjectId
+// ==========================================
+app.post('/api/wishlist/toggle', async (req, res) => {
+    try {
+        const { userId, productId } = req.body;
+        
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "Không tìm thấy user" });
+
+        // VÌ LÀ OBJECT_ID nên ta phải dùng .toString() để so sánh với ID gửi lên
+        const index = user.wishlist.findIndex(id => id.toString() === productId.toString());
+        
+        if (index > -1) {
+            // Nếu TÌM THẤY -> Xóa khỏi mảng
+            user.wishlist.splice(index, 1);
+        } else {
+            // Nếu KHÔNG THẤY -> Thêm vào mảng (Mongoose tự động ép chuỗi thành ObjectId)
+            user.wishlist.push(productId);
+        }
+
+        await user.save();
+        res.json({ success: true, wishlist: user.wishlist });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 3. Lấy CHI TIẾT các sản phẩm (Dành riêng cho trang wishlist.html)
+app.get('/api/wishlist/details/:userId', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).populate('wishlist');
+        if (!user) return res.status(404).json({ message: "Không tìm thấy user" });
+
+        // Trả về mảng chứa FULL thông tin sản phẩm (đã được populate)
+        res.json(user.wishlist || []);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// ==========================================
 // KHỞI ĐỘNG SERVER
 // ==========================================
 const PORT = process.env.PORT || 5000;

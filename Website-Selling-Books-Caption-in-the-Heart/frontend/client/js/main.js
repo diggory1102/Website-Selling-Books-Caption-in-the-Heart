@@ -1,54 +1,101 @@
 // ==========================================
 // CÁC HÀM TOÀN CỤC (GLOBAL FUNCTIONS)
-// Bắt buộc để ngoài cùng để HTML nhận diện được
 // ==========================================
 
-// 2. Hàm xử lý khi bấm nút trái tim
-function toggleWishlist(event, productId) {
+// Biến lưu tạm danh sách tim để giao diện Load siêu tốc
+let globalWishlist = [];
+
+// Hàm lấy ID của User đang đăng nhập
+function getCurrentUserId() {
+    const userStr = localStorage.getItem('currentUser');
+    if (!userStr) return null;
+    const user = JSON.parse(userStr);
+    return user._id || user.id; // Chấp cả ID của Google/Facebook hay MongoDB
+}
+
+// Hàm tải tim từ SERVER về
+async function fetchUserWishlist() {
+    const userId = getCurrentUserId();
+    if (!userId) {
+        globalWishlist = [];
+        updateWishlistCount();
+        return;
+    }
+    try {
+        const res = await fetch(`http://127.0.0.1:5000/api/wishlist/${userId}`);
+        const data = await res.json();
+        globalWishlist = data; 
+        updateWishlistCount(); 
+    } catch (error) {
+        console.error("Lỗi tải wishlist từ Server:", error);
+    }
+}
+
+// Hàm cập nhật con số trên biểu tượng Yêu thích Header
+function updateWishlistCount() {
+    const wishlistBadge = document.querySelector('a[href="wishlist.html"] .cart-count');
+    if (wishlistBadge) {
+        wishlistBadge.textContent = globalWishlist.length;
+    }
+}
+
+// Hàm xử lý chuyển trang chi tiết sản phẩm
+function goToDetail(event, productId) {
+    if (event.target.closest('.wishlist-btn')) return; 
+    window.location.href = `product-detail.html?id=${productId}`;
+}
+
+// Hàm GỬI TIM LÊN SERVER
+async function toggleWishlist(event, productId) {
     event.preventDefault(); 
     event.stopPropagation();
 
-    // CHẶN KHÁCH VÃNG LAI
-    const isLogged = localStorage.getItem('currentUser');
-    if (!isLogged) {
+    const userId = getCurrentUserId();
+    if (!userId) {
         alert("Vui lòng đăng nhập tài khoản để lưu truyện yêu thích nhé!");
         window.location.href = "login.html";
         return;
     }
 
+    // 1. Cập nhật giao diện lập tức (Cho mượt)
     const heartIcon = event.currentTarget.querySelector('i');
-    let wishlist = JSON.parse(localStorage.getItem('user_wishlist')) || [];
-    const index = wishlist.indexOf(productId);
+    const isLiked = heartIcon.classList.contains('fa-solid');
+    const stringProductId = String(productId);
     
-    if (index > -1) {
-        wishlist.splice(index, 1);
+    if (isLiked) {
         heartIcon.classList.remove('fa-solid');
         heartIcon.classList.add('fa-regular');
         heartIcon.style.color = '#ccc';
+        globalWishlist = globalWishlist.filter(id => id !== stringProductId);
     } else {
-        wishlist.push(productId);
         heartIcon.classList.remove('fa-regular');
         heartIcon.classList.add('fa-solid');
         heartIcon.style.color = '#e74c3c';
+        globalWishlist.push(stringProductId);
     }
-    
-    localStorage.setItem('user_wishlist', JSON.stringify(wishlist));
     updateWishlistCount();
-}
 
-// 3. Hàm cập nhật con số trên nút Yêu thích ở Header
-function updateWishlistCount() {
-    const wishlist = JSON.parse(localStorage.getItem('user_wishlist')) || [];
-    const wishlistBadge = document.querySelector('a[href="wishlist.html"] .cart-count');
-    if (wishlistBadge) {
-        wishlistBadge.textContent = wishlist.length;
+    // 2. Bắn API lưu ngầm vào Database
+    try {
+        const response = await fetch('http://127.0.0.1:5000/api/wishlist/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, productId: stringProductId })
+        });
+        const data = await response.json();
+        if (data.success) {
+            globalWishlist = data.wishlist; // Ghi đè lại kết quả chuẩn xác từ Database
+        }
+    } catch (error) {
+        console.error("Lỗi khi gửi tim lên server:", error);
     }
 }
 
+
 // ==========================================
-// KHI TRANG ĐÃ TẢI XONG BẮT ĐẦU CHẠY (DOM LOADED)
+// KHI TRANG ĐÃ TẢI XONG (DOM LOADED)
 // ==========================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     
     // --- LƯU THÔNG TIN ĐĂNG NHẬP TỪ GOOGLE/FACEBOOK ---
     const urlParams = new URLSearchParams(window.location.search);
@@ -68,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const accountBtn = document.getElementById('accountBtn');
     const accountDropdown = document.getElementById('accountDropdown');
     const searchInput = document.getElementById('searchInput');
-    const searchBtn = document.getElementById('searchBtn');
     const searchResults = document.getElementById('searchResults');
     const track = document.getElementById('productTrack');
     const cartBtn = document.getElementById('cartBtn');
@@ -104,8 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupToggle(cartBtn, cartDropdown);
 
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-bar')) {
-            if (searchResults) searchResults.classList.remove('show');
+        if (!e.target.closest('.search-bar') && searchResults) {
+            searchResults.classList.remove('show');
         }
         if (!e.target.closest('.header-left') && !e.target.closest('.icon-group')) {
             closeAllDropdowns();
@@ -116,26 +162,27 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadCategories() {
         if (!categoryMenu) return;
         try {
-            const response = await fetch(`http://127.0.0.1:5000/api/categories?t=${Date.now()}`);
-            if (!response.ok) throw new Error('Network response was not ok');
+            const response = await fetch(`http://127.0.0.1:5000/api/categories`);
             const categories = await response.json();
             
             if (categories && categories.length > 0) {
                 categoryMenu.innerHTML = categories.map(cat => 
                     `<li><a href="category.html?id=${cat.id}">${cat.name}</a></li>`
                 ).join('');
-            } else {
-                categoryMenu.innerHTML = '<li><a href="#">Đang cập nhật...</a></li>';
             }
         } catch (error) {
             categoryMenu.innerHTML = '<li><a href="#">Lỗi kết nối Server</a></li>';
         }
     }
 
-    // 3. TẢI SẢN PHẨM BEST SELLERS VÀ VẼ GIAO DIỆN
+    // 3. TẢI SẢN PHẨM & TÔ ĐỎ TIM
     async function loadBestSellers() {
         if (!track) return;
         try {
+            // ---> Gọi API lấy tim trên Database về trước <---
+            await fetchUserWishlist(); 
+
+            // Sau đó tải sản phẩm
             const response = await fetch('http://127.0.0.1:5000/api/products/best-sellers');
             const products = await response.json();
             
@@ -144,10 +191,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const wishlist = JSON.parse(localStorage.getItem('user_wishlist')) || [];
-
+            // Vẽ ảnh truyện
             track.innerHTML = products.map(item => {
-                const isLiked = wishlist.includes(item.id);
+                const isLiked = globalWishlist.includes(String(item.id));
                 const heartClass = isLiked ? 'fa-solid' : 'fa-regular';
                 const heartColor = isLiked ? '#e74c3c' : '#ccc';
 
@@ -214,9 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         searchResults.innerHTML = `<div class="search-empty">Không tìm thấy "${keyword}"</div>`;
                     }
                     searchResults.classList.add('show');
-                } catch (err) {
-                    console.error("Lỗi tìm kiếm:", err);
-                }
+                } catch (err) { }
             }, 300);
         });
     }
@@ -255,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
         prevBtn.onclick = () => { index--; moveSlider(); };
     }
 
-    // 6. CHECK LOGIN STATUS & PHÂN QUYỀN
+    // 6. KIỂM TRA QUYỀN VÀ HIỂN THỊ MENU TÀI KHOẢN
     function checkLoginStatus() {
         const userNameDisplay = document.getElementById('userNameDisplay');
         const userRoleDisplay = document.getElementById('userRoleDisplay');
@@ -309,6 +353,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('logoutBtn').addEventListener('click', function(e) {
                     e.preventDefault();
                     localStorage.removeItem('currentUser');
+                    // Khi đăng xuất, dọn dẹp sạch cả cái két tạm trong LocalStorage (nếu còn sót)
+                    localStorage.removeItem('user_wishlist');
                     window.location.reload(); 
                 });
             }
@@ -332,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==========================================
     // KHỞI CHẠY TẤT CẢ CÁC HÀM
     // ==========================================
-    updateWishlistCount();
+    // Chú ý: Ở đây không gọi fetchUserWishlist() vì loadBestSellers() đã gọi rồi
     loadCategories();
     loadBestSellers();
     checkLoginStatus(); 

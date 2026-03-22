@@ -7,9 +7,123 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. Điền thông tin User (Nếu đã đăng nhập)
+    // Khởi tạo danh sách ngày giao hàng dự kiến (5 ngày tới)
+    const deliveryDateSelect = document.getElementById('chkDeliveryDate');
+    if (deliveryDateSelect) {
+        const today = new Date();
+        const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        for (let i = 1; i <= 5; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() + i); // Tăng thêm i ngày
+            const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+            let option = document.createElement('option');
+            option.value = `${days[d.getDay()]}, ${dateStr}`;
+            option.textContent = `${days[d.getDay()]}, ${dateStr}`;
+            deliveryDateSelect.appendChild(option);
+        }
+    }
+
+    // Hàm gọi API lấy dữ liệu Tỉnh / Quận / Phường
+async function loadProvinces(savedAddress = null) {
+    try {
+        // Đổi sang nguồn dữ liệu tĩnh từ Github (Cực kỳ ổn định, không bao giờ sập)
+        const response = await fetch('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json');
+        const provinces = await response.json();
+        
+        const citySelect = document.getElementById('chkCity');
+        const districtSelect = document.getElementById('chkDistrict');
+        const wardSelect = document.getElementById('chkWard');
+
+        if (!citySelect || !districtSelect || !wardSelect) return;
+
+        // 1. Đổ dữ liệu Tỉnh/Thành vào Dropdown đầu tiên
+        provinces.forEach(city => {
+            let option = document.createElement('option');
+            option.value = city.Name;
+            option.textContent = city.Name;
+            citySelect.appendChild(option);
+        });
+
+        // 2. Bắt sự kiện khi người dùng chọn Tỉnh/Thành -> Load Quận/Huyện
+        citySelect.addEventListener('change', function() {
+            districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            
+            const selectedCityName = this.value;
+            if (!selectedCityName) return;
+
+            const selectedCity = provinces.find(c => c.Name === selectedCityName);
+            if (selectedCity && selectedCity.Districts) {
+                selectedCity.Districts.forEach(district => {
+                    let option = document.createElement('option');
+                    option.value = district.Name;
+                    option.textContent = district.Name;
+                    districtSelect.appendChild(option);
+                });
+            }
+        });
+
+        // 3. Bắt sự kiện khi người dùng chọn Quận/Huyện -> Load Phường/Xã
+        districtSelect.addEventListener('change', function() {
+            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            
+            const selectedCityName = citySelect.value;
+            const selectedDistrictName = this.value;
+            if (!selectedCityName || !selectedDistrictName) return;
+
+            const selectedCity = provinces.find(c => c.Name === selectedCityName);
+            if (!selectedCity) return;
+            
+            const selectedDistrict = selectedCity.Districts.find(d => d.Name === selectedDistrictName);
+            
+            if (selectedDistrict && selectedDistrict.Wards && selectedDistrict.Wards.length > 0) {
+                selectedDistrict.Wards.forEach(ward => {
+                    let option = document.createElement('option');
+                    option.value = ward.Name;
+                    option.textContent = ward.Name;
+                    wardSelect.appendChild(option);
+                });
+            } else {
+                let option = document.createElement('option');
+                option.value = "Không có Phường/Xã";
+                option.textContent = "Không có Phường/Xã";
+                wardSelect.appendChild(option);
+            }
+        });
+
+        // --- TỰ ĐỘNG ĐIỀN TỪ SỔ ĐỊA CHỈ ĐÃ LƯU ---
+        if (savedAddress && savedAddress.city) {
+            citySelect.value = savedAddress.city;
+            citySelect.dispatchEvent(new Event('change')); // Kích hoạt load Quận/Huyện
+
+            if (savedAddress.district) {
+                districtSelect.value = savedAddress.district;
+                districtSelect.dispatchEvent(new Event('change')); // Kích hoạt load Phường/Xã
+
+                if (savedAddress.ward) {
+                    wardSelect.value = savedAddress.ward;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Lỗi khi tải dữ liệu địa giới hành chính:', error);
+    }
+}
+
+    // Gọi hàm ngay khi vừa vào trang thanh toán (Kèm dữ liệu đã lưu nếu có)
+    const savedAddressStr = localStorage.getItem('saved_shipping_address');
+    const savedAddress = savedAddressStr ? JSON.parse(savedAddressStr) : null;
+    loadProvinces(savedAddress);
+
+    // 2. Điền thông tin User (Nếu đã đăng nhập) hoặc từ Sổ địa chỉ
     const userStr = localStorage.getItem('currentUser');
-    if (userStr) {
+    if (savedAddress) {
+        document.getElementById('chkName').value = savedAddress.name || '';
+        document.getElementById('chkPhone').value = savedAddress.phone || '';
+        if (document.getElementById('chkAddressDetail')) {
+            document.getElementById('chkAddressDetail').value = savedAddress.detail || '';
+        }
+    } else if (userStr) {
         const user = JSON.parse(userStr);
         document.getElementById('chkName').value = user.fullName || user.userName || '';
     }
@@ -171,14 +285,40 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSubmit.textContent = "ĐANG XỬ LÝ...";
         btnSubmit.disabled = true;
 
+        const city = document.getElementById('chkCity') ? document.getElementById('chkCity').value : '';
+        const district = document.getElementById('chkDistrict') ? document.getElementById('chkDistrict').value : '';
+        const ward = document.getElementById('chkWard') ? document.getElementById('chkWard').value : '';
+        const detail = document.getElementById('chkAddressDetail') ? document.getElementById('chkAddressDetail').value : '';
+        const fullAddress = `${detail}, ${ward}, ${district}, ${city}`;
+
+        // Lưu Sổ địa chỉ lại cho lần mua sau
+        const addressToSave = {
+            name: document.getElementById('chkName').value,
+            phone: document.getElementById('chkPhone').value,
+            city: city,
+            district: district,
+            ward: ward,
+            detail: detail
+        };
+        localStorage.setItem('saved_shipping_address', JSON.stringify(addressToSave));
+
+        // Parse thông tin user an toàn hơn
+        let currentUserId = null;
+        if (userStr) {
+            try { const u = JSON.parse(userStr); currentUserId = u.id || u._id; } 
+            catch(e) { console.error("Lỗi đọc thông tin user:", e); }
+        }
+
         const orderData = {
-            userId: userStr ? (JSON.parse(userStr).id || JSON.parse(userStr)._id) : null,
+            userId: currentUserId,
             items: cart,
             shippingInfo: {
                 name: document.getElementById('chkName').value,
                 phone: document.getElementById('chkPhone').value,
-                address: document.getElementById('chkAddress').value,
-                note: document.getElementById('chkNote').value
+                address: fullAddress,
+                note: document.getElementById('chkNote').value,
+                expectedDeliveryDate: document.getElementById('chkDeliveryDate') ? document.getElementById('chkDeliveryDate').value : '',
+                expectedDeliveryTime: document.getElementById('chkDeliveryTime') ? document.getElementById('chkDeliveryTime').value : ''
             },
             paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
             subTotal: subTotal,

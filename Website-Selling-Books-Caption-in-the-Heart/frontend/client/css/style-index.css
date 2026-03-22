@@ -16,6 +16,8 @@
 .best-seller-box { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 50px; }
 .box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; }
 .box-header h2 { font-size: 18px; font-weight: 700; }
+.title-group { display: flex; align-items: center; gap: 10px; color: var(--text-color); }
+.title-group i { color: #f1c40f; font-size: 20px; }
 .see-all { color: #007bff; text-decoration: none; font-size: 14px; font-weight: 600; }
 
 /* CAROUSEL */

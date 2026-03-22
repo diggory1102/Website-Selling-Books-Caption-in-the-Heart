@@ -138,10 +138,15 @@ BillSchema.pre('save', function(next) {
 });
 const Bill = mongoose.model('Bill', BillSchema);
 
+// --- BẢNG ĐĂNG KÝ NHẬN TIN (NEWSLETTER) ---
+const SubscriberSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true }
+}, schemaOptions);
+const Subscriber = mongoose.model('Subscriber', SubscriberSchema);
 
 // ==========================================
 // 3. XUẤT CÁC MODEL ĐỂ FILE KHÁC CÓ THỂ GỌI
 // ==========================================
 module.exports = {
-    Role, User, Category, Author, Publisher, Product, Rate, Promotion, Payment, Delivery, Bill
+    Role, User, Category, Author, Publisher, Product, Rate, Promotion, Payment, Delivery, Bill, Subscriber
 };

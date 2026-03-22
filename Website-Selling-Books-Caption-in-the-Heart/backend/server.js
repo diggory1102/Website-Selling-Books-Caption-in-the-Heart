@@ -11,7 +11,7 @@ const path = require('path');
 require('dotenv').config();
 
 // IMPORT CÁC BẢNG (MODELS) TỪ FILE database.js
-const { Category, Product } = require('./database');
+const { Category, Product, Subscriber } = require('./database');
 
 const app = express();
 app.use(cors());
@@ -102,33 +102,108 @@ app.get('/api/products/newest', async (req, res) => {
             discount: p.discount || null,
             sold: p.sold || 0,           // Lấy đúng số lượng đã bán từ DB
             rating: p.averageRating , // Lấy đúng số sao từ DB
+            authorName: p.authorName,
             isNew: true
         }));
         res.json(formattedProducts);
     } catch (error) { res.status(500).json({ success: false, message: "Lỗi Server" }); }
 });
 
+// ==========================================
+// API: LẤY CHI TIẾT 1 SẢN PHẨM THEO ID
+// ==========================================
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+        res.json(product);
+    } catch (err) {
+        res.status(500).json({ error: "Lỗi Server" });
+    }
+});
+
+// ==========================================
+// API: LẤY TRUYỆN CÙNG TÁC GIẢ VÀ THỂ LOẠI
+// ==========================================
+app.get('/api/products/:id/related', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+
+        const sameAuthor = await Product.find({ 
+            authorName: product.authorName, 
+            _id: { $ne: product._id } // Loại trừ truyện hiện tại
+        }).limit(4); // Lấy tối đa 4 truyện cho đẹp layout
+
+        const sameCategory = await Product.find({ 
+            categoryId: product.categoryId, 
+            _id: { $ne: product._id } 
+        }).limit(4);
+
+        res.json({ sameAuthor, sameCategory });
+    } catch (err) {
+        res.status(500).json({ error: "Lỗi Server" });
+    }
+});
+
 app.get('/api/search', async (req, res) => {
     try {
         const keyword = req.query.q; 
-        if (!keyword) return res.json([]); 
+        const categoryId = req.query.category;
+        const sortParam = req.query.sort;
+        const minPrice = req.query.minPrice;
+        const maxPrice = req.query.maxPrice;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 12; // Hiển thị 12 truyện mỗi trang
 
-        const products = await Product.find({
+        if (!keyword) return res.json({ products: [], totalPages: 0, currentPage: 1 }); 
+
+        let queryObj = {
             $or: [
                 { name: { $regex: keyword, $options: 'i' } }, 
                 { authorName: { $regex: keyword, $options: 'i' } }
             ]
-        }).limit(20);
+        };
+        
+        if (categoryId) queryObj.categoryId = categoryId;
+
+        if (minPrice || maxPrice) {
+            queryObj.price = {};
+            if (minPrice) queryObj.price.$gte = Number(minPrice);
+            if (maxPrice) queryObj.price.$lte = Number(maxPrice);
+        }
+
+        let sortObj = {};
+        if (sortParam === 'price_asc') {
+            sortObj.price = 1;
+        } else if (sortParam === 'price_desc') {
+            sortObj.price = -1;
+        } else if (sortParam === 'newest') {
+            sortObj.createdAt = -1; // Sắp xếp giảm dần theo thời gian tạo (-1 là mới nhất)
+        }
+
+        // Đếm tổng số kết quả để tính ra số trang
+        const totalProducts = await Product.countDocuments(queryObj);
+        const totalPages = Math.ceil(totalProducts / limit);
+        const skip = (page - 1) * limit;
+
+        const products = await Product.find(queryObj).sort(sortObj).skip(skip).limit(limit);
 
         const formattedProducts = products.map(p => ({
             id: p.id,
             productName: p.name,
             price: p.price,
             imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
-            authorName: p.authorName
+            authorName: p.authorName,
+            averageRating: p.averageRating,
+            sold: p.sold
         }));
 
-        res.json(formattedProducts);
+        res.json({
+            products: formattedProducts,
+            totalPages: totalPages,
+            currentPage: page
+        });
     } catch (err) {
         res.status(500).json({ error: "Lỗi Server" });
     }
@@ -450,6 +525,7 @@ app.get('/api/products/newest', async (req, res) => {
             discount: p.discount || null,
             sold: p.sold || 0,
             rating: p.averageRating || 5, // Lấy từ trường averageRating trong DB
+            authorName: p.authorName,
             isNew: true // Vì đây là API truyện mới
         }));
 
@@ -458,6 +534,25 @@ app.get('/api/products/newest', async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi Server" });
     }
 });
+
+// ==========================================
+// API: ĐĂNG KÝ NHẬN TIN (NEWSLETTER)
+// ==========================================
+app.post('/api/subscribe', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, message: "Vui lòng nhập email!" });
+
+        const existing = await Subscriber.findOne({ email });
+        if (existing) return res.status(400).json({ success: false, message: "Email này đã đăng ký nhận tin rồi!" });
+
+        await Subscriber.create({ email });
+        res.json({ success: true, message: "Đăng ký nhận tin thành công!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
+
 // ==========================================
 // KHỞI ĐỘNG SERVER
 // ==========================================

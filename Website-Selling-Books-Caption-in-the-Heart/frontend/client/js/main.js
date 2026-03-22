@@ -39,6 +39,55 @@ function updateWishlistCount() {
     }
 }
 
+// Hàm cập nhật con số trên biểu tượng Giỏ hàng Header
+function updateCartCount() {
+    const cart = JSON.parse(localStorage.getItem('user_cart')) || [];
+    // Tính tổng số lượng sản phẩm trong giỏ hàng
+    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
+    const cartBtnWrap = document.querySelector('#cartBtn .icon-wrap');
+    if (cartBtnWrap) {
+        let badge = cartBtnWrap.querySelector('.cart-count');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'cart-count';
+            badge.style.right = '-8px'; // Dịch sang phải một chút cho đẹp
+            cartBtnWrap.style.position = 'relative';
+            cartBtnWrap.appendChild(badge);
+        }
+        
+        if (totalQty > 0) {
+            badge.textContent = totalQty > 99 ? '99+' : totalQty;
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+// Hàm hiển thị Toast Message (Thông báo góc màn hình)
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-msg ${type}`;
+    const iconClass = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+    toast.innerHTML = `<i class="${iconClass}"></i> <span>${message}</span>`;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300); // Xóa thẻ html đi sau khi trượt ẩn
+    }, 3000); // Tự động ẩn sau 3 giây
+}
+
 // Hàm xử lý chuyển trang chi tiết sản phẩm
 function goToDetail(event, productId) {
     if (event.target.closest('.wishlist-btn')) return; 
@@ -118,6 +167,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const searchResults = document.getElementById('searchResults');
     const track = document.getElementById('productTrack');
     const cartBtn = document.getElementById('cartBtn');
+    const cartDropdown = document.getElementById('cartDropdown');
     const newMangaGrid = document.getElementById('newMangaGrid');
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     const searchBtn = document.getElementById('searchBtn');
@@ -228,6 +278,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                         <div class="info-box">
                             <h3 class="name">${item.name}</h3>
+                            <div class="author" style="font-size: 13px; margin-bottom: 8px;">
+                                ${item.authorName ? 
+                                    `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                        <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
+                                    </span>` 
+                                    : '<span style="color: #666;">Đang cập nhật</span>'
+                                }
+                            </div>
                             <div class="stars">
                                 ${starsHtml} <span class="sold-count">| Đã bán ${item.sold || 0}</span>
                             </div>
@@ -284,7 +342,8 @@ if (searchInput && searchBtn) {
             timeoutId = setTimeout(async () => {
                 try {
                     const response = await fetch(`http://127.0.0.1:5000/api/search?q=${encodeURIComponent(keyword)}`);
-                    const products = await response.json();
+                    const data = await response.json();
+                    const products = data.products || data; // Hỗ trợ định dạng có phân trang
 
                     if (products.length > 0) {
                         searchResults.innerHTML = products.map(item => `
@@ -292,7 +351,14 @@ if (searchInput && searchBtn) {
                                 <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.jp/200x250.png?text=No+Image';">
                                 <div class="search-info">
                                     <h4>${item.productName || item.name}</h4>
-                                    <p class="author">${item.authorName || 'Đang cập nhật'}</p>
+                                    <p class="author" style="margin: 4px 0;">
+                                        ${item.authorName ? 
+                                            `<span style="color: #007bff; cursor: pointer; text-decoration: none; font-size: 12px;" onclick="event.stopPropagation(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                                <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
+                                            </span>` 
+                                            : '<span style="color: #666; font-size: 12px;">Đang cập nhật</span>'
+                                        }
+                                    </p>
                                     <p class="price">${Number(item.price).toLocaleString()}đ</p>
                                 </div>
                             </div>
@@ -460,6 +526,14 @@ async function fetchNewManga(page) {
                     </div>
                     <div class="info-box">
                         <h3 class="name">${item.name}</h3>
+                        <div class="author" style="font-size: 13px; margin-bottom: 8px;">
+                            ${item.authorName ? 
+                                `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                    <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
+                                </span>` 
+                                : '<span style="color: #666;">Đang cập nhật</span>'
+                            }
+                        </div>
                         <div class="stars">
                             ${starsHtml}
                             <span class="sold-count">| Đã bán ${item.sold || 0}</span>
@@ -481,6 +555,11 @@ async function fetchNewManga(page) {
         loadMoreBtn.addEventListener('click', () => {
             currentPage++; // Tăng số trang lên
             fetchNewManga(currentPage); // Gọi hàm tải trang tiếp theo
+            
+            // Ẩn nút "Xem thêm" sau 1 lần bấm và hiện nút "Xem tất cả"
+            loadMoreBtn.style.display = 'none';
+            const viewAllBtn = document.getElementById('viewAllNewestBtn');
+            if (viewAllBtn) viewAllBtn.style.display = 'inline-block';
         });
     }
 // ==========================================
@@ -531,6 +610,84 @@ function initCarousel(originalLength) {
         moveSlider();
     });
 }
+
+    // ==========================================
+    // HERO BANNER SLIDER (Tự động chuyển ảnh)
+    // ==========================================
+    const bannerSlides = document.querySelector('.banner-slides');
+    const dots = document.querySelectorAll('.banner-dots .dot');
+    const bannerPrev = document.getElementById('bannerPrev');
+    const bannerNext = document.getElementById('bannerNext');
+
+    if (bannerSlides && dots.length > 0) {
+        let currentSlide = 0;
+        const totalSlides = dots.length;
+
+        const updateSlide = (index) => {
+            if (index < 0) index = totalSlides - 1;
+            if (index >= totalSlides) index = 0;
+            bannerSlides.style.transform = `translateX(-${index * 100}%)`;
+            dots.forEach(dot => dot.style.background = 'rgba(255,255,255,0.5)');
+            dots[index].style.background = '#ffffff';
+            currentSlide = index;
+        };
+
+        let slideInterval = setInterval(() => {
+            updateSlide(currentSlide + 1);
+        }, 3000); // Đổi ảnh sau mỗi 3 giây
+
+        const resetInterval = () => {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(() => updateSlide(currentSlide + 1), 3000);
+        };
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                updateSlide(index);
+                resetInterval();
+            });
+        });
+
+        if (bannerPrev) {
+            bannerPrev.addEventListener('click', () => {
+                updateSlide(currentSlide - 1);
+                resetInterval();
+            });
+        }
+
+        if (bannerNext) {
+            bannerNext.addEventListener('click', () => {
+                updateSlide(currentSlide + 1);
+                resetInterval();
+            });
+        }
+    }
+
+    // ==========================================
+    // 6. XỬ LÝ ĐĂNG KÝ NHẬN TIN (FOOTER)
+    // ==========================================
+    const subscribeBtn = document.getElementById('subscribeSubmitBtn');
+    const subscribeInput = document.getElementById('subscribeEmailInput');
+    if (subscribeBtn && subscribeInput) {
+        subscribeBtn.addEventListener('click', async () => {
+            const email = subscribeInput.value.trim();
+            if (!email) {
+                alert("Vui lòng nhập địa chỉ email của bạn!");
+                return;
+            }
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                alert(data.message);
+                if (data.success) subscribeInput.value = '';
+            } catch (err) { alert("Lỗi kết nối đến máy chủ!"); }
+        });
+    }
+
     // ==========================================
     // KHỞI CHẠY TẤT CẢ CÁC HÀM
     // ==========================================
@@ -539,4 +696,5 @@ function initCarousel(originalLength) {
     loadBestSellers();
     checkLoginStatus(); 
     fetchNewManga(currentPage);
+    updateCartCount();
 });

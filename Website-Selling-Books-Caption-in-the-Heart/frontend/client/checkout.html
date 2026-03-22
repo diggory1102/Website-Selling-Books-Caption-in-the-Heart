@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán - Caption In The Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/style-checkout.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container header-content">
+            <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'"></a></div>
+            <div class="search-bar">
+                <input style="border-radius: 15px;" type="text" id="searchInput" autocomplete="off" placeholder="Tìm kiếm truyện tranh, tác giả...">
+                <button style="border-radius: 5px;" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                <div id="searchResults" class="search-dropdown"></div>
+            </div>
+            <div class="user-actions">
+                <div class="action-item" id="notiBtn" style="position: relative; cursor: pointer;"><div class="icon-wrap"><i class="fa-regular fa-bell"></i></div><span>Thông báo</span></div>
+                <div class="action-item" id="accountBtn" style="position: relative; cursor: pointer;"><div class="icon-wrap"><i class="fa-regular fa-user"></i></div><span>Tài khoản</span><div id="accountDropdown" class="account-dropdown"><div class="account-list"></div></div></div>
+                <div class="action-item" id="cartBtn" style="position: relative; cursor: pointer;"><div class="icon-wrap"><i class="fa-solid fa-cart-shopping"></i></div><span>Giỏ hàng</span></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            <a href="index.html" style="color: #666; text-decoration: none;">Trang chủ</a> 
+            <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
+            <a href="cart.html" style="color: #666; text-decoration: none;">Giỏ hàng</a>
+            <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
+            <strong style="color: var(--primary-color);">Thanh toán</strong>
+        </div>
+
+        <h1 style="margin-top: 20px; font-size: 24px; color: #333;">Tiến hành đặt hàng</h1>
+
+        <div class="checkout-container">
+            <div class="checkout-left">
+                <h3 style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">Thông tin giao hàng</h3>
+                <form id="checkoutForm">
+                    <div class="form-group"><label>Họ và tên người nhận (*)</label><input type="text" id="chkName" placeholder="Nhập họ tên đầy đủ..." required></div>
+                    <div class="form-group"><label>Số điện thoại (*)</label><input type="text" id="chkPhone" placeholder="Nhập số điện thoại..." required></div>
+                    <div class="form-group"><label>Địa chỉ nhận hàng (*)</label><input type="text" id="chkAddress" placeholder="Ví dụ: Số 10, ngõ 20, Quận X..." required></div>
+                    <div class="form-group"><label>Ghi chú đơn hàng (Tùy chọn)</label><textarea id="chkNote" rows="3" placeholder="Ghi chú về thời gian hoặc chỉ dẫn giao hàng..."></textarea></div>
+                    
+                    <h3 style="margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px;">Phương thức thanh toán</h3>
+                    <div class="payment-methods">
+                        <label class="payment-option"><input type="radio" name="paymentMethod" value="COD" checked> <span>Thanh toán tiền mặt khi nhận hàng (COD)</span></label>
+                        <label class="payment-option"><input type="radio" name="paymentMethod" value="MOMO"> <span>Thanh toán qua ví MoMo</span></label>
+                        <label class="payment-option"><input type="radio" name="paymentMethod" value="BANK"> <span>Chuyển khoản Ngân hàng (Internet Banking)</span></label>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="checkout-right">
+                <h3 style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">Đơn hàng của bạn</h3>
+                <div id="checkoutItems" class="checkout-items"></div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
+                    <div style="position: relative; flex: 1;">
+                        <input type="text" id="voucherCode" autocomplete="off" placeholder="Nhập mã giảm giá..." style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-family: inherit;">
+                        <div id="voucherDropdown" class="voucher-dropdown"></div>
+                    </div>
+                    <button type="button" id="btnApplyVoucher" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;">Áp dụng</button>
+                </div>
+                <div id="voucherMessage" style="font-size: 13px; margin-bottom: 15px; display: none;"></div>
+
+                <div class="summary-row"><span>Tạm tính:</span><span id="chkSubtotal">0đ</span></div>
+                <div class="summary-row"><span>Phí vận chuyển:</span><span id="chkShipping">30,000đ</span></div>
+                <div class="summary-row" id="discountRow" style="display: none; color: #27ae60; font-weight: 600;"><span>Giảm giá Voucher:</span><span id="chkDiscount">-0đ</span></div>
+                <div class="summary-total"><span>Tổng cộng:</span><span class="val" id="chkTotal">0đ</span></div>
+                
+                <button type="submit" form="checkoutForm" class="btn-place-order">XÁC NHẬN ĐẶT HÀNG</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-content"><div class="footer-column"><h4>Về chúng tôi</h4><p>Caption In The Heart - Nơi kết nối đam mê.</p></div></div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/checkout.js"></script>
+</body>
+</html>

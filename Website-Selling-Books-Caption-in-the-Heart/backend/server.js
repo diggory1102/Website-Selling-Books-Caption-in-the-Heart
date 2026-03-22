@@ -11,7 +11,7 @@ const path = require('path');
 require('dotenv').config();
 
 // IMPORT CÁC BẢNG (MODELS) TỪ FILE database.js
-const { Category, Product, Subscriber } = require('./database');
+const { Category, Product, Subscriber, Bill, Payment, Delivery, Promotion } = require('./database');
 
 const app = express();
 app.use(cors());
@@ -554,6 +554,92 @@ app.post('/api/subscribe', async (req, res) => {
         res.json({ success: true, message: "Đăng ký nhận tin thành công!" });
     } catch (err) {
         res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
+
+// ==========================================
+// API: LẤY DANH SÁCH MÃ GIẢM GIÁ KHẢ DỤNG
+// ==========================================
+app.get('/api/promotions/available', async (req, res) => {
+    try {
+        const now = new Date();
+        // Tìm các mã còn hạn và chưa hết lượt dùng
+        const promotions = await Promotion.find({
+            startDate: { $lte: now },
+            endDate: { $gte: now },
+            $expr: { $lt: ["$usedCount", "$usageLimit"] }
+        });
+        
+        res.json({ success: true, promotions });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
+
+// ==========================================
+// API: KIỂM TRA MÃ GIẢM GIÁ (VOUCHER)
+// ==========================================
+app.post('/api/promotions/apply', async (req, res) => {
+    try {
+        const { code, orderValue } = req.body;
+        const promotion = await Promotion.findOne({ code: code });
+        
+        if (!promotion) return res.status(404).json({ success: false, message: "Mã giảm giá không tồn tại!" });
+        
+        const now = new Date();
+        if (now < promotion.startDate || now > promotion.endDate) {
+            return res.status(400).json({ success: false, message: "Mã giảm giá đã hết hạn hoặc chưa bắt đầu!" });
+        }
+        
+        if (promotion.usedCount >= promotion.usageLimit) {
+            return res.status(400).json({ success: false, message: "Mã giảm giá đã hết lượt sử dụng!" });
+        }
+        
+        if (orderValue < promotion.minOrderValue) {
+            return res.status(400).json({ success: false, message: `Đơn hàng tối thiểu ${Number(promotion.minOrderValue).toLocaleString()}đ để áp dụng!` });
+        }
+        
+        res.json({ success: true, promotion });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
+
+// ==========================================
+// API: TẠO ĐƠN HÀNG MỚI (CHECKOUT)
+// ==========================================
+app.post('/api/orders', async (req, res) => {
+    try {
+        const { userId, items, shippingInfo, paymentMethod, subTotal, shippingFee, totalPrice, promotionId, discountValue } = req.body;
+
+        if (!items || items.length === 0) {
+            return res.status(400).json({ success: false, message: "Giỏ hàng trống!" });
+        }
+
+        // Tạo thông tin Thanh toán và Giao hàng trước
+        const payment = await Payment.create({ method: paymentMethod, status: 'Chưa thanh toán' });
+        const delivery = await Delivery.create({ unitName: 'Giao hàng tiêu chuẩn', status: 'Chờ lấy hàng' });
+
+        // Lưu Hóa đơn
+        const newBill = await Bill.create({
+            userId: userId || null, // Hỗ trợ khách hàng chưa đăng nhập
+            paymentId: payment._id,
+            deliveryId: delivery._id,
+            subTotal: subTotal,
+            promotionId: promotionId || null,
+            discountValue: discountValue || 0,
+            totalPrice: totalPrice,
+            items: items.map(item => ({ productId: item.productId, productName: item.name, quantity: item.quantity, priceAtPurchase: item.price }))
+        });
+
+        // Cập nhật số lượt đã dùng của Voucher
+        if (promotionId) {
+            await Promotion.findByIdAndUpdate(promotionId, { $inc: { usedCount: 1 } });
+        }
+
+        res.json({ success: true, message: "Đặt hàng thành công!", orderId: newBill._id });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi tạo đơn hàng: " + err.message });
     }
 });
 

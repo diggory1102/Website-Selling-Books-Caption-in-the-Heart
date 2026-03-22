@@ -114,7 +114,10 @@ app.get('/api/products/newest', async (req, res) => {
 // ==========================================
 app.get('/api/products/:id', async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findById(req.params.id)
+            .populate('categoryId')
+            .populate('authorId')
+            .populate('publisherId');
         if (!product) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
         res.json(product);
     } catch (err) {
@@ -156,14 +159,14 @@ app.get('/api/search', async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 12; // Hiển thị 12 truyện mỗi trang
 
-        if (!keyword) return res.json({ products: [], totalPages: 0, currentPage: 1 }); 
+        let queryObj = {};
 
-        let queryObj = {
-            $or: [
+        if (keyword) {
+            queryObj.$or = [
                 { name: { $regex: keyword, $options: 'i' } }, 
                 { authorName: { $regex: keyword, $options: 'i' } }
-            ]
-        };
+            ];
+        }
         
         if (categoryId) queryObj.categoryId = categoryId;
 
@@ -193,6 +196,7 @@ app.get('/api/search', async (req, res) => {
             id: p.id,
             productName: p.name,
             price: p.price,
+            discount: p.discount,
             imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
             authorName: p.authorName,
             averageRating: p.averageRating,

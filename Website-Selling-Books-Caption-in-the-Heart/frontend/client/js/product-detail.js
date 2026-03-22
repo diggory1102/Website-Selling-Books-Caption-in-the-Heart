@@ -16,12 +16,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         const product = await response.json();
 
         // 3. Đổ dữ liệu lên giao diện
-        document.getElementById('bcCategory').textContent = product.categoryName || "Manga";
+        const bcCategory = document.getElementById('bcCategory');
+        const actualCategoryName = product.categoryName || (product.categoryId && product.categoryId.name) || "Danh mục";
+        const actualCategoryId = product.categoryId && product.categoryId._id ? product.categoryId._id : product.categoryId;
+        
+        bcCategory.textContent = actualCategoryName;
+        if (actualCategoryId) bcCategory.href = `category.html?id=${actualCategoryId}`;
+        
         document.getElementById('bcProductName').textContent = product.name;
         document.getElementById('pdName').textContent = product.name;
-        document.getElementById('pdAuthor').textContent = product.authorName || "Đang cập nhật";
-        document.getElementById('pdPublisher').textContent = product.publisherName || "NXB Kim Đồng";
-        document.getElementById('pdPrice').textContent = Number(product.price).toLocaleString() + 'đ';
+        
+        const actualAuthorName = product.authorName || (product.authorId && product.authorId.name) || "Đang cập nhật";
+        const actualPublisherName = product.publisherName || (product.publisherId && product.publisherId.name) || "Đang cập nhật";
+        
+        document.getElementById('pdAuthor').textContent = actualAuthorName;
+        document.getElementById('pdPublisher').textContent = actualPublisherName;
+        
+        // Logic tính toán giá sau khi giảm (dựa trên %)
+        let originalPrice = product.price;
+        let finalPrice = originalPrice;
+
+        if (product.discount) {
+            const discEl = document.getElementById('pdDiscountTag');
+            discEl.textContent = product.discount;
+            discEl.style.display = 'block';
+
+            if (product.discount.includes('%')) {
+                let discountValue = parseFloat(product.discount.replace(/[^0-9.]/g, ''));
+                if (!isNaN(discountValue)) {
+                    finalPrice = originalPrice - (originalPrice * discountValue / 100);
+                    
+                    const oldPriceEl = document.getElementById('pdOldPrice');
+                    oldPriceEl.textContent = Number(originalPrice).toLocaleString() + 'đ';
+                    oldPriceEl.style.display = 'inline';
+                }
+            }
+        }
+
+        document.getElementById('pdPrice').textContent = Number(finalPrice).toLocaleString() + 'đ';
         document.getElementById('pdSold').textContent = product.sold || 0;
         document.getElementById('pdStock').textContent = `(Còn ${product.stock || 0} sản phẩm)`;
         document.getElementById('pdDesc').textContent = product.description || "Chưa có bài viết mô tả cho sản phẩm này.";
@@ -29,12 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const imgEl = document.getElementById('pdImage');
         imgEl.src = product.imageUrl || 'https://placehold.jp/350x450.png?text=No+Image';
         imgEl.onerror = () => { imgEl.src = 'https://placehold.jp/350x450.png?text=No+Image'; };
-
-        if (product.discount) {
-            const discEl = document.getElementById('pdDiscountTag');
-            discEl.textContent = product.discount;
-            discEl.style.display = 'block';
-        }
 
         // Render Số sao
         const rating = product.averageRating || 0;
@@ -80,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 cart.push({
                     productId: productId,
                     name: product.name,
-                    price: product.price,
+                    price: finalPrice, // Sử dụng giá đã giảm để lưu vào giỏ hàng
                     imageUrl: product.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
                     quantity: qty,
                     maxStock: maxStock
@@ -111,7 +137,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.getElementById(sectionId).style.display = 'block';
                     
                     const html = products.map(item => {
-                        const priceFormatted = Number(item.price).toLocaleString() + 'đ';
+                        let origPrice = item.price;
+                        let fnPrice = origPrice;
+                        if (item.discount && item.discount.includes('%')) {
+                            let dVal = parseFloat(item.discount.replace(/[^0-9.]/g, ''));
+                            if (!isNaN(dVal)) fnPrice = origPrice - (origPrice * dVal / 100);
+                        }
+
+                        const priceFormatted = Number(fnPrice).toLocaleString() + 'đ';
+                        const oldPriceHtml = fnPrice < origPrice ? `<span class="old">${Number(origPrice).toLocaleString()}đ</span>` : '';
+
                         const rating = item.averageRating || 0;
                         let starsHtml = '';
                         for (let i = 1; i <= 5; i++) {
@@ -142,6 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         </div>
                                         <div class="price-group">
                                             <span class="now">${priceFormatted}</span>
+                                            ${oldPriceHtml}
                                         </div>
                                     </div>
                                 </a>

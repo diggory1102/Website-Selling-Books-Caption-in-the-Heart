@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng - Caption In The Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styleindex.css">
+    <style>
+        .cart-container { display: flex; gap: 30px; margin-top: 20px; align-items: flex-start; margin-bottom: 50px; }
+        .cart-left { flex: 1; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .cart-right { width: 350px; flex-shrink: 0; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 110px; }
+        .cart-header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary-color); padding-bottom: 15px; margin-bottom: 20px; font-weight: bold; }
+        .cart-item { display: flex; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee; margin-bottom: 20px; position: relative; }
+        .cart-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .cart-item img { width: 80px; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+        .item-info { flex: 1; }
+        .item-name { font-size: 16px; font-weight: 600; color: #333; text-decoration: none; display: block; margin-bottom: 8px; line-height: 1.4; }
+        .item-name:hover { color: var(--primary-color); }
+        .item-price { color: var(--secondary-color); font-weight: bold; font-size: 15px; }
+        .qty-box { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; width: max-content; }
+        .qty-btn { width: 30px; height: 30px; background: #f5f5f5; border: none; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .qty-btn:hover { background: #e0e0e0; }
+        .qty-input { width: 40px; height: 30px; border: none; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center; font-size: 14px; outline: none; }
+        .btn-remove { background: none; border: none; color: #aaa; cursor: pointer; font-size: 18px; transition: 0.2s; padding: 5px; }
+        .btn-remove:hover { color: var(--secondary-color); }
+        
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px; color: #555; }
+        .summary-total { display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; font-weight: bold; font-size: 18px; }
+        .summary-total .val { color: var(--secondary-color); }
+        .btn-checkout { display: block; width: 100%; text-align: center; padding: 15px; background: var(--secondary-color); color: #fff; font-weight: bold; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 20px; text-decoration: none; }
+        .btn-checkout:hover { background: #c0392b; }
+        .empty-cart { text-align: center; padding: 50px 20px; }
+        .empty-cart i { font-size: 60px; color: #ddd; margin-bottom: 20px; }
+        .empty-cart p { font-size: 16px; color: #666; margin-bottom: 20px; }
+        .btn-shopping { display: inline-block; padding: 10px 25px; background: var(--primary-color); color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; }
+
+        @media (max-width: 768px) { .cart-container { flex-direction: column; } .cart-right { width: 100%; position: static; } .cart-item { flex-wrap: wrap; } .qty-box { margin-top: 10px; } }
+    </style>
+</head>
+<body>
+    <!-- HEADER ĐỒNG BỘ -->
+    <header class="main-header">
+        <div class="container header-content">
+            <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'"></a></div>
+            <div class="search-bar">
+                <input style="border-radius: 15px;" type="text" id="searchInput" name="search" autocomplete="off" placeholder="Tìm kiếm truyện tranh, tác giả...">
+                <button style="border-radius: 5px;" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                <div id="searchResults" class="search-dropdown"></div>
+            </div>
+            <div class="user-actions">
+                <div class="action-item" id="notiBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap"><i class="fa-regular fa-bell"></i></div><span>Thông báo</span>
+                    <div id="notiDropdown" class="noti-dropdown">
+                        <div class="noti-header">Thông báo mới </div><div class="noti-list"></div><a href="notifications.html" class="noti-view-all">Xem tất cả</a>
+                    </div>
+                </div>
+                <div class="action-item" id="accountBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap"><i class="fa-regular fa-user"></i></div><span>Tài khoản</span>
+                    <div id="accountDropdown" class="account-dropdown">
+                        <div class="account-header"><strong id="userNameDisplay">Chào, Khách</strong> <span id="userRoleDisplay" style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Vui lòng đăng nhập</span></div>
+                        <div class="account-list"></div>
+                    </div>
+                </div>
+                <div class="action-item" id="cartBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap"><i class="fa-solid fa-cart-shopping"></i></div><span>Giỏ hàng</span>
+                    <div id="cartDropdown" class="cart-dropdown-simple">
+                        <a href="cart.html" class="account-item"><i class="fa-solid fa-basket-shopping"></i> Giỏ hàng của tôi</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Breadcrumb -->
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            <a href="index.html" style="color: #666; text-decoration: none;">Trang chủ</a> 
+            <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
+            <strong style="color: var(--primary-color);">Giỏ hàng</strong>
+        </div>
+
+        <h1 style="margin-top: 20px; font-size: 24px; color: #333;">Giỏ hàng của bạn</h1>
+
+        <div class="cart-container">
+            <div class="cart-left" id="cartLeft">
+                <!-- Nội dung giỏ hàng sẽ render bằng JS -->
+            </div>
+            
+            <div class="cart-right" id="cartRight" style="display: none;">
+                <h3 style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">Tóm tắt đơn hàng</h3>
+                <div class="summary-row">
+                    <span>Tạm tính (<span id="summaryCount">0</span> SP):</span>
+                    <span id="summarySubtotal">0đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span>Chưa tính</span>
+                </div>
+                <div class="summary-total">
+                    <span>Tổng cộng:</span>
+                    <span class="val" id="summaryTotal">0đ</span>
+                </div>
+                <button class="btn-checkout" onclick="window.location.href='checkout.html'">Tiến hành thanh toán</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script src="js/cart.js"></script>
+</body>
+</html>

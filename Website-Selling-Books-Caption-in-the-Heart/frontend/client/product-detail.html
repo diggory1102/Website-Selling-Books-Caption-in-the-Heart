@@ -127,7 +127,7 @@
         <div style="margin-bottom: 20px; font-size: 14px; color: #666;">
             <a href="index.html" style="color: #666; text-decoration: none;">Trang chủ</a> 
             <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
-            <span id="bcCategory">Danh mục</span> 
+            <a href="category.html" id="bcCategory" style="color: #666; text-decoration: none;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#666'">Danh mục</a> 
             <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
             <strong id="bcProductName" style="color: var(--primary-color);">Đang tải...</strong>
         </div>
@@ -155,6 +155,7 @@
 
                 <div class="pd-price-box">
                     <span class="pd-price" id="pdPrice">0đ</span>
+                    <span id="pdOldPrice" style="color: #bbb; text-decoration: line-through; font-size: 16px; margin-left: 15px; display: none;"></span>
                 </div>
 
                 <div style="margin-bottom: 25px;">

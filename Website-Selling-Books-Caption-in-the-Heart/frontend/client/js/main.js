@@ -265,6 +265,16 @@ document.addEventListener('DOMContentLoaded', async function() {
                     }
                 }
 
+                // 3. Tính toán giá sau giảm
+                let origPrice = item.price;
+                let fnPrice = origPrice;
+                if (item.discount && item.discount.includes('%')) {
+                    let dVal = parseFloat(item.discount.replace(/[^0-9.]/g, ''));
+                    if (!isNaN(dVal)) fnPrice = origPrice - (origPrice * dVal / 100);
+                }
+                const priceFormatted = Number(fnPrice).toLocaleString() + 'đ';
+                const oldPriceHtml = fnPrice < origPrice ? `<span class="old">${Number(origPrice).toLocaleString()}đ</span>` : '';
+
                 return `
                 <div class="product-card" style="position: relative;">
                     <div class="wishlist-btn" onclick="toggleWishlist(event, '${productId}')" style="position: absolute; top: 10px; right: 10px; z-index: 999; background: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
@@ -290,7 +300,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 ${starsHtml} <span class="sold-count">| Đã bán ${item.sold || 0}</span>
                             </div>
                             <div class="price-group">
-                                <span class="now">${Number(item.price).toLocaleString()}đ</span>
+                                <span class="now">${priceFormatted}</span>
+                                ${oldPriceHtml}
                             </div>
                         </div>
                     </a>
@@ -346,7 +357,17 @@ if (searchInput && searchBtn) {
                     const products = data.products || data; // Hỗ trợ định dạng có phân trang
 
                     if (products.length > 0) {
-                        searchResults.innerHTML = products.map(item => `
+                        searchResults.innerHTML = products.map(item => {
+                            let origPrice = item.price;
+                            let fnPrice = origPrice;
+                            if (item.discount && item.discount.includes('%')) {
+                                let dVal = parseFloat(item.discount.replace(/[^0-9.]/g, ''));
+                                if (!isNaN(dVal)) fnPrice = origPrice - (origPrice * dVal / 100);
+                            }
+                            const priceFormatted = Number(fnPrice).toLocaleString() + 'đ';
+                            const oldPriceHtml = fnPrice < origPrice ? `<span style="text-decoration: line-through; color: #bbb; font-size: 11px; margin-left: 5px;">${Number(origPrice).toLocaleString()}đ</span>` : '';
+                            
+                            return `
                             <div class="search-item" onclick="window.location.href='product-detail.html?id=${item.id}'">
                                 <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.jp/200x250.png?text=No+Image';">
                                 <div class="search-info">
@@ -359,10 +380,11 @@ if (searchInput && searchBtn) {
                                             : '<span style="color: #666; font-size: 12px;">Đang cập nhật</span>'
                                         }
                                     </p>
-                                    <p class="price">${Number(item.price).toLocaleString()}đ</p>
+                                    <p class="price">${priceFormatted} ${oldPriceHtml}</p>
                                 </div>
                             </div>
-                        `).join('') + `<div class="search-more"><a href="search.html?q=${encodeURIComponent(keyword)}">Xem tất cả kết quả</a></div>`;
+                            `;
+                        }).join('') + `<div class="search-more"><a href="search.html?q=${encodeURIComponent(keyword)}">Xem tất cả kết quả</a></div>`;
                     } else {
                         searchResults.innerHTML = `<div class="search-empty">Không tìm thấy "${keyword}"</div>`;
                     }
@@ -507,6 +529,15 @@ async function fetchNewManga(page) {
                 }
             }
 
+            let origPrice = item.price;
+            let fnPrice = origPrice;
+            if (item.discount && item.discount.includes('%')) {
+                let dVal = parseFloat(item.discount.replace(/[^0-9.]/g, ''));
+                if (!isNaN(dVal)) fnPrice = origPrice - (origPrice * dVal / 100);
+            }
+            const priceFormatted = Number(fnPrice).toLocaleString() + 'đ';
+            const oldPriceHtml = fnPrice < origPrice ? `<span class="old">${Number(origPrice).toLocaleString()}đ</span>` : '';
+
             const card = document.createElement('div');
             card.className = 'product-card';
             card.style.position = 'relative';
@@ -539,7 +570,8 @@ async function fetchNewManga(page) {
                             <span class="sold-count">| Đã bán ${item.sold || 0}</span>
                         </div>
                         <div class="price-group">
-                            <span class="now">${Number(item.price).toLocaleString()}đ</span>
+                            <span class="now">${priceFormatted}</span>
+                            ${oldPriceHtml}
                         </div>
                     </div>
                 </a>

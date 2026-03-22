@@ -88,7 +88,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 5. Vẽ kết quả (Dùng chung Class product-card để ăn CSS cũ)
         searchGrid.innerHTML = products.map(item => {
             const productId = item.id;
-            const priceFormatted = Number(item.price).toLocaleString() + 'đ';
+
+            let origPrice = item.price;
+            let fnPrice = origPrice;
+            if (item.discount && item.discount.includes('%')) {
+                let dVal = parseFloat(item.discount.replace(/[^0-9.]/g, ''));
+                if (!isNaN(dVal)) fnPrice = origPrice - (origPrice * dVal / 100);
+            }
+            const priceFormatted = Number(fnPrice).toLocaleString() + 'đ';
+            const oldPriceHtml = fnPrice < origPrice ? `<span class="old">${Number(origPrice).toLocaleString()}đ</span>` : '';
 
             // Render số sao và lượt bán dựa trên Database thực tế
             const rating = item.averageRating || 0;
@@ -124,6 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                             <div class="price-group">
                                 <span class="now">${priceFormatted}</span>
+                                ${oldPriceHtml}
                             </div>
                         </div>
                     </a>

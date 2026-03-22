@@ -46,7 +46,11 @@ app.get('/api/setup', async (req, res) => {
             { name: 'Doraemon - Truyện Ngắn', authorName: 'Fujiko F. Fujio', price: 20000, sold: 4800, imageUrl: 'images/doraemon.png', categoryId: catManga._id },
             { name: 'Naruto - Tập Cuối', authorName: 'Masashi Kishimoto', price: 22000, discount: '-5%', sold: 2100, imageUrl: 'images/naruto.png', categoryId: catHanhDong._id },
             { name: 'Thanh Gươm Diệt Quỷ', authorName: 'Koyoharu Gotouge', price: 25000, discount: '-15%', sold: 1800, imageUrl: 'images/diet-quy.png', categoryId: catHanhDong._id },
-            { name: 'Chú Thuật Hồi Chiến', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id }
+            { name: 'Chú Thuật Hồi Chiến', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
+            { name: 'Chú Thuật Hồi Chiến-2', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
+            { name: 'Chú Thuật Hồi Chiến-3', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
+            { name: 'Chú Thuật Hồi Chiến-4', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
+            { name: 'Chú Thuật Hồi Chiến-5', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
         ]);
         res.send("<h1>✅ Đã tạo dữ liệu MongoDB thành công! Hãy quay lại trang chủ web ấn F5.</h1>");
     } catch (err) {
@@ -76,6 +80,33 @@ app.get('/api/products/best-sellers', async (req, res) => {
         res.status(500).json({ error: "Lỗi Server" });
     }
 });
+// ==========================================
+// API: Lấy truyện MỚI CẬP NHẬT 
+// ==========================================
+// ==========================================
+// API TRUYỆN MỚI CẬP NHẬT (Đã sửa lỗi Đã bán)
+// ==========================================
+app.get('/api/products/newest', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 4;
+        const skip = (page - 1) * limit;
+
+        const productsFromDB = await Product.find().sort({ _id: -1 }).skip(skip).limit(limit);
+
+        const formattedProducts = productsFromDB.map(p => ({
+            id: p._id,
+            name: p.name,
+            price: p.price,
+            imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
+            discount: p.discount || null,
+            sold: p.sold || 0,           // Lấy đúng số lượng đã bán từ DB
+            rating: p.averageRating , // Lấy đúng số sao từ DB
+            isNew: true
+        }));
+        res.json(formattedProducts);
+    } catch (error) { res.status(500).json({ success: false, message: "Lỗi Server" }); }
+});
 
 app.get('/api/search', async (req, res) => {
     try {
@@ -87,13 +118,13 @@ app.get('/api/search', async (req, res) => {
                 { name: { $regex: keyword, $options: 'i' } }, 
                 { authorName: { $regex: keyword, $options: 'i' } }
             ]
-        }).limit(5);
+        }).limit(20);
 
         const formattedProducts = products.map(p => ({
             id: p.id,
             productName: p.name,
             price: p.price,
-            imageUrl: p.imageUrl,
+            imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
             authorName: p.authorName
         }));
 
@@ -186,8 +217,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 // CẤU HÌNH ĐĂNG NHẬP GOOGLE
 // ==========================================
 passport.use(new GoogleStrategy({
-    clientID: 'ĐIỀN_GOOGLE_CLIENT_ID_CỦA_BẠN_VÀO_ĐÂY', // Sẽ lấy từ Google Cloud Console
-    clientSecret: 'ĐIỀN_GOOGLE_CLIENT_SECRET_CỦA_BẠN_VÀO_ĐÂY',
+    clientID: process.env.GOOGLE_CLIENT_ID, // Sẽ lấy từ Google Cloud Console
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Sẽ lấy từ Google Cloud Console
     callbackURL: "http://127.0.0.1:5000/api/auth/google/callback"
   },
   async (accessToken, refreshToken, profile, done) => {
@@ -234,7 +265,7 @@ app.get('/api/auth/google/callback',
       };
       // Chuyển hướng về trang chủ kèm theo dữ liệu mã hóa trên thanh URL
       const userStr = encodeURIComponent(JSON.stringify(userInfo));
-      res.redirect(`http://127.0.0.1:5500/index.html?socialUser=${userStr}`);
+      res.redirect(`http://127.0.0.1:5500/Website-Selling-Books-Caption-in-the-Heart/frontend/client/index.html?socialUser=${userStr}`);
   }
 );
 
@@ -399,6 +430,34 @@ app.post('/api/auth/admin-login', async (req, res) => {
     }
 });
 
+// API: Lấy danh sách truyện mới cập nhật (Phân trang)
+app.get('/api/products/newest', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 4;
+        const skip = (page - 1) * limit;
+
+        const productsFromDB = await Product.find()
+            .sort({ createdAt: -1 }) // Sắp xếp theo ngày tạo mới nhất
+            .skip(skip)
+            .limit(limit);
+
+        const formattedProducts = productsFromDB.map(p => ({
+            id: p._id,
+            name: p.name,
+            price: p.price,
+            imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
+            discount: p.discount || null,
+            sold: p.sold || 0,
+            rating: p.averageRating || 5, // Lấy từ trường averageRating trong DB
+            isNew: true // Vì đây là API truyện mới
+        }));
+
+        res.json(formattedProducts);
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
 // ==========================================
 // KHỞI ĐỘNG SERVER
 // ==========================================

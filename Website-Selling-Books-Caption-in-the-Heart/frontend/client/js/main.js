@@ -118,7 +118,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     const searchResults = document.getElementById('searchResults');
     const track = document.getElementById('productTrack');
     const cartBtn = document.getElementById('cartBtn');
-    const cartDropdown = document.getElementById('cartDropdown');
+    const newMangaGrid = document.getElementById('newMangaGrid');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    let currentPage = 1;
     
     // 1. QUẢN LÝ CÁC MENU THẢ XUỐNG
     function closeAllDropdowns() {
@@ -175,14 +178,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // 3. TẢI SẢN PHẨM & TÔ ĐỎ TIM
+    // 3. TẢI SẢN PHẨM BEST SELLER & VẼ SAO ĐỘNG TỪ DB
     async function loadBestSellers() {
         if (!track) return;
         try {
-            // ---> Gọi API lấy tim trên Database về trước <---
+            // Gọi API lấy wishlist về trước
             await fetchUserWishlist(); 
 
-            // Sau đó tải sản phẩm
+            // Tải sản phẩm Best Seller
             const response = await fetch('http://127.0.0.1:5000/api/products/best-sellers');
             const products = await response.json();
             
@@ -191,29 +194,42 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
 
-            // Vẽ ảnh truyện
+            // Vẽ danh sách truyện
             track.innerHTML = products.map(item => {
-                const isLiked = globalWishlist.includes(String(item.id));
+                // 1. Đồng bộ logic tim đỏ
+                const productId = String(item.id || item._id);
+                const isLiked = globalWishlist.includes(productId);
                 const heartClass = isLiked ? 'fa-solid' : 'fa-regular';
                 const heartColor = isLiked ? '#e74c3c' : '#ccc';
 
+                // 2. Logic vẽ Sao động dựa trên averageRating từ Database
+                const rating = item.averageRating || 0; 
+                let starsHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= Math.floor(rating)) {
+                        starsHtml += '<i class="fa-solid fa-star"></i>';
+                    } else if (i - 0.5 <= rating) {
+                        starsHtml += '<i class="fa-solid fa-star-half-stroke"></i>';
+                    } else {
+                        starsHtml += '<i class="fa-regular fa-star"></i>';
+                    }
+                }
+
                 return `
                 <div class="product-card" style="position: relative;">
-                    
-                    <div class="wishlist-btn" onclick="toggleWishlist(event, '${item.id}')" style="position: absolute; top: 10px; right: 10px; z-index: 999; background: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
+                    <div class="wishlist-btn" onclick="toggleWishlist(event, '${productId}')" style="position: absolute; top: 10px; right: 10px; z-index: 999; background: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
                         <i class="${heartClass} fa-heart" style="color: ${heartColor}; transition: 0.2s;"></i>
                     </div>
 
-                    <a href="product-detail.html?id=${item.id}" style="text-decoration: none; color: inherit; display: block;">
+                    <a href="product-detail.html?id=${productId}" style="text-decoration: none; color: inherit; display: block;">
                         <div class="img-box">
                             ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
-                            <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/200x250?text=No+Image';" alt="${item.name}">
+                            <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.jp/200x250.png?text=No+Image';" alt="${item.name}">
                         </div>
                         <div class="info-box">
                             <h3 class="name">${item.name}</h3>
                             <div class="stars">
-                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
-                                <span class="sold-count">| Đã bán ${item.sold || 0}</span>
+                                ${starsHtml} <span class="sold-count">| Đã bán ${item.sold || 0}</span>
                             </div>
                             <div class="price-group">
                                 <span class="now">${Number(item.price).toLocaleString()}đ</span>
@@ -230,8 +246,32 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // 4. XỬ LÝ TÌM KIẾM
-    if (searchInput && searchResults) {
+    // ==========================================
+// 4. XỬ LÝ TÌM KIẾM TOÀN SITE
+// ==========================================
+
+
+if (searchInput && searchBtn) {
+    // Hàm xử lý điều hướng tìm kiếm
+    const performSearch = () => {
+        const keyword = searchInput.value.trim();
+        if (keyword) {
+            window.location.href = `search.html?q=${encodeURIComponent(keyword)}`;
+        }
+    };
+
+    // Sự kiện Click nút tìm kiếm
+    searchBtn.addEventListener('click', performSearch);
+
+    // Sự kiện nhấn phím Enter
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+
+    // Logic gợi ý kết quả (Dropdown)
+    if (searchResults) {
         let timeoutId;
         searchInput.addEventListener('input', function() {
             const keyword = this.value.trim();
@@ -239,6 +279,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 searchResults.classList.remove('show');
                 return;
             }
+
             clearTimeout(timeoutId);
             timeoutId = setTimeout(async () => {
                 try {
@@ -248,7 +289,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     if (products.length > 0) {
                         searchResults.innerHTML = products.map(item => `
                             <div class="search-item" onclick="window.location.href='product-detail.html?id=${item.id}'">
-                                <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/50x70?text=No+Img';">
+                                <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.jp/200x250.png?text=No+Image';">
                                 <div class="search-info">
                                     <h4>${item.productName || item.name}</h4>
                                     <p class="author">${item.authorName || 'Đang cập nhật'}</p>
@@ -260,45 +301,13 @@ document.addEventListener('DOMContentLoaded', async function() {
                         searchResults.innerHTML = `<div class="search-empty">Không tìm thấy "${keyword}"</div>`;
                     }
                     searchResults.classList.add('show');
-                } catch (err) { }
+                } catch (err) {
+                    console.error("Lỗi tìm kiếm gợi ý:", err);
+                }
             }, 300);
         });
     }
-
-    // 5. CAROUSEL
-    function initCarousel(originalLength) {
-        const nextBtn = document.getElementById('nextBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        if (!track || !nextBtn || !prevBtn || originalLength === 0) return;
-
-        let cardWidth = track.querySelector('.product-card').offsetWidth + 20;
-        let index = 0;
-
-        const cards = Array.from(track.children);
-        cards.forEach(card => track.appendChild(card.cloneNode(true)));
-
-        const moveSlider = () => {
-            track.style.transition = "transform 0.5s ease-in-out";
-            track.style.transform = `translateX(-${index * cardWidth}px)`;
-        };
-
-        track.addEventListener('transitionend', () => {
-            if (index >= originalLength) {
-                track.style.transition = "none";
-                index = 0;
-                track.style.transform = `translateX(0)`;
-            }
-            if (index < 0) {
-                track.style.transition = "none";
-                index = originalLength - 1;
-                track.style.transform = `translateX(-${index * cardWidth}px)`;
-            }
-        });
-
-        nextBtn.onclick = () => { index++; moveSlider(); };
-        prevBtn.onclick = () => { index--; moveSlider(); };
-    }
-
+}
     // 6. KIỂM TRA QUYỀN VÀ HIỂN THỊ MENU TÀI KHOẢN
     function checkLoginStatus() {
         const userNameDisplay = document.getElementById('userNameDisplay');
@@ -392,7 +401,136 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         }
     }
+async function fetchNewManga(page) {
+    if (!newMangaGrid) return;
+    
+    try {
+        // 1. Đồng bộ Wishlist trước khi vẽ để hiện tim đỏ ngay lập tức
+        if (typeof fetchUserWishlist === "function") {
+            await fetchUserWishlist(); 
+        }
 
+        // 2. Gọi API lấy dữ liệu truyện mới
+        const response = await fetch(`http://127.0.0.1:5000/api/products/newest?page=${page}&limit=4`);
+        const products = await response.json();
+
+        // Ẩn nút "Xem thêm" nếu không còn truyện để load
+        if (products.length === 0 || products.length < 4) {
+            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        }
+
+        // 3. Render từng sản phẩm dựa trên dữ liệu thật từ DB
+        products.forEach(item => {
+            const productId = String(item.id || item._id);
+            
+            // Xử lý trạng thái tim đỏ
+            const isLiked = typeof globalWishlist !== 'undefined' && globalWishlist.includes(productId);
+            const heartClass = isLiked ? 'fa-solid' : 'fa-regular';
+            const heartColor = isLiked ? '#e74c3c' : '#ccc';
+
+            // Vẽ Sao động (Dựa trên item.rating từ DB)
+            const rating = (item.rating !== undefined) ? item.rating : 0;
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= Math.floor(rating)) {
+                    starsHtml += '<i class="fa-solid fa-star"></i>';
+                } else if (i - 0.5 <= rating) {
+                    starsHtml += '<i class="fa-solid fa-star-half-stroke"></i>';
+                } else {
+                    starsHtml += '<i class="fa-regular fa-star"></i>';
+                }
+            }
+
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.style.position = 'relative';
+
+            // Cấu trúc HTML đồng bộ 100% với Best Seller
+            card.innerHTML = `
+                <div class="wishlist-btn" onclick="toggleWishlist(event, '${productId}')" style="position: absolute; top: 10px; right: 10px; z-index: 999; background: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
+                    <i class="${heartClass} fa-heart" style="color: ${heartColor}; transition: 0.2s;"></i>
+                </div>
+
+                ${item.isNew ? `<span class="new-badge">Mới</span>` : ''}
+
+                <a href="product-detail.html?id=${productId}" style="text-decoration: none; color: inherit; display: block; height: 100%;">
+                    <div class="img-box">
+                        ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
+                        <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/200x250?text=No+Image';" alt="${item.name}">
+                    </div>
+                    <div class="info-box">
+                        <h3 class="name">${item.name}</h3>
+                        <div class="stars">
+                            ${starsHtml}
+                            <span class="sold-count">| Đã bán ${item.sold || 0}</span>
+                        </div>
+                        <div class="price-group">
+                            <span class="now">${Number(item.price).toLocaleString()}đ</span>
+                        </div>
+                    </div>
+                </a>
+            `;
+            newMangaGrid.appendChild(card);
+        });
+    } catch (error) {
+        console.error("Lỗi khi tải truyện mới:", error);
+    }
+}
+// Thêm sự kiện cho nút Xem thêm
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+            currentPage++; // Tăng số trang lên
+            fetchNewManga(currentPage); // Gọi hàm tải trang tiếp theo
+        });
+    }
+// ==========================================
+// 5. CAROUSEL (Cải tiến để không gây lỗi trang khác)
+// ==========================================
+function initCarousel(originalLength) {
+    const track = document.getElementById('productTrack');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+
+    // Kiểm tra tất cả các phần tử cần thiết trước khi chạy
+    if (!track || !nextBtn || !prevBtn || originalLength === 0) return;
+
+    const firstCard = track.querySelector('.product-card');
+    if (!firstCard) return;
+
+    let cardWidth = firstCard.offsetWidth + 20;
+    let index = 0;
+
+    // Nhân đôi danh sách thẻ để tạo hiệu ứng vô tận
+    const cards = Array.from(track.children);
+    cards.forEach(card => track.appendChild(card.cloneNode(true)));
+
+    const moveSlider = () => {
+        track.style.transition = "transform 0.5s ease-in-out";
+        track.style.transform = `translateX(-${index * cardWidth}px)`;
+    };
+
+    track.addEventListener('transitionend', () => {
+        if (index >= originalLength) {
+            track.style.transition = "none";
+            index = 0;
+            track.style.transform = `translateX(0)`;
+        }
+        if (index < 0) {
+            track.style.transition = "none";
+            index = originalLength - 1;
+            track.style.transform = `translateX(-${index * cardWidth}px)`;
+        }
+    });
+
+    nextBtn.onclick = () => { index++; moveSlider(); };
+    prevBtn.onclick = () => { index--; moveSlider(); };
+
+    // Cập nhật cardWidth nếu người dùng resize trình duyệt
+    window.addEventListener('resize', () => {
+        cardWidth = firstCard.offsetWidth + 20;
+        moveSlider();
+    });
+}
     // ==========================================
     // KHỞI CHẠY TẤT CẢ CÁC HÀM
     // ==========================================
@@ -400,4 +538,5 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadCategories();
     loadBestSellers();
     checkLoginStatus(); 
+    fetchNewManga(currentPage);
 });

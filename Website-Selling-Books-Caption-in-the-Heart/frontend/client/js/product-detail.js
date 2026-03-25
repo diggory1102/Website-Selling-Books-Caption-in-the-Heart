@@ -29,7 +29,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const actualAuthorName = product.authorName || (product.authorId && product.authorId.name) || "Đang cập nhật";
         const actualPublisherName = product.publisherName || (product.publisherId && product.publisherId.name) || "Đang cập nhật";
         
-        document.getElementById('pdAuthor').textContent = actualAuthorName;
+        // Biến tên tác giả ở thông tin chính thành Link chuyển hướng
+        if (actualAuthorName !== "Đang cập nhật") {
+            document.getElementById('pdAuthor').innerHTML = `<a href="search.html?q=${encodeURIComponent(actualAuthorName)}" style="color: var(--primary-color); text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${actualAuthorName}</a>`;
+        } else {
+            document.getElementById('pdAuthor').textContent = actualAuthorName;
+        }
         document.getElementById('pdPublisher').textContent = actualPublisherName;
         
         // Logic tính toán giá sau khi giảm (dựa trên %)
@@ -207,7 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         <h3 class="name">${item.name}</h3>
                                         <div class="author" style="font-size: 13px; margin-bottom: 8px;">
                                             ${item.authorName ? 
-                                                `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                                `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
                                                     <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
                                                 </span>` 
                                                 : '<span style="color: #666;">Đang cập nhật</span>'

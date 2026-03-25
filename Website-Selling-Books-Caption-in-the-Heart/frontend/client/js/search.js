@@ -1,16 +1,23 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const searchGrid = document.getElementById('searchGrid');
     const searchTitle = document.getElementById('searchTitle');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const sortFilter = document.getElementById('sortFilter');
-    const priceFilter = document.getElementById('priceFilter');
+    
+    // Các DOM Element của bộ lọc mới
+    const menuCategoryFilter = document.getElementById('menuCategoryFilter');
+    const textCategoryFilter = document.getElementById('textCategoryFilter');
+    
+    const menuPriceFilter = document.getElementById('menuPriceFilter');
+    const textPriceFilter = document.getElementById('textPriceFilter');
+    
+    const menuSortFilter = document.getElementById('menuSortFilter');
+    const textSortFilter = document.getElementById('textSortFilter');
     
     // 1. Lấy từ khóa "q" từ URL
     const urlParams = new URLSearchParams(window.location.search);
     const query = urlParams.get('q') || '';
-    const categoryId = urlParams.get('category');
-    const sortParam = urlParams.get('sort');
-    const priceParam = urlParams.get('price');
+    let currentCategoryId = urlParams.get('category') || '';
+    let currentSortParam = urlParams.get('sort') || '';
+    let currentPriceParam = urlParams.get('price') || '';
     const pageParam = parseInt(urlParams.get('page')) || 1;
 
     if (query) {
@@ -21,46 +28,93 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // 2. Tải danh sách thể loại cho thanh lọc (Dropdown)
-        if (categoryFilter) {
+        if (menuCategoryFilter) {
             const catRes = await fetch('http://127.0.0.1:5000/api/categories');
             const categories = await catRes.json();
             
+            let html = `<li><a href="#" data-value="">Tất cả thể loại</a></li>`;
             categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat.id || cat._id;
-                option.textContent = cat.name;
-                if (String(cat.id || cat._id) === categoryId) {
-                    option.selected = true;
+                const id = cat.id || cat._id;
+                html += `<li><a href="#" data-value="${id}">${cat.name}</a></li>`;
+                if (String(id) === currentCategoryId) {
+                    textCategoryFilter.textContent = cat.name;
                     if (!query) searchTitle.innerHTML = `Thể loại: <span>${cat.name}</span>`;
                 }
-                categoryFilter.appendChild(option);
             });
-
-            categoryFilter.addEventListener('change', applyFilters);
+            menuCategoryFilter.innerHTML = html;
         }
 
-        // 3. Xử lý bộ lọc sắp xếp & khoảng giá
-        if (sortFilter) {
-            if (sortParam) sortFilter.value = sortParam;
-            sortFilter.addEventListener('change', applyFilters);
+        // 3. Set text ban đầu cho Lọc Giá và Sắp xếp
+        if (currentPriceParam && menuPriceFilter) {
+            const el = menuPriceFilter.querySelector(`a[data-value="${currentPriceParam}"]`);
+            if (el) textPriceFilter.textContent = el.textContent;
+        }
+        if (currentSortParam && menuSortFilter) {
+            const el = menuSortFilter.querySelector(`a[data-value="${currentSortParam}"]`);
+            if (el) textSortFilter.textContent = el.textContent;
         }
 
-        if (priceFilter) {
-            if (priceParam) priceFilter.value = priceParam;
-            priceFilter.addEventListener('change', applyFilters);
-        }
+        // --- LOGIC ĐÓNG / MỞ MENU DROPDOWN ---
+        const filterWrappers = document.querySelectorAll('.filter-dropdown-wrapper');
+        filterWrappers.forEach(wrapper => {
+            const btn = wrapper.querySelector('.filter-btn');
+            const popup = wrapper.querySelector('.filter-popup');
+            
+            if (btn && popup) {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = popup.classList.contains('show');
+                    
+                    // Đóng tất cả các menu đang mở trước
+                    document.querySelectorAll('.filter-popup').forEach(p => p.classList.remove('show'));
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    
+                    if (!isOpen) {
+                        popup.classList.add('show');
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        });
+
+        // Đóng menu khi click ra ngoài
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.filter-popup').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        });
 
         // Hàm gộp chung logic điều hướng khi có bất kỳ bộ lọc nào thay đổi
         function applyFilters() {
             const params = new URLSearchParams();
             if (query) params.set('q', query);
             
-            if (categoryFilter && categoryFilter.value) params.set('category', categoryFilter.value);
-            if (sortFilter && sortFilter.value) params.set('sort', sortFilter.value);
-            if (priceFilter && priceFilter.value) params.set('price', priceFilter.value);
+            if (currentCategoryId) params.set('category', currentCategoryId);
+            if (currentSortParam) params.set('sort', currentSortParam);
+            if (currentPriceParam) params.set('price', currentPriceParam);
             
             window.location.href = `search.html?${params.toString()}`;
         }
+
+        // Bắt sự kiện chọn Option bên trong Menu
+        document.querySelectorAll('.filter-popup').forEach(menu => {
+            menu.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('a');
+                if (target) {
+                    const value = target.getAttribute('data-value');
+                    
+                    if (menu.id === 'menuCategoryFilter') {
+                        currentCategoryId = value;
+                    } else if (menu.id === 'menuPriceFilter') {
+                        currentPriceParam = value;
+                    } else if (menu.id === 'menuSortFilter') {
+                        currentSortParam = value;
+                    }
+                    
+                    applyFilters(); // Redirect
+                }
+            });
+        });
 
         // Tải wishlist để đồng bộ tim đỏ trên thẻ truyện
         if (typeof fetchUserWishlist === 'function') {
@@ -70,10 +124,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 4. Gọi API tìm kiếm (Sử dụng cổng 5000)
         let apiUrl = `http://127.0.0.1:5000/api/search?page=${pageParam}`;
         if (query) apiUrl += `&q=${encodeURIComponent(query)}`;
-        if (categoryId) apiUrl += `&category=${categoryId}`;
-        if (sortParam) apiUrl += `&sort=${sortParam}`;
-        if (priceParam) {
-            const [min, max] = priceParam.split('-');
+        if (currentCategoryId) apiUrl += `&category=${currentCategoryId}`;
+        if (currentSortParam) apiUrl += `&sort=${currentSortParam}`;
+        if (currentPriceParam) {
+            const [min, max] = currentPriceParam.split('-');
             if (min) apiUrl += `&minPrice=${min}`;
             if (max) apiUrl += `&maxPrice=${max}`;
         }
@@ -137,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <h3 class="name">${item.productName || item.name}</h3>
                             <div class="author" style="font-size: 13px; margin-bottom: 8px;">
                                 ${item.authorName ? 
-                                    `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                    `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
                                         <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
                                     </span>` 
                                     : '<span style="color: #666;">Đang cập nhật</span>'

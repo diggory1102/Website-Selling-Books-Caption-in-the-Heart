@@ -133,12 +133,20 @@
             <div class="main-content">
                 <div class="cat-header">
                     <h1 class="cat-title" id="catTitle">Tất cả truyện tranh</h1>
-                    <select id="catSort" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: inherit; cursor: pointer;">
-                        <option value="">Sắp xếp: Mặc định</option>
-                        <option value="newest">Mới cập nhật</option>
-                        <option value="price_asc">Giá: Thấp đến cao</option>
-                        <option value="price_desc">Giá: Cao đến thấp</option>
-                    </select>
+                    
+                    <!-- Nút Sắp xếp Dropdown mới -->
+                    <div class="filter-dropdown-wrapper" style="position: relative; width: 220px;">
+                        <button class="filter-btn" id="btnCatSort" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #e0e0e0; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; transition: 0.2s;">
+                            <span id="textCatSort">Sắp xếp: Mặc định</span>
+                            <i class="fa-solid fa-chevron-down arrow"></i>
+                        </button>
+                        <ul class="filter-popup" id="menuCatSort">
+                            <li><a href="#" data-value="">Sắp xếp: Mặc định</a></li>
+                            <li><a href="#" data-value="newest">Mới cập nhật</a></li>
+                            <li><a href="#" data-value="price_asc">Giá: Thấp đến cao</a></li>
+                            <li><a href="#" data-value="price_desc">Giá: Cao đến thấp</a></li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Lưới truyện tái sử dụng class product-grid có sẵn -->

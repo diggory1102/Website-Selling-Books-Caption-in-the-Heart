@@ -10,20 +10,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Khởi tạo danh sách ngày giao hàng dự kiến (5 ngày tới)
-    const deliveryDateSelect = document.getElementById('chkDeliveryDate');
-    if (deliveryDateSelect) {
+    const menuChkDeliveryDate = document.getElementById('menuChkDeliveryDate');
+    const textChkDeliveryDate = document.getElementById('textChkDeliveryDate');
+    const inputChkDeliveryDate = document.getElementById('chkDeliveryDate');
+
+    if (menuChkDeliveryDate) {
         const today = new Date();
         const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        let html = '';
         for (let i = 1; i <= 5; i++) {
             const d = new Date(today);
             d.setDate(today.getDate() + i); // Tăng thêm i ngày
             const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-            let option = document.createElement('option');
-            option.value = `${days[d.getDay()]}, ${dateStr}`;
-            option.textContent = `${days[d.getDay()]}, ${dateStr}`;
-            deliveryDateSelect.appendChild(option);
+            const value = `${days[d.getDay()]}, ${dateStr}`;
+            html += `<li><a href="#" data-value="${value}">${value}</a></li>`;
+            
+            // Gán ngày đầu tiên làm mặc định
+            if (i === 1) {
+                textChkDeliveryDate.textContent = value;
+                inputChkDeliveryDate.value = value;
+            }
         }
+        menuChkDeliveryDate.innerHTML = html;
     }
+
+    // DOM cho địa chỉ
+    const inputCity = document.getElementById('chkCity');
+    const inputDistrict = document.getElementById('chkDistrict');
+    const inputWard = document.getElementById('chkWard');
+
+    const textCity = document.getElementById('textChkCity');
+    const textDistrict = document.getElementById('textChkDistrict');
+    const textWard = document.getElementById('textChkWard');
+
+    const menuCity = document.getElementById('menuChkCity');
+    const menuDistrict = document.getElementById('menuChkDistrict');
+    const menuWard = document.getElementById('menuChkWard');
 
     // Hàm gọi API lấy dữ liệu Tỉnh / Quận / Phường
 async function loadProvinces(savedAddress = null) {
@@ -32,78 +54,81 @@ async function loadProvinces(savedAddress = null) {
         const response = await fetch('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json');
         const provinces = await response.json();
         
-        const citySelect = document.getElementById('chkCity');
-        const districtSelect = document.getElementById('chkDistrict');
-        const wardSelect = document.getElementById('chkWard');
-
-        if (!citySelect || !districtSelect || !wardSelect) return;
+        if (!menuCity || !menuDistrict || !menuWard) return;
 
         // 1. Đổ dữ liệu Tỉnh/Thành vào Dropdown đầu tiên
+        let cityHtml = '<li><a href="#" data-value="">Chọn Tỉnh/Thành phố</a></li>';
         provinces.forEach(city => {
-            let option = document.createElement('option');
-            option.value = city.Name;
-            option.textContent = city.Name;
-            citySelect.appendChild(option);
+            cityHtml += `<li><a href="#" data-value="${city.Name}">${city.Name}</a></li>`;
         });
+        menuCity.innerHTML = cityHtml;
 
-        // 2. Bắt sự kiện khi người dùng chọn Tỉnh/Thành -> Load Quận/Huyện
-        citySelect.addEventListener('change', function() {
-            districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
-            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+        // Hàm xử lý chọn Tỉnh
+        window.handleCitySelect = function(cityName) {
+            textCity.textContent = cityName || "Chọn Tỉnh/Thành phố";
+            inputCity.value = cityName;
             
-            const selectedCityName = this.value;
-            if (!selectedCityName) return;
+            textDistrict.textContent = "Chọn Quận/Huyện";
+            inputDistrict.value = "";
+            menuDistrict.innerHTML = '<li><a href="#" data-value="">Chọn Quận/Huyện</a></li>';
+            
+            textWard.textContent = "Chọn Phường/Xã";
+            inputWard.value = "";
+            menuWard.innerHTML = '<li><a href="#" data-value="">Chọn Phường/Xã</a></li>';
 
-            const selectedCity = provinces.find(c => c.Name === selectedCityName);
+            if (!cityName) return;
+
+            const selectedCity = provinces.find(c => c.Name === cityName);
             if (selectedCity && selectedCity.Districts) {
+                let distHtml = '<li><a href="#" data-value="">Chọn Quận/Huyện</a></li>';
                 selectedCity.Districts.forEach(district => {
-                    let option = document.createElement('option');
-                    option.value = district.Name;
-                    option.textContent = district.Name;
-                    districtSelect.appendChild(option);
+                    distHtml += `<li><a href="#" data-value="${district.Name}">${district.Name}</a></li>`;
                 });
+                menuDistrict.innerHTML = distHtml;
             }
-        });
+        };
 
-        // 3. Bắt sự kiện khi người dùng chọn Quận/Huyện -> Load Phường/Xã
-        districtSelect.addEventListener('change', function() {
-            wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+        // Hàm xử lý chọn Quận
+        window.handleDistrictSelect = function(districtName) {
+            textDistrict.textContent = districtName || "Chọn Quận/Huyện";
+            inputDistrict.value = districtName;
             
-            const selectedCityName = citySelect.value;
-            const selectedDistrictName = this.value;
-            if (!selectedCityName || !selectedDistrictName) return;
+            textWard.textContent = "Chọn Phường/Xã";
+            inputWard.value = "";
+            menuWard.innerHTML = '<li><a href="#" data-value="">Chọn Phường/Xã</a></li>';
+
+            const selectedCityName = inputCity.value;
+            if (!selectedCityName || !districtName) return;
 
             const selectedCity = provinces.find(c => c.Name === selectedCityName);
             if (!selectedCity) return;
             
-            const selectedDistrict = selectedCity.Districts.find(d => d.Name === selectedDistrictName);
+            const selectedDistrict = selectedCity.Districts.find(d => d.Name === districtName);
             
             if (selectedDistrict && selectedDistrict.Wards && selectedDistrict.Wards.length > 0) {
+                let wardHtml = '<li><a href="#" data-value="">Chọn Phường/Xã</a></li>';
                 selectedDistrict.Wards.forEach(ward => {
-                    let option = document.createElement('option');
-                    option.value = ward.Name;
-                    option.textContent = ward.Name;
-                    wardSelect.appendChild(option);
+                    wardHtml += `<li><a href="#" data-value="${ward.Name}">${ward.Name}</a></li>`;
                 });
+                menuWard.innerHTML = wardHtml;
             } else {
-                let option = document.createElement('option');
-                option.value = "Không có Phường/Xã";
-                option.textContent = "Không có Phường/Xã";
-                wardSelect.appendChild(option);
+                menuWard.innerHTML = '<li><a href="#" data-value="Không có Phường/Xã">Không có Phường/Xã</a></li>';
             }
-        });
+        };
+
+        // Hàm xử lý chọn Phường
+        window.handleWardSelect = function(wardName) {
+            textWard.textContent = wardName || "Chọn Phường/Xã";
+            inputWard.value = wardName;
+        };
 
         // --- TỰ ĐỘNG ĐIỀN TỪ SỔ ĐỊA CHỈ ĐÃ LƯU ---
         if (savedAddress && savedAddress.city) {
-            citySelect.value = savedAddress.city;
-            citySelect.dispatchEvent(new Event('change')); // Kích hoạt load Quận/Huyện
-
+            handleCitySelect(savedAddress.city);
             if (savedAddress.district) {
-                districtSelect.value = savedAddress.district;
-                districtSelect.dispatchEvent(new Event('change')); // Kích hoạt load Phường/Xã
-
+                handleDistrictSelect(savedAddress.district);
                 if (savedAddress.ward) {
-                    wardSelect.value = savedAddress.ward;
+                    handleWardSelect(savedAddress.ward);
                 }
             }
         }
@@ -111,6 +136,51 @@ async function loadProvinces(savedAddress = null) {
         console.error('Lỗi khi tải dữ liệu địa giới hành chính:', error);
     }
 }
+
+    // --- LOGIC ĐÓNG / MỞ MENU DROPDOWN ---
+    const filterWrappers = document.querySelectorAll('.filter-dropdown-wrapper');
+    filterWrappers.forEach(wrapper => {
+        const btn = wrapper.querySelector('.filter-btn');
+        const popup = wrapper.querySelector('.filter-popup');
+        
+        if (btn && popup) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = popup.classList.contains('show');
+                
+                // Đóng tất cả các menu đang mở trước
+                document.querySelectorAll('.filter-popup').forEach(p => p.classList.remove('show'));
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                
+                if (!isOpen) {
+                    popup.classList.add('show');
+                    btn.classList.add('active');
+                }
+            });
+        }
+    });
+
+    // Bắt sự kiện chọn Option bên trong Menu
+    document.querySelectorAll('.filter-popup').forEach(menu => {
+        menu.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('a');
+            if (target) {
+                const value = target.getAttribute('data-value');
+                
+                if (menu.id === 'menuChkCity') window.handleCitySelect(value);
+                else if (menu.id === 'menuChkDistrict') window.handleDistrictSelect(value);
+                else if (menu.id === 'menuChkWard') window.handleWardSelect(value);
+                else if (menu.id === 'menuChkDeliveryDate') { document.getElementById('textChkDeliveryDate').textContent = target.textContent; document.getElementById('chkDeliveryDate').value = value; }
+                else if (menu.id === 'menuChkDeliveryTime') { document.getElementById('textChkDeliveryTime').textContent = target.textContent; document.getElementById('chkDeliveryTime').value = value; }
+                
+                menu.classList.remove('show');
+                if(menu.previousElementSibling) menu.previousElementSibling.classList.remove('active');
+            }
+        });
+    });
+    
+    document.addEventListener('click', () => { document.querySelectorAll('.filter-popup').forEach(p => p.classList.remove('show')); document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); });
 
     // Lấy thông tin user hiện tại để tạo khóa lưu Sổ địa chỉ riêng biệt
     const userStr = localStorage.getItem('currentUser');
@@ -330,6 +400,13 @@ async function loadProvinces(savedAddress = null) {
         const ward = document.getElementById('chkWard') ? document.getElementById('chkWard').value : '';
         const detail = document.getElementById('chkAddressDetail') ? document.getElementById('chkAddressDetail').value : '';
         const fullAddress = `${detail}, ${ward}, ${district}, ${city}`;
+
+        if (!city || !district || !ward) {
+            if (typeof showToast === 'function') showToast("Vui lòng chọn đầy đủ địa chỉ nhận hàng!", "error");
+            btnSubmit.textContent = "XÁC NHẬN ĐẶT HÀNG"; 
+            btnSubmit.disabled = false; 
+            return;
+        }
 
         // Lưu Sổ địa chỉ lại cho lần mua sau
         const addressToSave = {

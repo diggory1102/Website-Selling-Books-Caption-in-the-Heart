@@ -1,0 +1,31 @@
+/* --- BỐ CỤC LƯỚI TỰ ĐỘNG --- */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
+
+/* --- THẺ SẢN PHẨM KHUNG NGOÀI --- */
+.product-card { position: relative; border: 1px solid #f0f0f0; border-radius: 12px; background-color: var(--white); height: 100%; box-sizing: border-box; transition: transform 0.3s ease, box-shadow 0.3s ease; padding: 15px; display: flex; flex-direction: column; }
+.product-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: var(--primary-color); }
+
+/* --- HÌNH ẢNH & NHÃN SẢN PHẨM --- */
+.product-card a { display: flex; flex-direction: column; height: 100%; text-decoration: none; color: inherit; flex-grow: 1; }
+.img-box { background: #f8f8f8; border-radius: 10px; width: 100%; height: 220px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; flex-shrink: 0;}
+.img-box img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; }
+.product-card:hover .img-box img { transform: scale(1.05); }
+.sale-tag { position: absolute; top: 10px; left: 10px; background: var(--secondary-color); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 5px; z-index: 10; }
+.new-badge { position: absolute; top: 10px; left: 10px; background: #00bcd4; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 5px; z-index: 10; }
+.new-badge + .sale-tag { top: 38px; }
+
+/* --- THÔNG TIN TRUYỆN --- */
+.info-box { display: flex; flex-direction: column; flex-grow: 1; }
+.info-box .name { font-size: 14px; font-weight: 600; color: var(--text-color); margin: 0 0 8px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 38px; }
+.stars { color: #f1c40f; font-size: 12px; margin-bottom: 10px; }
+.price-group { margin-top: auto; display: flex; align-items: center; }
+.price-group .now { color: var(--secondary-color); font-size: 16px; font-weight: bold; }
+.price-group .old { color: #bbb; text-decoration: line-through; font-size: 12px; margin-left: 8px; }
+
+/* --- RESPONSIVE CHO ĐIỆN THOẠI --- */
+@media (max-width: 1024px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 768px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 480px) { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .img-box { height: 160px; } .info-box .name { font-size: 13px; height: 36px; } }
+
+.product-rating { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; }
+.sold-count { color: #757575; border-left: 1px solid #ebebeb; padding-left: 8px; }

@@ -3,12 +3,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const catTitle = document.getElementById('catTitle');
     const bcCategoryName = document.getElementById('bcCategoryName');
     const sidebarCategoryList = document.getElementById('sidebarCategoryList');
-    const catSort = document.getElementById('catSort');
+    
+    const menuCatSort = document.getElementById('menuCatSort');
+    const textCatSort = document.getElementById('textCatSort');
     
     // Lấy các tham số từ URL
     const urlParams = new URLSearchParams(window.location.search);
     const categoryId = urlParams.get('id'); // Dùng 'id' theo link trang chủ gửi qua
-    const sortParam = urlParams.get('sort');
+    let currentSortParam = urlParams.get('sort') || '';
     const priceParam = urlParams.get('price');
     const pageParam = parseInt(urlParams.get('page')) || 1;
 
@@ -17,8 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let newUrl = `category.html?`;
         if (categoryId) newUrl += `id=${categoryId}&`;
         
-        const selectedSort = catSort.value;
-        if (selectedSort) newUrl += `sort=${selectedSort}&`;
+        if (currentSortParam) newUrl += `sort=${currentSortParam}&`;
 
         const selectedPrice = document.querySelector('input[name="priceFilter"]:checked').value;
         if (selectedPrice) newUrl += `price=${selectedPrice}&`;
@@ -50,14 +51,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 2. Thiết lập trạng thái ban đầu cho các bộ lọc
-    if (sortParam) catSort.value = sortParam;
+    if (currentSortParam && menuCatSort) {
+        const el = menuCatSort.querySelector(`a[data-value="${currentSortParam}"]`);
+        if (el) textCatSort.textContent = el.textContent;
+    }
+
     if (priceParam) {
         const radio = document.querySelector(`input[name="priceFilter"][value="${priceParam}"]`);
         if (radio) radio.checked = true;
     }
 
+    // --- LOGIC ĐÓNG / MỞ MENU DROPDOWN SẮP XẾP ---
+    const filterWrappers = document.querySelectorAll('.filter-dropdown-wrapper');
+    filterWrappers.forEach(wrapper => {
+        const btn = wrapper.querySelector('.filter-btn');
+        const popup = wrapper.querySelector('.filter-popup');
+        if (btn && popup) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = popup.classList.contains('show');
+                document.querySelectorAll('.filter-popup').forEach(p => p.classList.remove('show'));
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                if (!isOpen) { popup.classList.add('show'); btn.classList.add('active'); }
+            });
+        }
+    });
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.filter-popup').forEach(p => p.classList.remove('show'));
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    });
+
     // Gắn sự kiện cho các bộ lọc
-    catSort.addEventListener('change', applyFilters);
+    if (menuCatSort) {
+        menuCatSort.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('a');
+            if (target) {
+                currentSortParam = target.getAttribute('data-value');
+                applyFilters();
+            }
+        });
+    }
+
     const priceRadios = document.querySelectorAll('input[name="priceFilter"]');
     priceRadios.forEach(radio => radio.addEventListener('change', applyFilters));
 
@@ -65,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         let apiUrl = `http://127.0.0.1:5000/api/search?page=${pageParam}&limit=12`; // Hiện 12 truyện 1 trang
         if (categoryId) apiUrl += `&category=${categoryId}`;
-        if (sortParam) apiUrl += `&sort=${sortParam}`;
+        if (currentSortParam) apiUrl += `&sort=${currentSortParam}`;
         if (priceParam) {
             const [min, max] = priceParam.split('-');
             if (min) apiUrl += `&minPrice=${min}`;
@@ -122,7 +157,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                         <div class="info-box">
                             <h3 class="name">${item.productName || item.name}</h3>
-                            <div class="author" style="font-size: 13px; margin-bottom: 8px;">${item.authorName || 'Đang cập nhật'}</div>
+                            <div class="author" style="font-size: 13px; margin-bottom: 8px;">
+                                ${item.authorName ? 
+                                    `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                        <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
+                                    </span>` 
+                                    : '<span style="color: #666;">Đang cập nhật</span>'
+                                }
+                            </div>
                             <div class="stars">${starsHtml} <span class="sold-count">| Đã bán ${item.sold || 0}</span></div>
                             <div class="price-group"><span class="now">${priceFormatted}</span> ${oldPriceHtml}</div>
                         </div>
@@ -138,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const getPageUrl = (page) => {
                 let url = `category.html?`;
                 if (categoryId) url += `id=${categoryId}&`;
-                if (sortParam) url += `sort=${sortParam}&`;
+                if (currentSortParam) url += `sort=${currentSortParam}&`;
                 if (priceParam) url += `price=${priceParam}&`;
                 url += `page=${page}`;
                 return url;

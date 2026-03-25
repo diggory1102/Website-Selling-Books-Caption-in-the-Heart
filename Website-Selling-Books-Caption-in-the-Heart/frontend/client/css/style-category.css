@@ -17,3 +17,16 @@
 .pagination-btn:hover { background-color: var(--primary-color); color: var(--white); }
 .pagination-btn.active { background-color: var(--primary-color); color: var(--white); pointer-events: none; }
 @media (max-width: 768px) { .category-layout { flex-direction: column; } .sidebar { width: 100%; position: static; } .cat-header { flex-direction: column; gap: 15px; align-items: flex-start; } } 
+
+/* ==========================================
+   THANH CUỘN CHO DANH SÁCH THỂ LOẠI (SIDEBAR CỘT TRÁI)
+   ========================================== */
+.sidebar-list {
+    max-height: 380px; /* Giới hạn chiều cao để hiển thị khoảng 10 thể loại */
+    overflow-y: auto;  /* Bật thanh cuộn dọc */
+    padding-right: 5px; /* Tránh chữ bị sát vào thanh cuộn */
+}
+
+.sidebar-list::-webkit-scrollbar { width: 5px; }
+.sidebar-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
+.sidebar-list::-webkit-scrollbar-track { background: #f9f9f9; border-radius: 5px; }

@@ -8,3 +8,34 @@
 }
 .pagination-btn:hover { background-color: var(--primary-color); color: var(--white); }
 .pagination-btn.active { background-color: var(--primary-color); color: var(--white); pointer-events: none; }
+
+/* ==========================================
+   DROPDOWN BỘ LỌC TÌM KIẾM (GIỐNG NÚT DANH MỤC)
+   ========================================== */
+.filter-btn:hover, .filter-btn.active {
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.filter-btn .arrow { transition: transform 0.3s ease; }
+.filter-btn.active .arrow { transform: rotate(180deg); }
+
+.filter-popup {
+    position: absolute; top: calc(100% + 5px); left: 0; width: 100%;
+    background: #fff; border: 1px solid #eee; border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 9999;
+    list-style: none; padding: 5px 0; margin: 0; display: none;
+    max-height: 250px; overflow-y: auto;
+}
+.filter-popup.show { display: block; animation: slideIn 0.2s ease-in-out; }
+.filter-popup::-webkit-scrollbar { width: 6px; }
+.filter-popup::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+
+.filter-popup li a {
+    display: block; padding: 10px 15px; text-decoration: none;
+    color: #333; font-size: 14px; transition: 0.2s;
+}
+.filter-popup li a:hover, .filter-popup li a.selected {
+    background-color: var(--primary-color);
+    color: #fff;
+}

@@ -14,7 +14,7 @@
         <div class="container header-content">
             <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'"></a></div>
             <div class="search-bar">
-                <input style="border-radius: 15px;" type="text" id="searchInput" autocomplete="off" placeholder="Tìm kiếm truyện tranh, tác giả...">
+                <input style="border-radius: 15px;" type="text" id="searchInput" name="search" autocomplete="off" placeholder="Tìm kiếm truyện tranh, tác giả...">
                 <button style="border-radius: 5px;" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
                 <div id="searchResults" class="search-dropdown"></div>
             </div>
@@ -29,21 +29,6 @@
                     <div id="notiDropdown" class="noti-dropdown">
                         <div class="noti-header">Thông báo mới </div>
                         <div class="noti-list">
-                            <a href="#" class="noti-item unread">
-                                <img src="https://via.placeholder.com/40" alt="icon">
-                                <div class="noti-content">
-                                    <p><strong>Khuyến mãi khủng:</strong> Giảm 50% toàn bộ Manga từ NXB Kim Đồng trong hôm nay!</p>
-                                    <span class="noti-time">10 phút trước</span>
-                                </div>
-                            </a>
-                            
-                            <a href="#" class="noti-item">
-                                <img src="https://via.placeholder.com/40" alt="icon">
-                                <div class="noti-content">
-                                    <p>Đơn hàng <strong>#DH12345</strong> của bạn đã được giao cho đơn vị vận chuyển.</p>
-                                    <span class="noti-time">2 giờ trước</span>
-                                </div>
-                            </a>
                         </div>
                         <a href="notifications.html" class="noti-view-all">Xem tất cả</a>
                     </div>
@@ -61,15 +46,6 @@
                             <span id="userRoleDisplay" style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Vui lòng đăng nhập</span>
                         </div>
                         <div class="account-list">
-                            <a href="addresses.html" class="account-item">
-                                <i class="fa-solid fa-address-card"></i> Hồ sơ của tôi (Profile)
-                            </a>
-                            <a href="#" class="account-item">
-                                <i class="fa-solid fa-box-open"></i> Đơn hàng của tôi
-                            </a>
-                            <a href="wishlist.html" class="account-item" style="text-align: left;">
-                                <i class="fa-solid fa-heart"></i> Danh sách yêu thích
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -119,15 +95,41 @@
                     <div class="form-group">
                         <label>Địa chỉ nhận hàng (*)</label>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <select id="chkCity" required class="custom-select" style="flex: 1;">
-                                <option value="">Chọn Tỉnh/Thành phố</option>
-                            </select>
-                            <select id="chkDistrict" required class="custom-select" style="flex: 1;">
-                                <option value="">Chọn Quận/Huyện</option>
-                            </select>
-                            <select id="chkWard" required class="custom-select" style="flex: 1;">
-                                <option value="">Chọn Phường/Xã</option>
-                            </select>
+                            <!-- Tỉnh / Thành phố -->
+                            <div class="filter-dropdown-wrapper" style="position: relative; flex: 1;">
+                                <button type="button" class="filter-btn" id="btnChkCity" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #ddd; padding: 12px 15px; border-radius: 10px; font-size: 14px; color: #444; cursor: pointer; transition: 0.2s;">
+                                    <span id="textChkCity">Chọn Tỉnh/Thành phố</span>
+                                    <i class="fa-solid fa-chevron-down arrow"></i>
+                                </button>
+                                <ul class="filter-popup" id="menuChkCity">
+                                    <li><a href="#" data-value="">Chọn Tỉnh/Thành phố</a></li>
+                                </ul>
+                                <input type="hidden" id="chkCity">
+                            </div>
+
+                            <!-- Quận / Huyện -->
+                            <div class="filter-dropdown-wrapper" style="position: relative; flex: 1;">
+                                <button type="button" class="filter-btn" id="btnChkDistrict" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #ddd; padding: 12px 15px; border-radius: 10px; font-size: 14px; color: #444; cursor: pointer; transition: 0.2s;">
+                                    <span id="textChkDistrict">Chọn Quận/Huyện</span>
+                                    <i class="fa-solid fa-chevron-down arrow"></i>
+                                </button>
+                                <ul class="filter-popup" id="menuChkDistrict">
+                                    <li><a href="#" data-value="">Chọn Quận/Huyện</a></li>
+                                </ul>
+                                <input type="hidden" id="chkDistrict">
+                            </div>
+
+                            <!-- Phường / Xã -->
+                            <div class="filter-dropdown-wrapper" style="position: relative; flex: 1;">
+                                <button type="button" class="filter-btn" id="btnChkWard" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #ddd; padding: 12px 15px; border-radius: 10px; font-size: 14px; color: #444; cursor: pointer; transition: 0.2s;">
+                                    <span id="textChkWard">Chọn Phường/Xã</span>
+                                    <i class="fa-solid fa-chevron-down arrow"></i>
+                                </button>
+                                <ul class="filter-popup" id="menuChkWard">
+                                    <li><a href="#" data-value="">Chọn Phường/Xã</a></li>
+                                </ul>
+                                <input type="hidden" id="chkWard">
+                            </div>
                         </div>
                         <input type="text" id="chkAddressDetail" placeholder="Số nhà, tên đường..." required>
                     </div>
@@ -135,19 +137,33 @@
                     <div class="form-group" style="display: flex; gap: 15px;">
                         <div style="flex: 1;">
                             <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #333;">Ngày giao hàng dự kiến</label>
-                            <select id="chkDeliveryDate" class="custom-select" style="width: 100%;">
-                                <!-- JS sẽ tự động điền các ngày vào đây -->
-                            </select>
+                            <div class="filter-dropdown-wrapper" style="position: relative; width: 100%;">
+                                <button type="button" class="filter-btn" id="btnChkDeliveryDate" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #ddd; padding: 12px 15px; border-radius: 10px; font-size: 14px; color: #444; cursor: pointer; transition: 0.2s;">
+                                    <span id="textChkDeliveryDate">Chọn ngày giao</span>
+                                    <i class="fa-solid fa-chevron-down arrow"></i>
+                                </button>
+                                <ul class="filter-popup" id="menuChkDeliveryDate">
+                                    <!-- JS sẽ tự động điền các ngày vào đây -->
+                                </ul>
+                                <input type="hidden" id="chkDeliveryDate">
+                            </div>
                         </div>
                         <div style="flex: 1;">
                             <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #333;">Khung giờ nhận hàng</label>
-                            <select id="chkDeliveryTime" class="custom-select" style="width: 100%;">
-                                <option value="Bất kỳ lúc nào">Bất kỳ lúc nào</option>
-                                <option value="Giờ hành chính (08:00 - 17:00)">Giờ hành chính (08:00 - 17:00)</option>
-                                <option value="Sáng (08:00 - 12:00)">Sáng (08:00 - 12:00)</option>
-                                <option value="Chiều (13:00 - 17:00)">Chiều (13:00 - 17:00)</option>
-                                <option value="Tối (18:00 - 21:00)">Tối (18:00 - 21:00)</option>
-                            </select>
+                            <div class="filter-dropdown-wrapper" style="position: relative; width: 100%;">
+                                <button type="button" class="filter-btn" id="btnChkDeliveryTime" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #ddd; padding: 12px 15px; border-radius: 10px; font-size: 14px; color: #444; cursor: pointer; transition: 0.2s;">
+                                    <span id="textChkDeliveryTime">Bất kỳ lúc nào</span>
+                                    <i class="fa-solid fa-chevron-down arrow"></i>
+                                </button>
+                                <ul class="filter-popup" id="menuChkDeliveryTime">
+                                    <li><a href="#" data-value="Bất kỳ lúc nào">Bất kỳ lúc nào</a></li>
+                                    <li><a href="#" data-value="Giờ hành chính (08:00 - 17:00)">Giờ hành chính (08:00 - 17:00)</a></li>
+                                    <li><a href="#" data-value="Sáng (08:00 - 12:00)">Sáng (08:00 - 12:00)</a></li>
+                                    <li><a href="#" data-value="Chiều (13:00 - 17:00)">Chiều (13:00 - 17:00)</a></li>
+                                    <li><a href="#" data-value="Tối (18:00 - 21:00)">Tối (18:00 - 21:00)</a></li>
+                                </ul>
+                                <input type="hidden" id="chkDeliveryTime" value="Bất kỳ lúc nào">
+                            </div>
                         </div>
                     </div>
                     <!-- KẾT THÚC: KHUNG CHỌN NGÀY GIỜ GIAO HÀNG -->

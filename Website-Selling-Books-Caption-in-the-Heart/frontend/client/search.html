@@ -110,23 +110,45 @@
         <div class="search-result-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h2 id="searchTitle">Đang tìm kiếm...</h2>
             <div class="filter-group" style="display: flex; gap: 10px;">
-                <select id="categoryFilter" class="custom-select">
-                    <option value="">Tất cả thể loại</option>
-                    <!-- Options will be rendered here by JS -->
-                </select>
-                <select id="priceFilter" class="custom-select">
-                    <option value="">Mọi mức giá</option>
-                    <option value="0-50000">Dưới 50.000đ</option>
-                    <option value="50000-100000">50.000đ - 100.000đ</option>
-                    <option value="100000-200000">100.000đ - 200.000đ</option>
-                    <option value="200000-99999999">Từ 200.000đ trở lên</option>
-                </select>
-                <select id="sortFilter" class="custom-select">
-                    <option value="">Sắp xếp: Mặc định</option>
-                    <option value="newest">Mới cập nhật</option>
-                    <option value="price_asc">Giá: Thấp đến cao</option>
-                    <option value="price_desc">Giá: Cao đến thấp</option>
-                </select>
+                <!-- Nút Lọc Thể Loại -->
+                <div class="filter-dropdown-wrapper" style="position: relative; width: 180px;">
+                    <button class="filter-btn" id="btnCategoryFilter" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #e0e0e0; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; transition: 0.2s;">
+                        <span id="textCategoryFilter">Tất cả thể loại</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </button>
+                    <ul class="filter-popup" id="menuCategoryFilter">
+                        <li><a href="#" data-value="">Tất cả thể loại</a></li>
+                    </ul>
+                </div>
+
+                <!-- Nút Lọc Giá -->
+                <div class="filter-dropdown-wrapper" style="position: relative; width: 180px;">
+                    <button class="filter-btn" id="btnPriceFilter" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #e0e0e0; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; transition: 0.2s;">
+                        <span id="textPriceFilter">Mọi mức giá</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </button>
+                    <ul class="filter-popup" id="menuPriceFilter">
+                        <li><a href="#" data-value="">Mọi mức giá</a></li>
+                        <li><a href="#" data-value="0-50000">Dưới 50.000đ</a></li>
+                        <li><a href="#" data-value="50000-100000">50.000đ - 100.000đ</a></li>
+                        <li><a href="#" data-value="100000-200000">100.000đ - 200.000đ</a></li>
+                        <li><a href="#" data-value="200000-99999999">Từ 200.000đ trở lên</a></li>
+                    </ul>
+                </div>
+
+                <!-- Nút Sắp Xếp -->
+                <div class="filter-dropdown-wrapper" style="position: relative; width: 180px;">
+                    <button class="filter-btn" id="btnSortFilter" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #e0e0e0; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; transition: 0.2s;">
+                        <span id="textSortFilter">Sắp xếp: Mặc định</span>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </button>
+                    <ul class="filter-popup" id="menuSortFilter">
+                        <li><a href="#" data-value="">Sắp xếp: Mặc định</a></li>
+                        <li><a href="#" data-value="newest">Mới cập nhật</a></li>
+                        <li><a href="#" data-value="price_asc">Giá: Thấp đến cao</a></li>
+                        <li><a href="#" data-value="price_desc">Giá: Cao đến thấp</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
 

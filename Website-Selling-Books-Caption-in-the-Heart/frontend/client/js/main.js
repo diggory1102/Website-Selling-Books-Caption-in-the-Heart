@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             if (categories && categories.length > 0) {
                 categoryMenu.innerHTML = categories.map(cat => 
-                    `<li><a href="search.html?category=${cat.id}">${cat.name}</a></li>`
+                    `<li><a href="category.html?id=${cat._id || cat.id}">${cat.name}</a></li>`
                 ).join('');
             }
         } catch (error) {
@@ -303,16 +303,16 @@ if (searchInput && searchBtn) {
                             <div class="search-item" onclick="window.location.href='product-detail.html?id=${item.id}'">
                                 <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.jp/200x250.png?text=No+Image';">
                                 <div class="search-info">
-                                    <h4>${item.productName || item.name}</h4>
-                                    <p class="author" style="margin: 4px 0;">
+                                    <div class="s-name">${item.productName || item.name}</div>
+                                    <div class="s-author" style="margin: 5px 0;">
                                         ${item.authorName ? 
-                                            `<span style="color: #007bff; cursor: pointer; text-decoration: none; font-size: 12px;" onclick="event.stopPropagation(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                            `<button type="button" class="btn-author-search" onclick="event.stopPropagation(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';">
                                                 <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
-                                            </span>` 
+                                            </button>` 
                                             : '<span style="color: #666; font-size: 12px;">Đang cập nhật</span>'
                                         }
-                                    </p>
-                                    <p class="price">${priceFormatted} ${oldPriceHtml}</p>
+                                    </div>
+                                    <div class="s-price">${priceFormatted} ${oldPriceHtml}</div>
                                 </div>
                             </div>
                             `;
@@ -560,6 +560,7 @@ if (searchInput && searchBtn) {
     loadCategories();
     checkLoginStatus(); 
     fetchUserWishlist(); // Khôi phục gọi hàm này để cập nhật số lượng yêu thích
+    fetchUserNotifications(); // Gọi API lấy thông báo động
     updateCartCount();
     initCustomSelects();
 });

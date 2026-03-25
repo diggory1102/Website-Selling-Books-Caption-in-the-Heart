@@ -21,6 +21,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const authRoutes = require('./routes/authRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const userRoutes = require('./routes/userRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 app.use(cors());
@@ -53,13 +54,27 @@ app.get('/api/setup', async (req, res) => {
         const catHanhDong = await Category.create({ name: 'Hành Động' });
         const catTrinhTham = await Category.create({ name: 'Trinh Thám' });
 
+        // Thêm 10 thể loại mới
+        await Category.create([
+            { name: 'Tình Cảm' },
+            { name: 'Học Đường' },
+            { name: 'Xuyên Không' },
+            { name: 'Kinh Dị' },
+            { name: 'Hài Hước' },
+            { name: 'Thể Thao' },
+            { name: 'Khoa Học Viễn Tưởng' },
+            { name: 'Giả Tưởng' },
+            { name: 'Phiêu Lưu' },
+            { name: 'Đời Thường' }
+        ]);
+
         await Product.create([
-            { name: 'One Piece - Tập 101', authorName: 'Eiichiro Oda', price: 30000, sold: 5000, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042271842.jpg', categoryId: catManga._id },
-            { name: 'Thám Tử Lừng Danh Conan', authorName: 'Gosho Aoyama', price: 25000, discount: '-10%', sold: 3200, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042332154.jpg', categoryId: catTrinhTham._id },
-            { name: 'Doraemon - Truyện Ngắn', authorName: 'Fujiko F. Fujio', price: 20000, sold: 4800, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935244874241.jpg', categoryId: catManga._id },
-            { name: 'Naruto - Tập Cuối', authorName: 'Masashi Kishimoto', price: 22000, discount: '-5%', sold: 2100, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042301822.jpg', categoryId: catHanhDong._id },
-            { name: 'Thanh Gươm Diệt Quỷ', authorName: 'Koyoharu Gotouge', price: 25000, discount: '-15%', sold: 1800, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042232935.jpg', categoryId: catHanhDong._id },
-            { name: 'Chú Thuật Hồi Chiến', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042280202.jpg', categoryId: catHanhDong._id }
+            { name: 'One Piece - Tập 101', authorName: 'Eiichiro Oda', price: 30000, sold: 5000, imageUrl: 'images/one-piece.png', categoryId: catManga._id },
+            { name: 'Thám Tử Lừng Danh Conan', authorName: 'Gosho Aoyama', price: 25000, discount: '-10%', sold: 3200, imageUrl: 'images/conan.png', categoryId: catTrinhTham._id },
+            { name: 'Doraemon - Truyện Ngắn', authorName: 'Fujiko F. Fujio', price: 20000, sold: 4800, imageUrl: 'images/doraemon.png', categoryId: catManga._id },
+            { name: 'Naruto - Tập Cuối', authorName: 'Masashi Kishimoto', price: 22000, discount: '-5%', sold: 2100, imageUrl: 'images/naruto.png', categoryId: catHanhDong._id },
+            { name: 'Thanh Gươm Diệt Quỷ', authorName: 'Koyoharu Gotouge', price: 25000, discount: '-15%', sold: 1800, imageUrl: 'images/attack-on-titan.png', categoryId: catHanhDong._id },
+            { name: 'Chú Thuật Hồi Chiến', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/jujutsu-kaisen.png', categoryId: catHanhDong._id }
         ]);
         res.send("<h1>✅ Đã tạo dữ liệu MongoDB thành công! Hãy quay lại trang chủ web ấn F5.</h1>");
     } catch (err) {
@@ -78,6 +93,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ==========================================
 // CẤU HÌNH UPLOAD ẢNH CHO ADMIN (SỬ DỤNG MULTER)

@@ -55,7 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="info-box">
                             <h3 class="name">${item.name}</h3>
                             <div class="author" style="font-size: 13px; margin-bottom: 8px;">
-                                ${item.authorName ? `<span style="color: #007bff;"><i class="fa-solid fa-pen-nib"></i> ${item.authorName}</span>` : '<span style="color: #666;">Đang cập nhật</span>'}
+                                ${item.authorName ? 
+                                    `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                        <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
+                                    </span>` 
+                                    : '<span style="color: #666;">Đang cập nhật</span>'
+                                }
                             </div>
                             <div class="stars">${starsHtml} <span style="color: #888; font-size: 11px; margin-left: 5px;">(${item.totalReviews || 0})</span> <span class="sold-count">| Đã bán ${item.sold || 0}</span></div>
                             <div class="price-group"><span class="now">${priceFormatted}</span>${oldPriceHtml}</div>
@@ -120,7 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="info-box">
                             <h3 class="name">${item.name}</h3>
                             <div class="author" style="font-size: 13px; margin-bottom: 8px;">
-                                ${item.authorName ? `<span style="color: #007bff;"><i class="fa-solid fa-pen-nib"></i> ${item.authorName}</span>` : '<span style="color: #666;">Đang cập nhật</span>'}
+                                ${item.authorName ? 
+                                    `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                        <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
+                                    </span>` 
+                                    : '<span style="color: #666;">Đang cập nhật</span>'
+                                }
                             </div>
                             <div class="stars">${starsHtml} <span style="color: #888; font-size: 11px; margin-left: 5px;">(${item.totalReviews || 0})</span> <span class="sold-count">| Đã bán ${item.sold || 0}</span></div>
                             <div class="price-group"><span class="now">${priceFormatted}</span>${oldPriceHtml}</div>

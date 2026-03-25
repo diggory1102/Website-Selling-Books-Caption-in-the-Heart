@@ -1,7 +1,7 @@
 /* Bố cục trang Thanh toán */
 .checkout-container { display: flex; gap: 30px; margin-top: 20px; align-items: flex-start; margin-bottom: 50px; }
 .checkout-left { flex: 1; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.checkout-right { width: 400px; flex-shrink: 0; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 110px; }
+.checkout-right { width: 400px; flex-shrink: 0; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 250px; }
 
 /* Định dạng các ô nhập liệu Form */
 .form-group { margin-bottom: 20px; }
@@ -54,12 +54,16 @@
     border: 1px solid #ddd;
 }
 
-.voucher-dropdown.show { display: block; }
+.voucher-dropdown.show { 
+    display: block; 
+    animation: slideIn 0.2s ease-in-out;
+}
 .voucher-dropdown::-webkit-scrollbar { width: 5px; }
 .voucher-dropdown::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
 
 .voucher-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; }
-.voucher-item:hover { background: #f5faff; }
+.voucher-item:hover { background: var(--primary-color); }
+.voucher-item:hover .v-code, .voucher-item:hover .v-desc { color: #fff !important; }
 .voucher-item .v-code { font-weight: 700; color: var(--secondary-color); margin-bottom: 3px; font-size: 14px; }
 .voucher-item .v-desc { font-size: 12px; color: #555; }
 .voucher-empty { padding: 15px; text-align: center; color: #888; font-size: 13px; }

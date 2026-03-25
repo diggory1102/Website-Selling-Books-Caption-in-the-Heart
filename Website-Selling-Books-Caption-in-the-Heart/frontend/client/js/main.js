@@ -384,6 +384,16 @@ if (searchInput && searchBtn) {
                         </div>
                     `;
                 }
+                
+                // BỔ SUNG: Cập nhật Avatar trên Sidebar (Dành cho các trang Quản lý tài khoản)
+                const sidebarAvatar = document.getElementById('sidebarAvatar');
+                if (sidebarAvatar) sidebarAvatar.src = avatarUrl;
+            }
+
+            // BỔ SUNG: Cập nhật Tên người dùng trên Sidebar
+            const sbName = document.getElementById('sbName');
+            if (sbName) {
+                sbName.textContent = user.fullName || user.userName || user.name || 'Thành viên';
             }
 
             if (accountList) {

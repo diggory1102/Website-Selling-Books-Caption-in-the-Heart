@@ -170,13 +170,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const accountDropdown = document.getElementById('accountDropdown');
     const searchInput = document.getElementById('searchInput');
     const searchResults = document.getElementById('searchResults');
-    const track = document.getElementById('productTrack');
     const cartBtn = document.getElementById('cartBtn');
     const cartDropdown = document.getElementById('cartDropdown');
-    const newMangaGrid = document.getElementById('newMangaGrid');
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
     const searchBtn = document.getElementById('searchBtn');
-    let currentPage = 1;
     
     // 1. QUẢN LÝ CÁC MENU THẢ XUỐNG
     function closeAllDropdowns() {
@@ -233,94 +229,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // 3. TẢI SẢN PHẨM BEST SELLER & VẼ SAO ĐỘNG TỪ DB
-    async function loadBestSellers() {
-        if (!track) return;
-        try {
-            // Gọi API lấy wishlist về trước
-            await fetchUserWishlist(); 
-
-            // Tải sản phẩm Best Seller
-            const response = await fetch('http://127.0.0.1:5000/api/products/best-sellers');
-            const products = await response.json();
-            
-            if (!products || products.length === 0) {
-                track.innerHTML = '<p>Đang cập nhật truyện...</p>';
-                return;
-            }
-
-            // Vẽ danh sách truyện
-            track.innerHTML = products.map(item => {
-                // 1. Đồng bộ logic tim đỏ
-                const productId = String(item.id || item._id);
-                const isLiked = globalWishlist.includes(productId);
-                const heartClass = isLiked ? 'fa-solid' : 'fa-regular';
-                const heartColor = isLiked ? '#e74c3c' : '#ccc';
-
-                // 2. Logic vẽ Sao động dựa trên averageRating từ Database
-                const rating = item.averageRating || 0; 
-                let starsHtml = '';
-                for (let i = 1; i <= 5; i++) {
-                    if (i <= Math.floor(rating)) {
-                        starsHtml += '<i class="fa-solid fa-star"></i>';
-                    } else if (i - 0.5 <= rating) {
-                        starsHtml += '<i class="fa-solid fa-star-half-stroke"></i>';
-                    } else {
-                        starsHtml += '<i class="fa-regular fa-star"></i>';
-                    }
-                }
-
-                // 3. Tính toán giá sau giảm
-                let origPrice = item.price;
-                let fnPrice = origPrice;
-                if (item.discount && item.discount.includes('%')) {
-                    let dVal = parseFloat(item.discount.replace(/[^0-9.]/g, ''));
-                    if (!isNaN(dVal)) fnPrice = origPrice - (origPrice * dVal / 100);
-                }
-                const priceFormatted = Number(fnPrice).toLocaleString() + 'đ';
-                const oldPriceHtml = fnPrice < origPrice ? `<span class="old">${Number(origPrice).toLocaleString()}đ</span>` : '';
-
-                return `
-                <div class="product-card" style="position: relative;">
-                    <div class="wishlist-btn" onclick="toggleWishlist(event, '${productId}')" style="position: absolute; top: 10px; right: 10px; z-index: 999; background: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
-                        <i class="${heartClass} fa-heart" style="color: ${heartColor}; transition: 0.2s;"></i>
-                    </div>
-
-                    <a href="product-detail.html?id=${productId}" style="text-decoration: none; color: inherit; display: block;">
-                        <div class="img-box">
-                            ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
-                            <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.jp/200x250.png?text=No+Image';" alt="${item.name}">
-                        </div>
-                        <div class="info-box">
-                            <h3 class="name">${item.name}</h3>
-                            <div class="author" style="font-size: 13px; margin-bottom: 8px;">
-                                ${item.authorName ? 
-                                    `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-                                        <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
-                                    </span>` 
-                                    : '<span style="color: #666;">Đang cập nhật</span>'
-                                }
-                            </div>
-                            <div class="stars">
-                                ${starsHtml} <span class="sold-count">| Đã bán ${item.sold || 0}</span>
-                            </div>
-                            <div class="price-group">
-                                <span class="now">${priceFormatted}</span>
-                                ${oldPriceHtml}
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                `;
-            }).join('');
-
-            initCarousel(products.length); 
-        } catch (error) { 
-            console.error("Lỗi Best Seller:", error); 
-        }
-    }
-
-    // ==========================================
+// ==========================================
 // 4. XỬ LÝ TÌM KIẾM TOÀN SITE
 // ==========================================
 
@@ -415,8 +324,14 @@ if (searchInput && searchBtn) {
         // THÊM MỚI: Lấy role đã lưu từ admin-login.js (kết quả của lõi C++)
         const userRole = localStorage.getItem('userRole'); 
 
-        if (userStr) {
-            const user = JSON.parse(userStr);
+        // Bổ sung lớp bảo vệ: Đảm bảo chuỗi an toàn mới tiến hành giải mã JSON
+        let user = null;
+        if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+            try { user = JSON.parse(userStr); } 
+            catch (e) { localStorage.removeItem('currentUser'); }
+        }
+
+        if (user) {
             if (notiBtn) notiBtn.style.display = '';
             if (cartBtn) cartBtn.style.display = '';
             if (wishlistBtn) wishlistBtn.style.display = '';
@@ -494,212 +409,6 @@ if (searchInput && searchBtn) {
             }
         }
     }
-async function fetchNewManga(page) {
-    if (!newMangaGrid) return;
-    
-    try {
-        // 1. Đồng bộ Wishlist trước khi vẽ để hiện tim đỏ ngay lập tức
-        if (typeof fetchUserWishlist === "function") {
-            await fetchUserWishlist(); 
-        }
-
-        // 2. Gọi API lấy dữ liệu truyện mới
-        const response = await fetch(`http://127.0.0.1:5000/api/products/newest?page=${page}&limit=4`);
-        const products = await response.json();
-
-        // Ẩn nút "Xem thêm" nếu không còn truyện để load
-        if (products.length === 0 || products.length < 4) {
-            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-        }
-
-        // 3. Render từng sản phẩm dựa trên dữ liệu thật từ DB
-        products.forEach(item => {
-            const productId = String(item.id || item._id);
-            
-            // Xử lý trạng thái tim đỏ
-            const isLiked = typeof globalWishlist !== 'undefined' && globalWishlist.includes(productId);
-            const heartClass = isLiked ? 'fa-solid' : 'fa-regular';
-            const heartColor = isLiked ? '#e74c3c' : '#ccc';
-
-            // Vẽ Sao động (Dựa trên item.rating từ DB)
-            const rating = (item.rating !== undefined) ? item.rating : 0;
-            let starsHtml = '';
-            for (let i = 1; i <= 5; i++) {
-                if (i <= Math.floor(rating)) {
-                    starsHtml += '<i class="fa-solid fa-star"></i>';
-                } else if (i - 0.5 <= rating) {
-                    starsHtml += '<i class="fa-solid fa-star-half-stroke"></i>';
-                } else {
-                    starsHtml += '<i class="fa-regular fa-star"></i>';
-                }
-            }
-
-            let origPrice = item.price;
-            let fnPrice = origPrice;
-            if (item.discount && item.discount.includes('%')) {
-                let dVal = parseFloat(item.discount.replace(/[^0-9.]/g, ''));
-                if (!isNaN(dVal)) fnPrice = origPrice - (origPrice * dVal / 100);
-            }
-            const priceFormatted = Number(fnPrice).toLocaleString() + 'đ';
-            const oldPriceHtml = fnPrice < origPrice ? `<span class="old">${Number(origPrice).toLocaleString()}đ</span>` : '';
-
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.style.position = 'relative';
-
-            // Cấu trúc HTML đồng bộ 100% với Best Seller
-            card.innerHTML = `
-                <div class="wishlist-btn" onclick="toggleWishlist(event, '${productId}')" style="position: absolute; top: 10px; right: 10px; z-index: 999; background: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
-                    <i class="${heartClass} fa-heart" style="color: ${heartColor}; transition: 0.2s;"></i>
-                </div>
-
-                ${item.isNew ? `<span class="new-badge">Mới</span>` : ''}
-
-                <a href="product-detail.html?id=${productId}" style="text-decoration: none; color: inherit; display: block; height: 100%;">
-                    <div class="img-box">
-                        ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
-                        <img src="${item.imageUrl}" onerror="this.onerror=null; this.src='https://placehold.co/200x250?text=No+Image';" alt="${item.name}">
-                    </div>
-                    <div class="info-box">
-                        <h3 class="name">${item.name}</h3>
-                        <div class="author" style="font-size: 13px; margin-bottom: 8px;">
-                            ${item.authorName ? 
-                                `<span style="color: #007bff; cursor: pointer; text-decoration: none;" onclick="event.preventDefault(); window.location.href='search.html?q=${encodeURIComponent(item.authorName)}';" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-                                    <i class="fa-solid fa-pen-nib"></i> ${item.authorName}
-                                </span>` 
-                                : '<span style="color: #666;">Đang cập nhật</span>'
-                            }
-                        </div>
-                        <div class="stars">
-                            ${starsHtml}
-                            <span class="sold-count">| Đã bán ${item.sold || 0}</span>
-                        </div>
-                        <div class="price-group">
-                            <span class="now">${priceFormatted}</span>
-                            ${oldPriceHtml}
-                        </div>
-                    </div>
-                </a>
-            `;
-            newMangaGrid.appendChild(card);
-        });
-    } catch (error) {
-        console.error("Lỗi khi tải truyện mới:", error);
-    }
-}
-// Thêm sự kiện cho nút Xem thêm
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', () => {
-            currentPage++; // Tăng số trang lên
-            fetchNewManga(currentPage); // Gọi hàm tải trang tiếp theo
-            
-            // Ẩn nút "Xem thêm" sau 1 lần bấm và hiện nút "Xem tất cả"
-            loadMoreBtn.style.display = 'none';
-            const viewAllBtn = document.getElementById('viewAllNewestBtn');
-            if (viewAllBtn) viewAllBtn.style.display = 'inline-block';
-        });
-    }
-// ==========================================
-// 5. CAROUSEL (Cải tiến để không gây lỗi trang khác)
-// ==========================================
-function initCarousel(originalLength) {
-    const track = document.getElementById('productTrack');
-    const nextBtn = document.getElementById('nextBtn');
-    const prevBtn = document.getElementById('prevBtn');
-
-    // Kiểm tra tất cả các phần tử cần thiết trước khi chạy
-    if (!track || !nextBtn || !prevBtn || originalLength === 0) return;
-
-    const firstCard = track.querySelector('.product-card');
-    if (!firstCard) return;
-
-    let cardWidth = firstCard.offsetWidth + 20;
-    let index = 0;
-
-    // Nhân đôi danh sách thẻ để tạo hiệu ứng vô tận
-    const cards = Array.from(track.children);
-    cards.forEach(card => track.appendChild(card.cloneNode(true)));
-
-    const moveSlider = () => {
-        track.style.transition = "transform 0.5s ease-in-out";
-        track.style.transform = `translateX(-${index * cardWidth}px)`;
-    };
-
-    track.addEventListener('transitionend', () => {
-        if (index >= originalLength) {
-            track.style.transition = "none";
-            index = 0;
-            track.style.transform = `translateX(0)`;
-        }
-        if (index < 0) {
-            track.style.transition = "none";
-            index = originalLength - 1;
-            track.style.transform = `translateX(-${index * cardWidth}px)`;
-        }
-    });
-
-    nextBtn.onclick = () => { index++; moveSlider(); };
-    prevBtn.onclick = () => { index--; moveSlider(); };
-
-    // Cập nhật cardWidth nếu người dùng resize trình duyệt
-    window.addEventListener('resize', () => {
-        cardWidth = firstCard.offsetWidth + 20;
-        moveSlider();
-    });
-}
-
-    // ==========================================
-    // HERO BANNER SLIDER (Tự động chuyển ảnh)
-    // ==========================================
-    const bannerSlides = document.querySelector('.banner-slides');
-    const dots = document.querySelectorAll('.banner-dots .dot');
-    const bannerPrev = document.getElementById('bannerPrev');
-    const bannerNext = document.getElementById('bannerNext');
-
-    if (bannerSlides && dots.length > 0) {
-        let currentSlide = 0;
-        const totalSlides = dots.length;
-
-        const updateSlide = (index) => {
-            if (index < 0) index = totalSlides - 1;
-            if (index >= totalSlides) index = 0;
-            bannerSlides.style.transform = `translateX(-${index * 100}%)`;
-            dots.forEach(dot => dot.style.background = 'rgba(255,255,255,0.5)');
-            dots[index].style.background = '#ffffff';
-            currentSlide = index;
-        };
-
-        let slideInterval = setInterval(() => {
-            updateSlide(currentSlide + 1);
-        }, 3000); // Đổi ảnh sau mỗi 3 giây
-
-        const resetInterval = () => {
-            clearInterval(slideInterval);
-            slideInterval = setInterval(() => updateSlide(currentSlide + 1), 3000);
-        };
-
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                updateSlide(index);
-                resetInterval();
-            });
-        });
-
-        if (bannerPrev) {
-            bannerPrev.addEventListener('click', () => {
-                updateSlide(currentSlide - 1);
-                resetInterval();
-            });
-        }
-
-        if (bannerNext) {
-            bannerNext.addEventListener('click', () => {
-                updateSlide(currentSlide + 1);
-                resetInterval();
-            });
-        }
-    }
-
     // ==========================================
     // 6. XỬ LÝ ĐĂNG KÝ NHẬN TIN (FOOTER)
     // ==========================================
@@ -727,7 +436,7 @@ function initCarousel(originalLength) {
 
 
 
-        // ==========================================
+    // ==========================================
     // 7. BIẾN THẺ SELECT THÀNH CUSTOM DROPDOWN TỰ ĐỘNG
     // ==========================================
     function initCustomSelects() {
@@ -806,11 +515,9 @@ function initCarousel(originalLength) {
     // ==========================================
     // KHỞI CHẠY TẤT CẢ CÁC HÀM
     // ==========================================
-    // Chú ý: Ở đây không gọi fetchUserWishlist() vì loadBestSellers() đã gọi rồi
     loadCategories();
-    loadBestSellers();
     checkLoginStatus(); 
-    fetchNewManga(currentPage);
+    fetchUserWishlist(); // Khôi phục gọi hàm này để cập nhật số lượng yêu thích
     updateCartCount();
     initCustomSelects();
 });

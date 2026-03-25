@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 }
                             </div>
                             <div class="stars">
-                                ${starsHtml} <span class="sold-count" style="color: #757575; font-size: 11px; margin-left: 5px;">| Đã bán ${item.sold || 0}</span>
+                                ${starsHtml} <span style="color: #888; font-size: 11px; margin-left: 5px;">(${item.totalReviews || 0})</span> <span class="sold-count" style="color: #757575; font-size: 11px; margin-left: 5px;">| Đã bán ${item.sold || 0}</span>
                             </div>
                             <div class="price-group">
                                 <span class="now">${priceFormatted}</span>

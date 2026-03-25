@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (i - 0.5 <= rating) starsHtml += '<i class="fa-solid fa-star-half-stroke"></i>';
             else starsHtml += '<i class="fa-regular fa-star"></i>';
         }
-        document.getElementById('pdRating').innerHTML = starsHtml;
+        document.getElementById('pdRating').innerHTML = `${starsHtml} <span style="color: #888; font-size: 13px; margin-left: 8px;">(${product.totalReviews || 0} đánh giá)</span>`;
 
         // 4. Logic Tăng / Giảm số lượng
         const qtyInput = document.getElementById('pdQuantity');
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                             }
                                         </div>
                                         <div class="stars">
-                                            ${starsHtml} <span class="sold-count" style="color: #757575; font-size: 11px; margin-left: 5px;">| Đã bán ${item.sold || 0}</span>
+                                            ${starsHtml} <span style="color: #888; font-size: 11px; margin-left: 5px;">(${item.totalReviews || 0})</span> <span class="sold-count" style="color: #757575; font-size: 11px; margin-left: 5px;">| Đã bán ${item.sold || 0}</span>
                                         </div>
                                         <div class="price-group">
                                             <span class="now">${priceFormatted}</span>
@@ -234,6 +234,61 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) {
             console.error("Lỗi tải truyện liên quan:", err);
         }
+
+        // 7. TẢI VÀ HIỂN THỊ DANH SÁCH KHÁCH HÀNG ĐÁNH GIÁ (CHE TÊN)
+        try {
+            const reviewsRes = await fetch(`http://127.0.0.1:5000/api/reviews/product/${productId}`);
+            if (reviewsRes.ok) {
+                const reviewsData = await reviewsRes.json();
+                if (reviewsData.success) {
+                    const reviews = reviewsData.reviews;
+                    
+                    const reviewsSection = document.createElement('div');
+                    reviewsSection.className = 'product-reviews-section';
+                    reviewsSection.style.marginTop = '40px';
+                    reviewsSection.style.marginBottom = '40px';
+                    reviewsSection.style.padding = '20px 30px';
+                    reviewsSection.style.background = '#fff';
+                    reviewsSection.style.borderRadius = '12px';
+                    reviewsSection.style.boxShadow = '0 4px 15px rgba(0,0,0,0.05)';
+
+                    let reviewsHtml = `<h3 style="margin-bottom: 20px; font-size: 18px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">Đánh giá từ khách hàng đã mua (${reviews.length})</h3>`;
+
+                    if (reviews.length === 0) {
+                        reviewsHtml += `<p style="color: #666; font-size: 14px; text-align: center; padding: 20px 0;">Chưa có đánh giá nào cho sản phẩm này.</p>`;
+                    } else {
+                        reviewsHtml += `<div style="display: flex; flex-direction: column; gap: 20px;">`;
+                        reviews.forEach(r => {
+                            let rStars = '';
+                            for (let i = 1; i <= 5; i++) {
+                                rStars += `<i class="${i <= r.rating ? 'fa-solid' : 'fa-regular'} fa-star" style="color: #f1c40f; font-size: 13px;"></i>`;
+                            }
+                            
+                            // Thuật toán bảo mật che tên khách hàng
+                            let rawName = (r.userId && r.userId.fullName) ? r.userId.fullName : ((r.userId && r.userId.userName) ? r.userId.userName : 'Khách hàng');
+                            let maskedName = rawName;
+                            if (rawName.length > 2) maskedName = rawName.substring(0, 1) + '***' + rawName.substring(rawName.length - 1);
+                            else if (rawName.length === 2) maskedName = rawName.substring(0, 1) + '*';
+
+                            const rDate = new Date(r.createdAt).toLocaleDateString('vi-VN');
+                            reviewsHtml += `
+                                <div style="border-bottom: 1px dashed #eee; padding-bottom: 15px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; font-size: 14px; color: #333;"><i class="fa-solid fa-circle-user" style="color:#ccc; margin-right:5px;"></i> ${maskedName}</span>
+                                        <span style="font-size: 12px; color: #999;">${rDate}</span>
+                                    </div>
+                                    <div style="margin-bottom: 10px;">${rStars}</div>
+                                    <p style="font-size: 14px; color: #555; line-height: 1.5; margin: 0;">${r.content || 'Người dùng không để lại nhận xét bằng chữ.'}</p>
+                                </div>
+                            `;
+                        });
+                        reviewsHtml += `</div>`;
+                    }
+                    reviewsSection.innerHTML = reviewsHtml;
+                    document.querySelector('main.container') ? document.querySelector('main.container').appendChild(reviewsSection) : document.querySelector('.container').appendChild(reviewsSection);
+                }
+            }
+        } catch (err) { console.error("Lỗi tải đánh giá:", err); }
 
     } catch (error) {
         console.error(error);

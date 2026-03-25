@@ -17,6 +17,7 @@ const { Category, Product, Subscriber, Bill, Payment, Delivery, Promotion } = re
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const authRoutes = require('./routes/authRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 const app = express();
 app.use(cors());
@@ -72,6 +73,7 @@ app.get('/', (req, res) => res.send("🚀 Backend API đang chạy tốt!"));
 app.use('/api', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // ==========================================
 // CẤU HÌNH ĐĂNG NHẬP GOOGLE

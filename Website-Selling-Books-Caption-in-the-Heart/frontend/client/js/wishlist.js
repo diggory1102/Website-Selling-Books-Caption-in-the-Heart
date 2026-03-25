@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <h3 class="name">${item.name}</h3>
                         <div class="stars">
                             ${starsHtml}
+                            <span style="color: #888; font-size: 11px; margin-left: 5px;">(${item.totalReviews || 0})</span>
                             <span class="sold-count">| Đã bán ${item.sold || 0}</span>
                         </div>
                         <div class="price-group">

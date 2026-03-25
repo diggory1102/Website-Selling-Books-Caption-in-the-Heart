@@ -33,7 +33,8 @@ const getNewestProducts = async (req, res) => {
             id: p._id, name: p.name, price: p.price,
             imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
             discount: p.discount || null, sold: p.sold || 0,
-            rating: p.averageRating || 5, authorName: p.authorName, isNew: true
+            rating: p.averageRating || 0, authorName: p.authorName, isNew: true,
+            totalReviews: p.totalReviews || 0
         }));
         res.json(formattedProducts);
     } catch (error) {
@@ -96,7 +97,8 @@ const searchProducts = async (req, res) => {
         const formattedProducts = products.map(p => ({
             id: p.id, productName: p.name, price: p.price, discount: p.discount,
             imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
-            authorName: p.authorName, averageRating: p.averageRating, sold: p.sold
+            authorName: p.authorName, averageRating: p.averageRating, sold: p.sold,
+            totalReviews: p.totalReviews || 0
         }));
 
         res.json({ products: formattedProducts, totalPages: totalPages, currentPage: page });

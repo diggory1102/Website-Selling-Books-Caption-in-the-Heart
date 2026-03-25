@@ -123,22 +123,50 @@ async function loadProvinces(savedAddress = null) {
         } catch(e) { console.error("Lỗi đọc thông tin user:", e); }
     }
 
-    // Gọi hàm ngay khi vừa vào trang thanh toán (Lấy dữ liệu của riêng user này)
     const storageKey = `saved_shipping_address_${currentUserId}`;
-    const savedAddressStr = localStorage.getItem(storageKey);
-    const savedAddress = savedAddressStr ? JSON.parse(savedAddressStr) : null;
-    loadProvinces(savedAddress);
 
-    // 2. Điền thông tin User (Nếu đã đăng nhập) hoặc từ Sổ địa chỉ
-    if (savedAddress) {
-        document.getElementById('chkName').value = savedAddress.name || '';
-        document.getElementById('chkPhone').value = savedAddress.phone || '';
-        if (document.getElementById('chkAddressDetail')) {
-            document.getElementById('chkAddressDetail').value = savedAddress.detail || '';
+    // Hàm tải và áp dụng địa chỉ mặc định từ Server (Ưu tiên 1) hoặc LocalStorage (Ưu tiên 2)
+    async function initCheckoutAddress() {
+        let addressToUse = null;
+
+        if (currentUserId !== 'guest') {
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/api/users/${currentUserId}`);
+                const data = await res.json();
+                if (data.success && data.user && data.user.addresses) {
+                    const defaultAddr = data.user.addresses.find(a => a.isDefault);
+                    if (defaultAddr) {
+                        addressToUse = {
+                            name: defaultAddr.name, phone: defaultAddr.phone,
+                            city: defaultAddr.city, district: defaultAddr.district,
+                            ward: defaultAddr.ward, detail: defaultAddr.detail
+                        };
+                    }
+                }
+            } catch (err) { console.error("Lỗi tải địa chỉ mặc định:", err); }
         }
-    } else if (userObj) {
-        document.getElementById('chkName').value = userObj.fullName || userObj.userName || '';
+
+        // Nếu không có địa chỉ mặc định từ Server, lấy từ LocalStorage
+        if (!addressToUse) {
+            const savedAddressStr = localStorage.getItem(storageKey);
+            addressToUse = savedAddressStr ? JSON.parse(savedAddressStr) : null;
+        }
+
+        loadProvinces(addressToUse);
+
+        // 2. Điền thông tin vào form
+        if (addressToUse) {
+            document.getElementById('chkName').value = addressToUse.name || '';
+            document.getElementById('chkPhone').value = addressToUse.phone || '';
+            if (document.getElementById('chkAddressDetail')) {
+                document.getElementById('chkAddressDetail').value = addressToUse.detail || '';
+            }
+        } else if (userObj) {
+            document.getElementById('chkName').value = userObj.fullName || userObj.userName || '';
+        }
     }
+
+    initCheckoutAddress();
 
     // 3. Render sản phẩm ra khung thanh toán
     const checkoutItems = document.getElementById('checkoutItems');

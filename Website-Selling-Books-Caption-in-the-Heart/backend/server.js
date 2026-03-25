@@ -8,6 +8,8 @@ const express = require('express');
 const cors = require('cors');
 const { execFile } = require('child_process');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 require('dotenv').config();
 
 // IMPORT CÁC BẢNG (MODELS) TỪ FILE database.js
@@ -18,10 +20,15 @@ const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const authRoutes = require('./routes/authRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Tăng giới hạn tải JSON lên 50MB để chứa vừa Avatar Base64
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Mở thư mục tĩnh để trình duyệt có thể đọc được ảnh từ thư mục uploads của Server
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Cấu hình Session (bắt buộc để dùng Passport)
 app.use(session({ secret: 'caption-in-the-heart-secret', resave: false, saveUninitialized: true }));
@@ -47,16 +54,12 @@ app.get('/api/setup', async (req, res) => {
         const catTrinhTham = await Category.create({ name: 'Trinh Thám' });
 
         await Product.create([
-            { name: 'One Piece - Tập 101', authorName: 'Eiichiro Oda', price: 30000, sold: 5000, imageUrl: 'images/one-piece.png', categoryId: catManga._id },
-            { name: 'Thám Tử Lừng Danh Conan', authorName: 'Gosho Aoyama', price: 25000, discount: '-10%', sold: 3200, imageUrl: 'images/conan.png', categoryId: catTrinhTham._id },
-            { name: 'Doraemon - Truyện Ngắn', authorName: 'Fujiko F. Fujio', price: 20000, sold: 4800, imageUrl: 'images/doraemon.png', categoryId: catManga._id },
-            { name: 'Naruto - Tập Cuối', authorName: 'Masashi Kishimoto', price: 22000, discount: '-5%', sold: 2100, imageUrl: 'images/naruto.png', categoryId: catHanhDong._id },
-            { name: 'Thanh Gươm Diệt Quỷ', authorName: 'Koyoharu Gotouge', price: 25000, discount: '-15%', sold: 1800, imageUrl: 'images/diet-quy.png', categoryId: catHanhDong._id },
-            { name: 'Chú Thuật Hồi Chiến', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
-            { name: 'Chú Thuật Hồi Chiến-2', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
-            { name: 'Chú Thuật Hồi Chiến-3', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
-            { name: 'Chú Thuật Hồi Chiến-4', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
-            { name: 'Chú Thuật Hồi Chiến-5', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'images/chuthuathoichien.png', categoryId: catHanhDong._id },
+            { name: 'One Piece - Tập 101', authorName: 'Eiichiro Oda', price: 30000, sold: 5000, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042271842.jpg', categoryId: catManga._id },
+            { name: 'Thám Tử Lừng Danh Conan', authorName: 'Gosho Aoyama', price: 25000, discount: '-10%', sold: 3200, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042332154.jpg', categoryId: catTrinhTham._id },
+            { name: 'Doraemon - Truyện Ngắn', authorName: 'Fujiko F. Fujio', price: 20000, sold: 4800, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/8/9/8935244874241.jpg', categoryId: catManga._id },
+            { name: 'Naruto - Tập Cuối', authorName: 'Masashi Kishimoto', price: 22000, discount: '-5%', sold: 2100, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042301822.jpg', categoryId: catHanhDong._id },
+            { name: 'Thanh Gươm Diệt Quỷ', authorName: 'Koyoharu Gotouge', price: 25000, discount: '-15%', sold: 1800, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042232935.jpg', categoryId: catHanhDong._id },
+            { name: 'Chú Thuật Hồi Chiến', authorName: 'Gege Akutami', price: 35000, sold: 1500, imageUrl: 'https://cdn0.fahasa.com/media/catalog/product/9/7/9786042280202.jpg', categoryId: catHanhDong._id }
         ]);
         res.send("<h1>✅ Đã tạo dữ liệu MongoDB thành công! Hãy quay lại trang chủ web ấn F5.</h1>");
     } catch (err) {
@@ -74,6 +77,31 @@ app.use('/api', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/users', userRoutes);
+
+// ==========================================
+// CẤU HÌNH UPLOAD ẢNH CHO ADMIN (SỬ DỤNG MULTER)
+// ==========================================
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir); // Tự động tạo thư mục uploads nếu chưa có
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir); // Lưu file vào thư mục backend/uploads/
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname)); // Tạo tên file ngẫu nhiên để không bị trùng
+    }
+});
+const upload = multer({ storage: storage });
+
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: 'Không tìm thấy file tải lên' });
+    const imageUrl = `http://127.0.0.1:5000/uploads/${req.file.filename}`;
+    res.json({ success: true, imageUrl: imageUrl }); // Trả link ảnh về cho Admin lưu vào DB
+});
 
 // ==========================================
 // CẤU HÌNH ĐĂNG NHẬP GOOGLE

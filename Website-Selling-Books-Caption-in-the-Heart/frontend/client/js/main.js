@@ -2,6 +2,24 @@
 // CÁC HÀM TOÀN CỤC (GLOBAL FUNCTIONS)
 // ==========================================
 
+// KỸ THUẬT NÂNG CAO: Ghi đè hàm localStorage.setItem để tự động đồng bộ Giỏ hàng lên Server
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    originalSetItem.apply(this, arguments); // Vẫn lưu vào LocalStorage để UI mượt mà
+    
+    // Nếu đây là giỏ hàng của user đã đăng nhập, tự động ném lên MongoDB
+    if (key.startsWith('user_cart_') && key !== 'user_cart_guest') {
+        const userId = getCurrentUserId();
+        if (userId && key === `user_cart_${userId}`) {
+            fetch(`http://127.0.0.1:5000/api/users/${userId}/cart`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cart: JSON.parse(value) })
+            }).catch(e => console.log("Lỗi đồng bộ giỏ hàng lên Server"));
+        }
+    }
+};
+
 // Biến lưu tạm danh sách tim để giao diện Load siêu tốc
 let globalWishlist = [];
 
@@ -350,7 +368,7 @@ if (searchInput && searchBtn) {
             if (avatarUrl) {
                 const accountIconWrap = document.querySelector('#accountBtn .icon-wrap');
                 if (accountIconWrap) {
-                    accountIconWrap.innerHTML = `<img src="${avatarUrl}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">`;
+                    accountIconWrap.innerHTML = `<img src="${avatarUrl}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; display: block;">`;
                 }
 
                 const accountHeader = document.querySelector('.account-header');
@@ -391,6 +409,20 @@ if (searchInput && searchBtn) {
                     localStorage.removeItem('user_wishlist');
                     window.location.reload(); 
                 });
+
+                // TẢI GIỎ HÀNG TỪ SERVER XUỐNG KHI ĐĂNG NHẬP
+                fetch(`http://127.0.0.1:5000/api/users/${user._id || user.id}/cart`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.cart) {
+                            const cartKey = `user_cart_${user._id || user.id}`;
+                            
+                            // Luôn lấy dữ liệu mới nhất từ Server đè xuống máy tính hiện tại để đồng bộ đa thiết bị 100%
+                            originalSetItem.call(localStorage, cartKey, JSON.stringify(data.cart));
+                            updateCartCount();
+                            if (typeof renderCart === 'function') renderCart();
+                        }
+                    });
             }
         } else {
             // ... Các phần hiển thị khi chưa đăng nhập giữ nguyên ...

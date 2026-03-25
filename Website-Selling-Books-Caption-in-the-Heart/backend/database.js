@@ -42,12 +42,26 @@ const UserSchema = new mongoose.Schema({
         isDefault: { type: Boolean, default: false }
     }],
     numberPhone: String,
+    dateOfBirth: String, // Lưu ngày sinh (YYYY-MM-DD)
+    defaultAddress: String, // Lưu nhanh địa chỉ giao hàng
+    avatar: String, // Lưu ảnh đại diện (Chuỗi Base64)
     isOnline: { type: Boolean, default: false },
     
     // DANH SÁCH YÊU THÍCH ĐƯỢC GỘP VÀO ĐÂY (Chuẩn 100%)
     wishlist: [{ 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Product' 
+    }],
+    
+    // --- GIỎ HÀNG (Lưu trên Server để đồng bộ đa thiết bị) ---
+    cart: [{
+        productId: { type: String }, 
+        name: String,
+        price: Number,
+        imageUrl: String,
+        quantity: Number,
+        maxStock: Number,
+        selected: Boolean
     }]
 }, schemaOptions); 
 const User = mongoose.model('User', UserSchema);

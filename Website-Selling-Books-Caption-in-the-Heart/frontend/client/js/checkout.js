@@ -1,9 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Kiểm tra giỏ hàng có rỗng không
-    const cart = JSON.parse(localStorage.getItem('user_cart')) || [];
+    // 1. Lọc chỉ lấy các sản phẩm đã được tích chọn trong giỏ hàng
+    const allCart = JSON.parse(localStorage.getItem(getCartKey())) || [];
+    const cart = allCart.filter(item => item.selected !== false);
+
     if (cart.length === 0) {
-        alert("Giỏ hàng trống! Vui lòng chọn truyện trước khi thanh toán.");
-        window.location.href = "index.html";
+        if (typeof showToast === 'function') showToast("Chưa có sản phẩm nào được chọn để thanh toán!", "error");
+        window.location.href = "cart.html";
         return;
     }
 
@@ -110,22 +112,32 @@ async function loadProvinces(savedAddress = null) {
     }
 }
 
-    // Gọi hàm ngay khi vừa vào trang thanh toán (Kèm dữ liệu đã lưu nếu có)
-    const savedAddressStr = localStorage.getItem('saved_shipping_address');
+    // Lấy thông tin user hiện tại để tạo khóa lưu Sổ địa chỉ riêng biệt
+    const userStr = localStorage.getItem('currentUser');
+    let currentUserId = 'guest';
+    let userObj = null;
+    if (userStr) {
+        try { 
+            userObj = JSON.parse(userStr); 
+            currentUserId = userObj.id || userObj._id; 
+        } catch(e) { console.error("Lỗi đọc thông tin user:", e); }
+    }
+
+    // Gọi hàm ngay khi vừa vào trang thanh toán (Lấy dữ liệu của riêng user này)
+    const storageKey = `saved_shipping_address_${currentUserId}`;
+    const savedAddressStr = localStorage.getItem(storageKey);
     const savedAddress = savedAddressStr ? JSON.parse(savedAddressStr) : null;
     loadProvinces(savedAddress);
 
     // 2. Điền thông tin User (Nếu đã đăng nhập) hoặc từ Sổ địa chỉ
-    const userStr = localStorage.getItem('currentUser');
     if (savedAddress) {
         document.getElementById('chkName').value = savedAddress.name || '';
         document.getElementById('chkPhone').value = savedAddress.phone || '';
         if (document.getElementById('chkAddressDetail')) {
             document.getElementById('chkAddressDetail').value = savedAddress.detail || '';
         }
-    } else if (userStr) {
-        const user = JSON.parse(userStr);
-        document.getElementById('chkName').value = user.fullName || user.userName || '';
+    } else if (userObj) {
+        document.getElementById('chkName').value = userObj.fullName || userObj.userName || '';
     }
 
     // 3. Render sản phẩm ra khung thanh toán
@@ -300,17 +312,10 @@ async function loadProvinces(savedAddress = null) {
             ward: ward,
             detail: detail
         };
-        localStorage.setItem('saved_shipping_address', JSON.stringify(addressToSave));
-
-        // Parse thông tin user an toàn hơn
-        let currentUserId = null;
-        if (userStr) {
-            try { const u = JSON.parse(userStr); currentUserId = u.id || u._id; } 
-            catch(e) { console.error("Lỗi đọc thông tin user:", e); }
-        }
+        localStorage.setItem(storageKey, JSON.stringify(addressToSave)); // Lưu vào khóa riêng của user
 
         const orderData = {
-            userId: currentUserId,
+            userId: currentUserId === 'guest' ? null : currentUserId,
             items: cart,
             shippingInfo: {
                 name: document.getElementById('chkName').value,
@@ -332,12 +337,23 @@ async function loadProvinces(savedAddress = null) {
             const res = await fetch('http://127.0.0.1:5000/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
             const data = await res.json();
             if (data.success) {
-                localStorage.removeItem('user_cart'); // Xóa giỏ hàng khi đặt thành công
+                // Chỉ giữ lại những sản phẩm chưa được chọn thanh toán
+                const latestCart = JSON.parse(localStorage.getItem(getCartKey())) || [];
+                localStorage.setItem(getCartKey(), JSON.stringify(latestCart.filter(item => item.selected === false)));
                 if (typeof showToast === 'function') showToast("🎉 " + data.message, "success"); else alert(data.message);
                 if (typeof updateCartCount === 'function') updateCartCount();
                 setTimeout(() => window.location.href = "index.html", 2000);
-            } else { alert(data.message); btnSubmit.textContent = "XÁC NHẬN ĐẶT HÀNG"; btnSubmit.disabled = false; }
-        } catch (error) { alert("Lỗi kết nối máy chủ!"); btnSubmit.textContent = "XÁC NHẬN ĐẶT HÀNG"; btnSubmit.disabled = false; }
+            } else { 
+                console.error("Chi tiết lỗi từ Backend:", data.message);
+                if (typeof showToast === 'function') showToast(data.message, "error"); 
+                btnSubmit.textContent = "XÁC NHẬN ĐẶT HÀNG"; 
+                btnSubmit.disabled = false; 
+            }
+        } catch (error) { 
+            if (typeof showToast === 'function') showToast("Lỗi kết nối máy chủ!", "error"); 
+            btnSubmit.textContent = "XÁC NHẬN ĐẶT HÀNG"; 
+            btnSubmit.disabled = false; 
+        }
     });
 });
 

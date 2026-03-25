@@ -1,5 +1,5 @@
 .category-layout { display: flex; gap: 30px; margin-top: 20px; align-items: flex-start; margin-bottom: 50px; }
-.sidebar { width: 250px; flex-shrink: 0; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 110px; height: fit-content; max-height: calc(100vh - 130px); overflow-y: auto; }
+.sidebar { width: 250px; flex-shrink: 0; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 250px; height: fit-content; max-height: calc(100vh - 130px); overflow-y: auto; }
 .sidebar::-webkit-scrollbar { width: 5px; }
 .sidebar::-webkit-scrollbar-thumb { background: #ddd; border-radius: 5px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }
@@ -16,4 +16,4 @@
 .pagination-btn { padding: 8px 12px; border: 1px solid var(--primary-color); background-color: var(--white); color: var(--primary-color); border-radius: 4px; cursor: pointer; text-decoration: none; font-weight: 500; transition: 0.3s; }
 .pagination-btn:hover { background-color: var(--primary-color); color: var(--white); }
 .pagination-btn.active { background-color: var(--primary-color); color: var(--white); pointer-events: none; }
-@media (max-width: 768px) { .category-layout { flex-direction: column; } .sidebar { width: 100%; position: static; } .cat-header { flex-direction: column; gap: 15px; align-items: flex-start; } }
+@media (max-width: 768px) { .category-layout { flex-direction: column; } .sidebar { width: 100%; position: static; } .cat-header { flex-direction: column; gap: 15px; align-items: flex-start; } } 

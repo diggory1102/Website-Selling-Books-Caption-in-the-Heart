@@ -6,7 +6,7 @@
 /* Định dạng các ô nhập liệu Form */
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #333; }
-.form-group input, .form-group textarea { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; transition: 0.3s; box-sizing: border-box;}
+.form-group input, .form-group textarea { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: 0.3s; box-sizing: border-box;}
 .form-group input:focus, .form-group textarea:focus { border-color: var(--primary-color); }
 
 /* Phương thức thanh toán */

@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productId = urlParams.get('id');
 
     if (!productId) {
-        alert("Không tìm thấy thông tin sản phẩm!");
+        if (typeof showToast === 'function') showToast("Không tìm thấy thông tin sản phẩm!", "error");
         window.location.href = "index.html";
         return;
     }
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 5. Xử lý "Thêm vào giỏ hàng" (Lưu tạm LocalStorage để làm Ưu tiên 2)
         document.getElementById('btnAddToCart').addEventListener('click', () => {
-            let cart = JSON.parse(localStorage.getItem('user_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(getCartKey())) || [];
             let qty = parseInt(qtyInput.value);
 
             let existingItem = cart.find(item => item.productId === productId);
@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
                 existingItem.quantity += qty;
+                existingItem.selected = false; // Không tự động chọn khi chỉ thêm vào giỏ
             } else {
                 cart.push({
                     productId: productId,
@@ -109,11 +110,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     price: finalPrice, // Sử dụng giá đã giảm để lưu vào giỏ hàng
                     imageUrl: product.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
                     quantity: qty,
-                    maxStock: maxStock
+                    maxStock: maxStock,
+                    selected: false // Không tự động chọn khi chỉ thêm vào giỏ
                 });
             }
 
-            localStorage.setItem('user_cart', JSON.stringify(cart));
+            localStorage.setItem(getCartKey(), JSON.stringify(cart));
             
             // Cập nhật lại số lượng trên Header ngay lập tức
             if (typeof updateCartCount === 'function') updateCartCount();
@@ -124,6 +126,45 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert(`Đã thêm ${qty} cuốn vào giỏ hàng!`);
             }
         });
+
+        // Xử lý "Mua ngay" (Thêm vào giỏ và chuyển sang trang Thanh toán luôn)
+        const btnBuyNow = document.getElementById('btnBuyNow');
+        if (btnBuyNow) {
+            btnBuyNow.addEventListener('click', () => {
+                let cart = JSON.parse(localStorage.getItem(getCartKey())) || [];
+                let qty = parseInt(qtyInput.value);
+
+                // Bỏ chọn tất cả sản phẩm cũ trong giỏ hàng
+                cart.forEach(item => item.selected = false);
+
+                let existingItem = cart.find(item => item.productId === productId);
+                if (existingItem) {
+                    if (existingItem.quantity + qty > maxStock) {
+                        if (typeof showToast === 'function') {
+                            showToast("Số lượng mua vượt quá hàng tồn kho!", "error");
+                        }
+                        return;
+                    }
+                    existingItem.quantity += qty;
+                    existingItem.selected = true; // Chỉ chọn duy nhất sản phẩm này
+                } else {
+                    cart.push({
+                        productId: productId,
+                        name: product.name,
+                        price: finalPrice,
+                        imageUrl: product.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
+                        quantity: qty,
+                        maxStock: maxStock,
+                        selected: true // Chỉ chọn duy nhất sản phẩm này
+                    });
+                }
+
+                localStorage.setItem(getCartKey(), JSON.stringify(cart));
+                
+                // Chuyển hướng tới trang giỏ hàng (sản phẩm này đã được tự động tích chọn)
+                window.location.href = 'cart.html';
+            });
+        }
 
         // 6. Tải truyện cùng tác giả và cùng thể loại
         try {

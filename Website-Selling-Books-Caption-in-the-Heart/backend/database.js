@@ -119,6 +119,12 @@ const BillSchema = new mongoose.Schema({
     paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
     deliveryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Delivery' },
     
+    // --- THÔNG TIN NGƯỜI NHẬN ---
+    customerName: String,
+    customerPhone: String,
+    shippingAddress: String,
+    note: String,
+
     // Bổ sung thông tin tính tiền và khuyến mãi
     subTotal: { type: Number, required: true }, // Tổng tiền hàng chưa giảm
     promotionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Promotion' }, // Mã đã xài
@@ -129,12 +135,11 @@ const BillSchema = new mongoose.Schema({
     items: [LineItemSchema] 
 }, schemaOptions);
 
-BillSchema.pre('save', function(next) {
+BillSchema.pre('save', function() {
     if (!this.billCode) {
         const randomNum = Math.floor(100000 + Math.random() * 900000);
         this.billCode = 'HD-' + randomNum;
     }
-    next();
 });
 const Bill = mongoose.model('Bill', BillSchema);
 

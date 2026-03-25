@@ -13,6 +13,11 @@ function getCurrentUserId() {
     return user._id || user.id; // Chấp cả ID của Google/Facebook hay MongoDB
 }
 
+// Hàm lấy Key Giỏ hàng tương ứng với User (hoặc khách)
+function getCartKey() {
+    return 'user_cart_' + (getCurrentUserId() || 'guest');
+}
+
 // Hàm tải tim từ SERVER về
 async function fetchUserWishlist() {
     const userId = getCurrentUserId();
@@ -41,7 +46,7 @@ function updateWishlistCount() {
 
 // Hàm cập nhật con số trên biểu tượng Giỏ hàng Header
 function updateCartCount() {
-    const cart = JSON.parse(localStorage.getItem('user_cart')) || [];
+    const cart = JSON.parse(localStorage.getItem(getCartKey())) || [];
     // Tính tổng số lượng sản phẩm trong giỏ hàng
     const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
     
@@ -101,7 +106,7 @@ async function toggleWishlist(event, productId) {
 
     const userId = getCurrentUserId();
     if (!userId) {
-        alert("Vui lòng đăng nhập tài khoản để lưu truyện yêu thích nhé!");
+        showToast("Vui lòng đăng nhập để lưu truyện yêu thích nhé!", "error");
         window.location.href = "login.html";
         return;
     }
@@ -704,7 +709,7 @@ function initCarousel(originalLength) {
         subscribeBtn.addEventListener('click', async () => {
             const email = subscribeInput.value.trim();
             if (!email) {
-                alert("Vui lòng nhập địa chỉ email của bạn!");
+                showToast("Vui lòng nhập địa chỉ email của bạn!", "error");
                 return;
             }
             try {
@@ -714,9 +719,87 @@ function initCarousel(originalLength) {
                     body: JSON.stringify({ email })
                 });
                 const data = await res.json();
-                alert(data.message);
+                showToast(data.message, data.success ? "success" : "error");
                 if (data.success) subscribeInput.value = '';
-            } catch (err) { alert("Lỗi kết nối đến máy chủ!"); }
+            } catch (err) { showToast("Lỗi kết nối đến máy chủ!", "error"); }
+        });
+    }
+
+
+
+        // ==========================================
+    // 7. BIẾN THẺ SELECT THÀNH CUSTOM DROPDOWN TỰ ĐỘNG
+    // ==========================================
+    function initCustomSelects() {
+        const selects = document.querySelectorAll('select.custom-select');
+        selects.forEach(select => {
+            if (select.parentElement.classList.contains('custom-select-wrapper')) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-select-wrapper';
+            wrapper.style.flex = select.style.flex || '';
+            wrapper.style.width = select.style.width || '100%';
+            
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+            select.style.display = 'none'; // Ẩn select gốc đi
+
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-select-trigger';
+            
+            const list = document.createElement('ul');
+            list.className = 'custom-select-list';
+
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(list);
+
+            const renderList = () => {
+                list.innerHTML = '';
+                const options = Array.from(select.options);
+                const selectedOption = options.find(o => o.selected) || options[0];
+                const text = selectedOption ? selectedOption.textContent : 'Vui lòng chọn';
+                trigger.innerHTML = `<span>${text}</span> <i class="fa-solid fa-chevron-down"></i>`;
+
+                options.forEach((option, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'custom-select-item';
+                    if (option.selected) li.classList.add('selected');
+                    li.textContent = option.textContent;
+                    if (option.value === "") li.style.color = '#888';
+                    
+                    li.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        select.selectedIndex = index;
+                        select.dispatchEvent(new Event('change')); // Kích hoạt sự kiện đổi của select gốc
+                        list.classList.remove('show');
+                        trigger.classList.remove('active');
+                    });
+                    list.appendChild(li);
+                });
+            };
+
+            renderList();
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select-list').forEach(el => { if (el !== list) el.classList.remove('show'); });
+                document.querySelectorAll('.custom-select-trigger').forEach(el => { if (el !== trigger) el.classList.remove('active'); });
+                list.classList.toggle('show');
+                trigger.classList.toggle('active');
+            });
+
+            // Tự động vẽ lại danh sách nếu select gốc bị thay đổi bằng Javascript (Dùng cho Tỉnh/Huyện)
+            const observer = new MutationObserver(() => renderList());
+            observer.observe(select, { childList: true, subtree: true });
+
+            // Cập nhật giao diện nếu giá trị select gốc thay đổi
+            select.addEventListener('change', () => renderList());
+        });
+
+        // Đóng dropdown khi click ra ngoài
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-list').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.custom-select-trigger').forEach(el => el.classList.remove('active'));
         });
     }
 
@@ -729,4 +812,5 @@ function initCarousel(originalLength) {
     checkLoginStatus(); 
     fetchNewManga(currentPage);
     updateCartCount();
+    initCustomSelects();
 });

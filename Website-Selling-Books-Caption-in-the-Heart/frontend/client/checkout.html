@@ -87,10 +87,10 @@
                         <a href="review.html" class="account-item" style="text-align: left;">
                             <i class="fa-regular fa-star"></i> Đánh giá
                         </a>
-                        <a href="purchased.html" class="account-item" style="text-align: left;">
+                        <a href="orders.html?status=Đã giao" class="account-item" style="text-align: left;">
                             <i class="fa-solid fa-box-open"></i> Đã mua
                         </a>
-                        <a href="cancelled.html" class="account-item" style="text-align: left;">
+                        <a href="orders.html?status=Đã hủy" class="account-item" style="text-align: left;">
                             <i class="fa-solid fa-ban"></i> Đã huỷ
                         </a>
                     </div>
@@ -119,13 +119,13 @@
                     <div class="form-group">
                         <label>Địa chỉ nhận hàng (*)</label>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <select id="chkCity" required style="flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; background: #fff;">
+                            <select id="chkCity" required class="custom-select" style="flex: 1;">
                                 <option value="">Chọn Tỉnh/Thành phố</option>
                             </select>
-                            <select id="chkDistrict" required style="flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; background: #fff;">
+                            <select id="chkDistrict" required class="custom-select" style="flex: 1;">
                                 <option value="">Chọn Quận/Huyện</option>
                             </select>
-                            <select id="chkWard" required style="flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; background: #fff;">
+                            <select id="chkWard" required class="custom-select" style="flex: 1;">
                                 <option value="">Chọn Phường/Xã</option>
                             </select>
                         </div>
@@ -135,13 +135,13 @@
                     <div class="form-group" style="display: flex; gap: 15px;">
                         <div style="flex: 1;">
                             <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #333;">Ngày giao hàng dự kiến</label>
-                            <select id="chkDeliveryDate" style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-family: inherit; font-size: 14px; background: #fff; cursor: pointer;">
+                            <select id="chkDeliveryDate" class="custom-select" style="width: 100%;">
                                 <!-- JS sẽ tự động điền các ngày vào đây -->
                             </select>
                         </div>
                         <div style="flex: 1;">
                             <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #333;">Khung giờ nhận hàng</label>
-                            <select id="chkDeliveryTime" style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-family: inherit; font-size: 14px; background: #fff; cursor: pointer;">
+                            <select id="chkDeliveryTime" class="custom-select" style="width: 100%;">
                                 <option value="Bất kỳ lúc nào">Bất kỳ lúc nào</option>
                                 <option value="Giờ hành chính (08:00 - 17:00)">Giờ hành chính (08:00 - 17:00)</option>
                                 <option value="Sáng (08:00 - 12:00)">Sáng (08:00 - 12:00)</option>
@@ -169,10 +169,10 @@
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
                     <div style="position: relative; flex: 1;">
-                        <input type="text" id="voucherCode" autocomplete="off" placeholder="Nhập mã giảm giá..." style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-family: inherit;">
+                        <input type="text" id="voucherCode" autocomplete="off" placeholder="Nhập mã giảm giá..." style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 10px; outline: none; font-family: inherit;">
                         <div id="voucherDropdown" class="voucher-dropdown"></div>
                     </div>
-                    <button type="button" id="btnApplyVoucher" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;">Áp dụng</button>
+                    <button type="button" id="btnApplyVoucher" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s;">Áp dụng</button>
                 </div>
                 <div id="voucherMessage" style="font-size: 13px; margin-bottom: 15px; display: none;"></div>
 

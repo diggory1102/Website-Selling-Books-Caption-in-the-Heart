@@ -620,17 +620,38 @@ app.post('/api/orders', async (req, res) => {
         const payment = await Payment.create({ method: paymentMethod, status: 'Chưa thanh toán' });
         const delivery = await Delivery.create({ unitName: 'Giao hàng tiêu chuẩn', status: 'Chờ lấy hàng' });
 
-        // Lưu Hóa đơn
-        const newBill = await Bill.create({
-            userId: userId || null, // Hỗ trợ khách hàng chưa đăng nhập
+        // Tạo mã hóa đơn ngẫu nhiên (VD: HD-123456)
+        const randomBillCode = 'HD-' + Math.floor(100000 + Math.random() * 900000);
+
+        // Khởi tạo dữ liệu đơn hàng (Không truyền null để tránh lỗi MongoDB CastError)
+        const billData = {
+            billCode: randomBillCode,
             paymentId: payment._id,
             deliveryId: delivery._id,
             subTotal: subTotal,
-            promotionId: promotionId || null,
+            shippingFee: shippingFee,
             discountValue: discountValue || 0,
             totalPrice: totalPrice,
-            items: items.map(item => ({ productId: item.productId, productName: item.name, quantity: item.quantity, priceAtPurchase: item.price }))
-        });
+            
+            status: 'Chờ xử lý',
+            // Tương thích với nhiều cách đặt tên cột trong DB của bạn
+            customerName: shippingInfo.name, name: shippingInfo.name,
+            customerPhone: shippingInfo.phone, phone: shippingInfo.phone,
+            shippingAddress: shippingInfo.address, address: shippingInfo.address,
+            note: shippingInfo.note,
+            
+            items: items.map(item => ({ 
+                productId: item.productId, 
+                productName: item.name, name: item.name,
+                quantity: item.quantity, 
+                priceAtPurchase: item.price, price: item.price 
+            }))
+        };
+
+        if (userId) billData.userId = userId;
+        if (promotionId) billData.promotionId = promotionId;
+
+        const newBill = await Bill.create(billData);
 
         // Cập nhật số lượt đã dùng của Voucher
         if (promotionId) {
@@ -640,6 +661,60 @@ app.post('/api/orders', async (req, res) => {
         res.json({ success: true, message: "Đặt hàng thành công!", orderId: newBill._id });
     } catch (err) {
         res.status(500).json({ success: false, message: "Lỗi tạo đơn hàng: " + err.message });
+    }
+});
+
+// ==========================================
+// API: LẤY DANH SÁCH ĐƠN HÀNG CỦA USER
+// ==========================================
+app.get('/api/orders/user/:userId', async (req, res) => {
+    try {
+        const bills = await Bill.find({ userId: req.params.userId })
+            .populate('paymentId')
+            .populate('deliveryId')
+            .populate('items.productId', 'imageUrl') // Populate để lấy được ảnh truyện
+            .sort({ createdAt: -1 }); // Sắp xếp hóa đơn mới nhất lên đầu
+        res.json({ success: true, orders: bills });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi lấy danh sách đơn hàng" });
+    }
+});
+
+// ==========================================
+// API: LẤY CHI TIẾT 1 ĐƠN HÀNG
+// ==========================================
+app.get('/api/orders/:id', async (req, res) => {
+    try {
+        const order = await Bill.findById(req.params.id)
+            .populate('paymentId')
+            .populate('deliveryId')
+            .populate('items.productId', 'imageUrl name');
+            
+        if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+        res.json({ success: true, order });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi lấy chi tiết đơn hàng" });
+    }
+});
+
+// ==========================================
+// API: HỦY ĐƠN HÀNG
+// ==========================================
+app.put('/api/orders/:id/cancel', async (req, res) => {
+    try {
+        const order = await Bill.findById(req.params.id);
+        if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+        
+        if (order.status !== 'Chờ xử lý') {
+            return res.status(400).json({ success: false, message: "Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý" });
+        }
+
+        order.status = 'Đã hủy';
+        await order.save();
+        
+        res.json({ success: true, message: "Đã hủy đơn hàng thành công!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi khi hủy đơn hàng: " + err.message });
     }
 });
 

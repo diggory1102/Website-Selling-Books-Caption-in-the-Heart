@@ -30,7 +30,17 @@ const UserSchema = new mongoose.Schema({
     fullName: String,
     email: { type: String, required: true, unique: true },
     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' }, // Khóa ngoại liên kết phân quyền
-    address: String,
+    
+    // --- SỔ ĐỊA CHỈ (Hỗ trợ người dùng lưu nhiều địa chỉ) ---
+    addresses: [{
+        name: String,
+        phone: String,
+        city: String,
+        district: String,
+        ward: String,
+        detail: String,
+        isDefault: { type: Boolean, default: false }
+    }],
     numberPhone: String,
     isOnline: { type: Boolean, default: false },
     
@@ -98,6 +108,16 @@ const PromotionSchema = new mongoose.Schema({
 }, schemaOptions);
 const Promotion = mongoose.model('Promotion', PromotionSchema);
 
+// --- BẢNG THÔNG BÁO (NOTIFICATION) ---
+const NotificationSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Dành riêng cho 1 user (Nếu null -> Báo toàn hệ thống)
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    isRead: { type: Boolean, default: false },
+    type: { type: String, default: 'SYSTEM' } // Phân loại: 'ORDER', 'PROMOTION', 'SYSTEM'
+}, schemaOptions);
+const Notification = mongoose.model('Notification', NotificationSchema);
+
 // --- CÁC BẢNG THANH TOÁN & GIAO HÀNG ---
 const PaymentSchema = new mongoose.Schema({ method: String, status: String }, schemaOptions);
 const Payment = mongoose.model('Payment', PaymentSchema);
@@ -124,6 +144,8 @@ const BillSchema = new mongoose.Schema({
     customerPhone: String,
     shippingAddress: String,
     note: String,
+    expectedDeliveryDate: String, // Thêm ngày giao hàng dự kiến
+    expectedDeliveryTime: String, // Thêm khung giờ giao hàng dự kiến
 
     // Bổ sung thông tin tính tiền và khuyến mãi
     subTotal: { type: Number, required: true }, // Tổng tiền hàng chưa giảm
@@ -153,5 +175,5 @@ const Subscriber = mongoose.model('Subscriber', SubscriberSchema);
 // 3. XUẤT CÁC MODEL ĐỂ FILE KHÁC CÓ THỂ GỌI
 // ==========================================
 module.exports = {
-    Role, User, Category, Author, Publisher, Product, Rate, Promotion, Payment, Delivery, Bill, Subscriber
+    Role, User, Category, Author, Publisher, Product, Rate, Promotion, Notification, Payment, Delivery, Bill, Subscriber
 };

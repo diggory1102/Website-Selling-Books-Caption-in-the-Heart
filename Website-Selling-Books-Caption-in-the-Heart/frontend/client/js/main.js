@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             if (categories && categories.length > 0) {
                 categoryMenu.innerHTML = categories.map(cat => 
-                    `<li><a href="category.html?id=${cat.id}">${cat.name}</a></li>`
+                    `<li><a href="search.html?category=${cat.id}">${cat.name}</a></li>`
                 ).join('');
             }
         } catch (error) {

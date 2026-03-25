@@ -7,18 +7,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // 1. Lấy từ khóa "q" từ URL
     const urlParams = new URLSearchParams(window.location.search);
-    const query = urlParams.get('q');
+    const query = urlParams.get('q') || '';
     const categoryId = urlParams.get('category');
     const sortParam = urlParams.get('sort');
     const priceParam = urlParams.get('price');
     const pageParam = parseInt(urlParams.get('page')) || 1;
 
-    if (!query) {
-        searchTitle.textContent = "Bạn chưa nhập từ khóa tìm kiếm.";
-        return;
+    if (query) {
+        searchTitle.innerHTML = `Kết quả tìm kiếm cho: <span>"${query}"</span>`;
+    } else {
+        searchTitle.innerHTML = `Tất cả truyện tranh`;
     }
-
-    searchTitle.innerHTML = `Kết quả tìm kiếm cho: <span>"${query}"</span>`;
 
     try {
         // 2. Tải danh sách thể loại cho thanh lọc (Dropdown)
@@ -32,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 option.textContent = cat.name;
                 if (String(cat.id || cat._id) === categoryId) {
                     option.selected = true;
+                    if (!query) searchTitle.innerHTML = `Thể loại: <span>${cat.name}</span>`;
                 }
                 categoryFilter.appendChild(option);
             });
@@ -52,18 +52,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Hàm gộp chung logic điều hướng khi có bất kỳ bộ lọc nào thay đổi
         function applyFilters() {
-            const selectedCat = categoryFilter ? categoryFilter.value : '';
-            const currentSort = sortFilter ? sortFilter.value : '';
-            const currentPrice = priceFilter ? priceFilter.value : '';
-            let newUrl = `search.html?q=${encodeURIComponent(query)}`;
-            if (selectedCat) newUrl += `&category=${selectedCat}`;
-            if (currentSort) newUrl += `&sort=${currentSort}`;
-            if (currentPrice) newUrl += `&price=${currentPrice}`;
-            window.location.href = newUrl;
+            const params = new URLSearchParams();
+            if (query) params.set('q', query);
+            
+            if (categoryFilter && categoryFilter.value) params.set('category', categoryFilter.value);
+            if (sortFilter && sortFilter.value) params.set('sort', sortFilter.value);
+            if (priceFilter && priceFilter.value) params.set('price', priceFilter.value);
+            
+            window.location.href = `search.html?${params.toString()}`;
+        }
+
+        // Tải wishlist để đồng bộ tim đỏ trên thẻ truyện
+        if (typeof fetchUserWishlist === 'function') {
+            await fetchUserWishlist();
         }
 
         // 4. Gọi API tìm kiếm (Sử dụng cổng 5000)
-        let apiUrl = `http://127.0.0.1:5000/api/search?q=${encodeURIComponent(query)}&page=${pageParam}`;
+        let apiUrl = `http://127.0.0.1:5000/api/search?page=${pageParam}`;
+        if (query) apiUrl += `&q=${encodeURIComponent(query)}`;
         if (categoryId) apiUrl += `&category=${categoryId}`;
         if (sortParam) apiUrl += `&sort=${sortParam}`;
         if (priceParam) {
@@ -81,13 +87,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentPage = data.currentPage || 1;
 
         if (products.length === 0) {
-            searchGrid.innerHTML = `<div class="no-results">Rất tiếc, không tìm thấy truyện nào khớp với từ khóa của bạn.</div>`;
+            searchGrid.innerHTML = `<div class="no-results" style="grid-column: 1/-1; text-align: center; padding: 50px 0; color: #666; font-size: 16px;">Rất tiếc, không tìm thấy truyện nào khớp với bộ lọc của bạn.</div>`;
             return;
         }
 
         // 5. Vẽ kết quả (Dùng chung Class product-card để ăn CSS cũ)
         searchGrid.innerHTML = products.map(item => {
             const productId = item.id;
+
+            // Check trạng thái yêu thích
+            const isLiked = typeof globalWishlist !== 'undefined' && globalWishlist.includes(String(productId));
+            const heartClass = isLiked ? 'fa-solid' : 'fa-regular';
+            const heartColor = isLiked ? '#e74c3c' : '#ccc';
 
             let origPrice = item.price;
             let fnPrice = origPrice;
@@ -112,9 +123,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             
             return `
-                <div class="product-card">
+                <div class="product-card" style="position: relative;">
+                    <div class="wishlist-btn" onclick="toggleWishlist(event, '${productId}')" style="position: absolute; top: 10px; right: 10px; z-index: 999; background: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
+                        <i class="${heartClass} fa-heart" style="color: ${heartColor}; transition: 0.2s;"></i>
+                    </div>
+
                     <a href="product-detail.html?id=${productId}" style="text-decoration: none; color: inherit;">
                         <div class="img-box">
+                            ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
                             <img src="${item.imageUrl}" onerror="this.src='https://placehold.jp/200x250.png?text=No+Image'">
                         </div>
                         <div class="info-box">
@@ -147,12 +163,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Hàm hỗ trợ tạo URL cho trang
             const getPageUrl = (page) => {
-                let url = `search.html?q=${encodeURIComponent(query)}`;
-                if (categoryId) url += `&category=${categoryId}`;
-                if (sortParam) url += `&sort=${sortParam}`;
-                if (priceParam) url += `&price=${priceParam}`;
-                url += `&page=${page}`;
-                return url;
+                const pParams = new URLSearchParams(window.location.search);
+                pParams.set('page', page);
+                return `search.html?${pParams.toString()}`;
             };
 
             // Nút Trang trước (Chỉ hiện nếu không phải trang 1)

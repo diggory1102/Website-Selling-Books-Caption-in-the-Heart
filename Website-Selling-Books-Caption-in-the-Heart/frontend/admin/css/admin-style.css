@@ -1,0 +1,22 @@
+@import url('sidebar.css');
+@import url('topbar.css');
+@import url('components.css');
+
+:root {
+    --primary: #2c3e50;
+    --secondary: #e74c3c;
+    --bg: #f4f6f9;
+    --text: #333;
+    --sidebar-bg: #fff;
+    --sidebar-hover: #f8f9fa;
+    --border: #eee;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); }
+a { text-decoration: none; color: inherit; }
+
+.admin-container { display: flex; min-height: 100vh; }
+
+/* Main Content */
+.admin-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }

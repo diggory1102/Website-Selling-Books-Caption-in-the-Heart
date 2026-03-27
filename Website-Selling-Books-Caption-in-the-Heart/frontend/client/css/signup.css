@@ -1,0 +1,185 @@
+/* ==========================================
+   KẾT THỪA BIẾN MÀU TỪ TRANG CHỦ (STYLEINDEX)
+   ========================================== */
+:root {
+    --primary-color: #9bd8fc; /* Đã đổi sang màu xanh bạn chọn */
+    --secondary-color: #e74c3c;
+    --bg-color: #f5f7f9;
+    --text-color: #333;
+    --white: #ffffff;
+}
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Montserrat', sans-serif; 
+}
+
+body { 
+    background-color: var(--bg-color); 
+    color: var(--text-color);
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    min-height: 100vh; 
+}
+
+/* ==========================================
+   1. PHẦN BANNER Ở TRÊN CÙNG
+   ========================================== */
+.top-banner {
+    width: 100%;
+    background-color: var(--primary-color);
+    height: 235px;
+    display: flex;
+    align-items: center;
+    padding: 0 40px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+}
+
+.top-banner img {
+    height: 200px; 
+    cursor: pointer;
+}
+
+/* ==========================================
+   2. PHẦN KHUNG FORM (ĐĂNG NHẬP / ĐĂNG KÝ)
+   ========================================== */
+.auth-container { 
+    background-color: var(--white); 
+    width: 100%;
+    max-width: 400px; 
+    padding: 40px 30px; 
+    border-radius: 8px; /* Bo góc giống trang chủ */
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15); /* Đổ bóng mượt mà giống menu dropdown */
+    margin-top: 50px; 
+    margin-bottom: 50px;
+}
+
+.auth-container h2 { 
+    text-align: center; 
+    margin-bottom: 25px; 
+    color: var(--text-color); 
+    font-weight: 700;
+}
+
+.form-group { margin-bottom: 15px; }
+
+.form-group label { 
+    display: block; 
+    margin-bottom: 5px; 
+    font-weight: 500; 
+    font-size: 14px; 
+    color: var(--text-color);
+}
+
+.form-group input { 
+    width: 100%; 
+    padding: 12px 15px; 
+    border: 1px solid #eaeaea; 
+    border-radius: 8px; 
+    outline: none; 
+    transition: 0.3s;
+}
+
+.form-group input:focus { 
+    border-color: var(--primary-color); 
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); /* Hiệu ứng focus mềm mại */
+} 
+
+/* ==========================================
+   3. NÚT BẤM (BUTTONS)
+   ========================================== */
+.auth-btn { 
+    width: 100%; 
+    padding: 12px; 
+    background-color: var(--primary-color); 
+    color: var(--white); 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 16px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    margin-top: 10px; 
+    transition: 0.3s; 
+}
+
+.auth-btn:hover { 
+    background-color: #0056b3; /* Xanh đậm hơn khi hover */
+} 
+
+.auth-links { 
+    text-align: center; 
+    margin-top: 15px; 
+    font-size: 13px; 
+}
+
+.auth-links a { 
+    color: var(--primary-color); 
+    text-decoration: none; 
+    font-weight: 600;
+} 
+
+.auth-links a:hover { 
+    text-decoration: underline; 
+}
+
+/* Thông báo lỗi / thành công */
+.message { margin-top: 15px; font-size: 14px; text-align: center; display: none; }
+.message.error { color: var(--secondary-color); display: block; } /* Màu đỏ từ styleindex */
+.message.success { color: #27ae60; display: block; } /* Xanh lá cây */
+
+/* ==========================================
+   4. NÚT ĐĂNG KÝ MẠNG XÃ HỘI
+   ========================================== */
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #888;
+    font-size: 13px;
+}
+
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.divider span {
+    padding: 0 10px;
+}
+
+.social-auth {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.social-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.3s;
+    background: var(--white);
+    border: 1px solid #eaeaea;
+    color: var(--text-color);
+}
+
+.social-btn img {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.social-btn:hover {
+    background: var(--bg-color);
+}

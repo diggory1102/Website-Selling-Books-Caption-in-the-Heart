@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh giá sản phẩm - Caption In The Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/style-review.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container header-content">
+            <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'"></a></div>
+            <div class="search-bar">
+                <input style="border-radius: 15px;" type="text" id="searchInput" name="search" autocomplete="off" placeholder="Tìm kiếm truyện tranh, tác giả...">
+                <button style="border-radius: 5px;" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                <div id="searchResults" class="search-dropdown"></div>
+            </div>
+            <div class="user-actions">
+                <div class="action-item" id="notiBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-regular fa-bell"></i>
+                    </div>
+                    
+                    <span>Thông báo</span>
+
+                    <div id="notiDropdown" class="noti-dropdown">
+                        <div class="noti-header">Thông báo mới </div>
+                        <div class="noti-list">
+                        </div>
+                        <a href="notifications.html" class="noti-view-all">Xem tất cả</a>
+                    </div>
+                </div>
+                <div class="action-item" id="accountBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <span>Tài khoản</span>
+
+                    <div id="accountDropdown" class="account-dropdown">
+                        <div class="account-header">
+                            <strong id="userNameDisplay">Chào, Khách</strong> 
+                            <span id="userRoleDisplay" style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Vui lòng đăng nhập</span>
+                        </div>
+                        <div class="account-list">
+                        </div>
+                    </div>
+                </div>
+                <div class="action-item" id="cartBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                    <span>Giỏ hàng</span>
+                    
+                    <div id="cartDropdown" class="cart-dropdown-simple">
+                        <a href="cart.html" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-basket-shopping"></i> Giỏ hàng của tôi
+                        </a>
+                        <a href="review.html" class="account-item" style="text-align: left;">
+                            <i class="fa-regular fa-star"></i> Đánh giá
+                        </a>
+                        <a href="orders.html?status=Đã giao" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-box-open"></i> Đã mua
+                        </a>
+                        <a href="orders.html?status=Đã hủy" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-ban"></i> Đã huỷ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            <a href="index.html" style="color: #666; text-decoration: none;">Trang chủ</a> 
+            <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
+            <strong style="color: var(--primary-color);">Đánh giá sản phẩm</strong>
+        </div>
+
+        <h1 style="margin-top: 20px; margin-bottom: 20px; font-size: 24px; color: #333;">Chưa đánh giá</h1>
+
+        <div class="review-container" id="reviewList">
+            <!-- JS Render List -->
+        </div>
+    </main>
+
+    <!-- BẢNG NỔI (MODAL) ĐỂ VIẾT ĐÁNH GIÁ -->
+    <div class="review-modal-overlay" id="reviewModal">
+        <div class="review-modal">
+            <i class="fa-solid fa-xmark close-modal" onclick="closeReviewModal()"></i>
+            <h3>Đánh giá sản phẩm</h3>
+            <p id="rvProductName" style="font-weight: 600; color: var(--primary-color); margin-bottom: 10px; font-size: 14px;"></p>
+            
+            <div class="star-container" id="starContainer">
+                <!-- Render by JS -->
+            </div>
+
+            <textarea id="reviewContent" class="review-content" placeholder="Hãy chia sẻ cảm nhận của bạn về chất lượng truyện, bọc màng co, giao hàng... (Tùy chọn)"></textarea>
+            
+            <button id="btnSubmitReview" class="btn-submit-rev" onclick="submitReview()">GỬI ĐÁNH GIÁ</button>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container footer-content">
+            <div class="footer-column">
+                <h4>Về chúng tôi</h4>
+                <p>Caption In The Heart - Nơi kết nối niềm đam mê truyện tranh bất tận.</p>
+                <div class="socials">
+                    <i class="fa-brands fa-facebook"></i>
+                    <i class="fa-brands fa-instagram"></i>
+                    <i class="fa-brands fa-youtube"></i>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Hỗ trợ khách hàng</h4>
+                <ul>
+                    <li><a href="#">Hướng dẫn mua hàng</a></li>
+                    <li><a href="#">Chính sách đổi trả</a></li>
+                    <li><a href="#">Phương thức thanh toán</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Đăng ký nhận tin</h4>
+                <div class="subscribe">
+                    <input type="email" id="subscribeEmailInput" placeholder="Email của bạn">
+                    <button id="subscribeSubmitBtn">Gửi</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/review.js"></script>
+</body>
+</html>

@@ -16,6 +16,8 @@ const createOrder = async (req, res) => {
             customerName: shippingInfo.name, name: shippingInfo.name,
             customerPhone: shippingInfo.phone, phone: shippingInfo.phone,
             shippingAddress: shippingInfo.address, address: shippingInfo.address, note: shippingInfo.note,
+            expectedDeliveryDate: shippingInfo.expectedDeliveryDate,
+            expectedDeliveryTime: shippingInfo.expectedDeliveryTime,
             items: items.map(item => ({ 
                 productId: item.productId, productName: item.name, name: item.name,
                 quantity: item.quantity, priceAtPurchase: item.price, price: item.price 
@@ -62,6 +64,15 @@ const cancelOrder = async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: "Lỗi khi hủy đơn hàng: " + err.message }); }
 };
 
+const getAllOrders = async (req, res) => {
+    try {
+        const bills = await Bill.find()
+            .populate('paymentId').populate('deliveryId').populate('items.productId', 'imageUrl name')
+            .sort({ createdAt: -1 }); // Lấy đơn hàng mới nhất lên đầu
+        res.json({ success: true, orders: bills });
+    } catch (err) { res.status(500).json({ success: false, message: "Lỗi lấy danh sách tất cả đơn hàng" }); }
+};
+
 module.exports = {
-    createOrder, getUserOrders, getOrderById, cancelOrder
+    createOrder, getUserOrders, getOrderById, cancelOrder, getAllOrders
 };

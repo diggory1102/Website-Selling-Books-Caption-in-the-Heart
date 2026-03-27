@@ -163,6 +163,25 @@ async function toggleWishlist(event, productId) {
     }
 }
 
+// Hàm lấy thông báo từ Server để không bị lỗi ReferenceError
+async function fetchUserNotifications() {
+    const userId = getCurrentUserId();
+    if (!userId) return;
+    try {
+        const res = await fetch(`http://127.0.0.1:5000/api/notifications/user/${userId}`);
+        const data = await res.json();
+        if (data.success && data.notifications) {
+            const unreadCount = data.notifications.filter(n => !n.isRead).length;
+            const notiBtnWrap = document.querySelector('#notiBtn .icon-wrap');
+            if (notiBtnWrap && unreadCount > 0) {
+                let badge = notiBtnWrap.querySelector('.cart-count');
+                if (!badge) { badge = document.createElement('span'); badge.className = 'cart-count'; notiBtnWrap.appendChild(badge); }
+                badge.textContent = unreadCount;
+                badge.style.display = 'block';
+            }
+        }
+    } catch (err) { console.error("Lỗi lấy thông báo:", err); }
+}
 
 // ==========================================
 // KHI TRANG ĐÃ TẢI XONG (DOM LOADED)

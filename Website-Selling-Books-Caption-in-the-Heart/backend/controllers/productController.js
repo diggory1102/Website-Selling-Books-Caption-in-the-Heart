@@ -105,11 +105,19 @@ const searchProducts = async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Lỗi Server" }); }
 };
 
+const getAllProducts = async (req, res) => {
+    try {
+        const products = await Product.find().sort({ createdAt: -1 });
+        res.json({ success: true, products });
+    } catch (err) { res.status(500).json({ error: "Lỗi Server" }); }
+};
+
 module.exports = {
     getCategories,
     getBestSellers,
     getNewestProducts,
     getProductById,
     getRelatedProducts,
-    searchProducts
+    searchProducts,
+    getAllProducts
 };

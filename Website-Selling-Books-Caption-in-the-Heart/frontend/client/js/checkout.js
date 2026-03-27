@@ -124,11 +124,11 @@ async function loadProvinces(savedAddress = null) {
 
         // --- TỰ ĐỘNG ĐIỀN TỪ SỔ ĐỊA CHỈ ĐÃ LƯU ---
         if (savedAddress && savedAddress.city) {
-            handleCitySelect(savedAddress.city);
+            window.handleCitySelect(savedAddress.city);
             if (savedAddress.district) {
-                handleDistrictSelect(savedAddress.district);
+                window.handleDistrictSelect(savedAddress.district);
                 if (savedAddress.ward) {
-                    handleWardSelect(savedAddress.ward);
+                    window.handleWardSelect(savedAddress.ward);
                 }
             }
         }

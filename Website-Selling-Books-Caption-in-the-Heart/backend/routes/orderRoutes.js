@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const orderController = require('../controllers/orderController');
+const { createOrder, getUserOrders, getOrderById, cancelOrder, getAllOrders } = require('../controllers/orderController');
 
-router.post('/', orderController.createOrder);
-router.get('/user/:userId', orderController.getUserOrders);
-router.get('/:id', orderController.getOrderById);
-router.put('/:id/cancel', orderController.cancelOrder);
+router.post('/', createOrder);
+router.get('/user/:userId', getUserOrders);
+router.get('/:id', getOrderById);
+router.put('/:id/cancel', cancelOrder);
+
+// Route dành cho Admin lấy tất cả đơn hàng
+router.get('/', getAllOrders);
 
 module.exports = router;

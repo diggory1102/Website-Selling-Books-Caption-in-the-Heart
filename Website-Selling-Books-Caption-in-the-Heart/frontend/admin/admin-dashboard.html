@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Caption In The Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <img src="../client/images/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'">
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="admin-dashboard.html" class="active"><i class="fa-solid fa-chart-line"></i> Tổng quan</a></li>
+                <li><a href="#"><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</a></li>
+                <li><a href="#"><i class="fa-solid fa-book"></i> Sản phẩm</a></li>
+                <li><a href="#"><i class="fa-solid fa-tags"></i> Danh mục</a></li>
+                <li><a href="#"><i class="fa-solid fa-users"></i> Khách hàng</a></li>
+                <li><a href="#"><i class="fa-solid fa-ticket"></i> Khuyến mãi</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Topbar -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button id="toggleSidebar" class="btn-toggle"><i class="fa-solid fa-bars"></i></button>
+                    <h2>Tổng quan hệ thống</h2>
+                </div>
+                <div class="topbar-right">
+                    <div class="admin-profile" id="adminProfileBtn">
+                        <img src="https://via.placeholder.com/40" alt="Admin Avatar" id="adminAvatar">
+                        <div class="admin-info">
+                            <span class="admin-name" id="adminName">Đang tải...</span>
+                            <span class="admin-role" id="adminRole">...</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down"></i>
+                        
+                        <div class="admin-dropdown" id="adminDropdown">
+                            <a href="#" id="btnGoToClient"><i class="fa-solid fa-earth-americas"></i> Xem trang Web</a>
+                            <a href="#" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e3f2fd; color: #00bcd4;"><i class="fa-solid fa-sack-dollar"></i></div>
+                        <div class="stat-info"><p>Tổng doanh thu</p><h3 id="statRevenue">0đ</h3></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e8f5e9; color: #4caf50;"><i class="fa-solid fa-box-open"></i></div>
+                        <div class="stat-info"><p>Tổng đơn hàng</p><h3 id="statOrders">0</h3></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fff3e0; color: #ff9800;"><i class="fa-solid fa-book"></i></div>
+                        <div class="stat-info"><p>Sản phẩm hiện có</p><h3 id="statProducts">0</h3></div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Table -->
+                <div class="recent-orders-section">
+                    <div class="section-header">
+                        <h3>Đơn hàng gần đây</h3>
+                        <a href="#" class="btn-view-all">Xem tất cả</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr> <th>Mã đơn</th> <th>Khách hàng</th> <th>Ngày đặt</th> <th>Tổng tiền</th> <th>Trạng thái</th> </tr>
+                            </thead>
+                            <tbody id="recentOrdersTable">
+                                <tr><td colspan="5" style="text-align: center;">Đang tải dữ liệu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng của tôi - Caption In The Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/style-orders.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container header-content">
+            <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'"></a></div>
+            <div class="search-bar">
+                <input style="border-radius: 15px;" type="text" id="searchInput" autocomplete="off" placeholder="Tìm kiếm truyện tranh...">
+                <button style="border-radius: 5px;" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                <div id="searchResults" class="search-dropdown"></div>
+            </div>
+            <div class="user-actions">
+                <div class="action-item" id="notiBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-regular fa-bell"></i>
+                    </div>
+                    
+                    <span>Thông báo</span>
+
+                    <div id="notiDropdown" class="noti-dropdown">
+                        <div class="noti-header">Thông báo mới </div>
+                        <div class="noti-list">
+                            <a href="#" class="noti-item unread">
+                                <img src="https://via.placeholder.com/40" alt="icon">
+                                <div class="noti-content">
+                                    <p><strong>Khuyến mãi khủng:</strong> Giảm 50% toàn bộ Manga từ NXB Kim Đồng trong hôm nay!</p>
+                                    <span class="noti-time">10 phút trước</span>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="noti-item">
+                                <img src="https://via.placeholder.com/40" alt="icon">
+                                <div class="noti-content">
+                                    <p>Đơn hàng <strong>#DH12345</strong> của bạn đã được giao cho đơn vị vận chuyển.</p>
+                                    <span class="noti-time">2 giờ trước</span>
+                                </div>
+                            </a>
+                        </div>
+                        <a href="notifications.html" class="noti-view-all">Xem tất cả</a>
+                    </div>
+                </div>
+                <div class="action-item" id="accountBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <span>Tài khoản</span>
+
+                    <div id="accountDropdown" class="account-dropdown">
+                        <div class="account-header">
+                            <strong id="userNameDisplay">Chào, Khách</strong> 
+                            <span id="userRoleDisplay" style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Vui lòng đăng nhập</span>
+                        </div>
+                        <div class="account-list">
+                        </div>
+                    </div>
+                </div>
+                <div class="action-item" id="cartBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap"><i class="fa-solid fa-cart-shopping"></i></div><span>Giỏ hàng</span>
+                    <div id="cartDropdown" class="cart-dropdown-simple">
+                        <a href="cart.html" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-basket-shopping"></i> Giỏ hàng của tôi
+                        </a>
+                        <a href="review.html" class="account-item" style="text-align: left;">
+                            <i class="fa-regular fa-star"></i> Đánh giá
+                        </a>
+                        <a href="orders.html?status=Đã giao" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-box-open"></i> Đã mua
+                        </a>
+                        <a href="orders.html?status=Đã hủy" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-ban"></i> Đã huỷ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            <a href="index.html" style="color: #666; text-decoration: none;">Trang chủ</a> 
+            <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
+            <strong style="color: var(--primary-color);">Đơn hàng của tôi</strong>
+        </div>
+
+        <h1 style="margin-top: 20px; font-size: 24px; color: #333;">Quản lý đơn hàng</h1>
+
+        <div class="orders-container">
+            <!-- Thanh Tab -->
+            <div class="orders-tabs">
+                <button class="tab-btn active" data-status="all">Tất cả</button>
+                <button class="tab-btn" data-status="Chờ xử lý">Chờ xác nhận</button>
+                <button class="tab-btn" data-status="Đang giao">Đang giao</button>
+                <button class="tab-btn" data-status="Đã giao">Hoàn thành</button>
+                <button class="tab-btn" data-status="Đã hủy">Đã hủy</button>
+            </div>
+            
+            <!-- Danh sách hiển thị Đơn hàng -->
+            <div class="orders-list" id="ordersList">
+                <!-- Đơn hàng sẽ được JS render vào đây -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-content">
+            <div class="footer-column">
+                <h4>Về chúng tôi</h4>
+                <p>Caption In The Heart - Nơi kết nối niềm đam mê truyện tranh bất tận.</p>
+                <div class="socials">
+                    <i class="fa-brands fa-facebook"></i>
+                    <i class="fa-brands fa-instagram"></i>
+                    <i class="fa-brands fa-youtube"></i>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Hỗ trợ khách hàng</h4>
+                <ul>
+                    <li><a href="#">Hướng dẫn mua hàng</a></li>
+                    <li><a href="#">Chính sách đổi trả</a></li>
+                    <li><a href="#">Phương thức thanh toán</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Đăng ký nhận tin</h4>
+                <div class="subscribe">
+                    <input type="email" id="subscribeEmailInput" placeholder="Email của bạn">
+                    <button id="subscribeSubmitBtn">Gửi</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/orders.js"></script>
+</body>
+</html>

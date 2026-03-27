@@ -1,13 +1,6 @@
 const mongoose = require('mongoose');
 
 // ==========================================
-// 1. KẾT NỐI MONGODB
-// ==========================================
-mongoose.connect('mongodb://127.0.0.1:27017/web_ban_truyen')
-    .then(() => console.log('✅ Đã kết nối MongoDB thành công!'))
-    .catch(err => console.log('❌ Lỗi kết nối MongoDB:', err));
-
-// ==========================================
 // 2. KHỞI TẠO CÁC SCHEMA (BẢNG)
 // ==========================================
 const schemaOptions = { 

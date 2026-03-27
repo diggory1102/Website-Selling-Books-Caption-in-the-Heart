@@ -1,7 +1,7 @@
 // seed.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const { Role, User, Product, Bill, Payment, Delivery } = require('./database');
+const { Role, User, Product, Category, Bill, Payment, Delivery } = require('./database');
 
 async function seedData() {
     try {
@@ -10,11 +10,51 @@ async function seedData() {
         console.log("-> Đã kết nối DB để tạo dữ liệu mẫu...");
 
         // Xóa dữ liệu cũ để tránh trùng lặp khi chạy lại (Tùy chọn)
+        await Category.deleteMany({});
+        await Product.deleteMany({});
         await Role.deleteMany({});
         await User.deleteMany({});
         await Bill.deleteMany({});
         await Payment.deleteMany({});
         await Delivery.deleteMany({});
+
+        // ==========================================
+        // 1.5 TẠO DANH MỤC VÀ SẢN PHẨM MẪU
+        // ==========================================
+        const categoryNames = [
+            'Manga', 'Hành Động', 'Trinh Thám', 'Tình Cảm', 'Học Đường', 
+            'Xuyên Không', 'Kinh Dị', 'Hài Hước', 'Thể Thao', 'Khoa Học Viễn Tưởng', 
+            'Giả Tưởng', 'Phiêu Lưu', 'Đời Thường', 'Cổ Trang', 'Lịch Sử', 
+            'Tâm Lý', 'Phép Thuật', 'Mecha', 'Nấu Ăn', 'Âm Nhạc'
+        ];
+        
+        await Category.insertMany(categoryNames.map(name => ({ name })));
+        const cats = await Category.find();
+        const getCatId = (name) => cats.find(c => c.name === name)._id;
+
+        await Product.create([
+            { name: 'One Piece - Tập 101', authorName: 'Eiichiro Oda', price: 30000, sold: 5000, imageUrl: 'images/one-piece.png', categoryId: getCatId('Manga') },
+            { name: 'Naruto - Tập Cuối', authorName: 'Masashi Kishimoto', price: 22000, discount: '-5%', sold: 2100, imageUrl: 'images/naruto.png', categoryId: getCatId('Hành Động') },
+            { name: 'Thám Tử Lừng Danh Conan', authorName: 'Gosho Aoyama', price: 25000, discount: '-10%', sold: 3200, imageUrl: 'images/conan.png', categoryId: getCatId('Trinh Thám') },
+            { name: 'Your Name - Tên Cậu Là Gì?', authorName: 'Makoto Shinkai', price: 45000, discount: '-15%', sold: 1500, imageUrl: 'images/your-name.png', categoryId: getCatId('Tình Cảm') },
+            { name: 'My Hero Academia - Tập 1', authorName: 'Kohei Horikoshi', price: 28000, sold: 3400, imageUrl: 'images/my-hero-academia.png', categoryId: getCatId('Học Đường') },
+            { name: 'Sword Art Online - Tập 1', authorName: 'Reki Kawahara', price: 35000, sold: 2900, imageUrl: 'images/sao.png', categoryId: getCatId('Xuyên Không') },
+            { name: 'Uzumaki - Vòng Xoắn Ốc', authorName: 'Junji Ito', price: 50000, discount: '-10%', sold: 800, imageUrl: 'images/uzumaki.png', categoryId: getCatId('Kinh Dị') },
+            { name: 'Gintama - Tập 1', authorName: 'Hideaki Sorachi', price: 25000, sold: 2200, imageUrl: 'images/gintama.png', categoryId: getCatId('Hài Hước') },
+            { name: 'Haikyuu!! - Tập 10', authorName: 'Haruichi Furudate', price: 30000, sold: 4100, imageUrl: 'images/haikyuu.png', categoryId: getCatId('Thể Thao') },
+            { name: 'Ghost in the Shell', authorName: 'Masamune Shirow', price: 55000, sold: 600, imageUrl: 'images/ghost-in-shell.png', categoryId: getCatId('Khoa Học Viễn Tưởng') },
+            { name: 'Attack on Titan - Tập 34', authorName: 'Hajime Isayama', price: 35000, discount: '-20%', sold: 4800, imageUrl: 'images/attack-on-titan.png', categoryId: getCatId('Giả Tưởng') },
+            { name: 'Hunter x Hunter - Tập 32', authorName: 'Yoshihiro Togashi', price: 25000, sold: 1900, imageUrl: 'images/hunter-x-hunter.png', categoryId: getCatId('Phiêu Lưu') },
+            { name: 'Spy x Family - Tập 1', authorName: 'Tatsuya Endo', price: 35000, discount: '-10%', sold: 4200, imageUrl: 'images/spy-x-family.png', categoryId: getCatId('Đời Thường') },
+            { name: 'Vương Giả Thiên Hạ', authorName: 'Yasuhisa Hara', price: 32000, sold: 1100, imageUrl: 'images/kingdom.png', categoryId: getCatId('Cổ Trang') },
+            { name: 'Vinland Saga - Tập 1', authorName: 'Makoto Yukimura', price: 38000, sold: 1300, imageUrl: 'images/vinland-saga.png', categoryId: getCatId('Lịch Sử') },
+            { name: 'Death Note - Cuốn Sổ Tử Thần', authorName: 'Tsugumi Ohba', price: 30000, discount: '-20%', sold: 2500, imageUrl: 'images/death-note.png', categoryId: getCatId('Tâm Lý') },
+            { name: 'Fairy Tail - Tập 10', authorName: 'Hiro Mashima', price: 20000, sold: 5100, imageUrl: 'images/fairy-tail.png', categoryId: getCatId('Phép Thuật') },
+            { name: 'Neon Genesis Evangelion', authorName: 'Yoshiyuki Sadamoto', price: 40000, sold: 900, imageUrl: 'images/evangelion.png', categoryId: getCatId('Mecha') },
+            { name: 'Vua Bếp Soma - Tập 1', authorName: 'Yuto Tsukuda', price: 25000, discount: '-5%', sold: 1700, imageUrl: 'images/soma.png', categoryId: getCatId('Nấu Ăn') },
+            { name: 'Tháng Tư Là Lời Nói Dối Của Em', authorName: 'Naoshi Arakawa', price: 35000, sold: 2400, imageUrl: 'images/your-lie-in-april.png', categoryId: getCatId('Âm Nhạc') }
+        ]);
+        console.log("✅ Đã tạo dữ liệu Thể loại và Truyện tranh mẫu!");
 
         // 2. Tạo các vai trò (Roles)
         const adminRole = await Role.create({ name: 'admin', authority: 'FULL_ACCESS' });

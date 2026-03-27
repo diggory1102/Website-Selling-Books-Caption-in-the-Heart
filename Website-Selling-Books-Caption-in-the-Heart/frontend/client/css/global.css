@@ -1,0 +1,17 @@
+@import url('header.css');
+@import url('footer.css');
+@import url('product-card.css');
+@import url('components.css');
+
+:root {
+    --primary-color: #9bd8fc;
+    --secondary-color: #e74c3c;
+    --bg-color: #f5f7f9;
+    --text-color: #333;
+    --white: #ffffff;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color); color: var(--text-color); }
+input, button, textarea, select { font-family: inherit; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }

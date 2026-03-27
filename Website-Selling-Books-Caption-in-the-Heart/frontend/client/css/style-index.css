@@ -1,0 +1,54 @@
+/* HERO - DANH MỤC */
+.hero-bar { margin: 20px 0; }
+.category-wrapper { position: relative; }
+.category-btn { background: #fff; border: 1px solid #e0e0e0; padding: 12px 25px; border-radius: 10px; display: flex; align-items: center; gap: 15px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.category-btn.active { color: #007bff; border-color: var(--primary-color); }
+.category-popup { position: absolute; top: calc(100% + 10px); left: 0; background: #fff; width: 250px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); list-style: none; padding: 10px 0; z-index: 1000; display: none; border: 1px solid #eee; max-height: 300px; overflow-y: auto; overflow-x: hidden; }
+.category-popup.show { display: block; animation: slideIn 0.3s ease; }
+.category-popup li a { padding: 12px 20px; display: flex; align-items: center; gap: 15px; text-decoration: none; color: #444; font-size: 14px; }
+.category-popup li a i { color: var(--primary-color); width: 18px; text-align: center; }
+.category-popup li a:hover { background: #f0f9ff; color: #007bff; }
+.category-popup::-webkit-scrollbar { width: 6px; }
+.category-popup::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+.category-popup::-webkit-scrollbar-track { background: #f9f9f9; }
+
+/* BEST SELLER BOX */
+.best-seller-box { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 50px; }
+.box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; }
+.box-header h2 { font-size: 18px; font-weight: 700; }
+.title-group { display: flex; align-items: center; gap: 10px; color: var(--text-color); }
+.title-group i { color: #f1c40f; font-size: 20px; }
+.see-all { color: #007bff; text-decoration: none; font-size: 14px; font-weight: 600; }
+
+/* CAROUSEL */
+.carousel-container { position: relative; display: flex; align-items: center; }
+.carousel-viewport { width: 100%; overflow: hidden; padding: 10px 0; }
+.product-track { display: flex; gap: 20px; transition: transform 0.5s ease-in-out; }
+.product-track .product-card { flex: 0 0 calc(25% - 15px); min-width: calc(25% - 15px); }
+
+/* NAVIGATION BUTTONS */
+.nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: #fff; border: 1px solid var(--primary-color); border-radius: 50%; color: var(--primary-color); cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; }
+.nav-btn:hover { background: var(--primary-color); color: #fff; }
+.nav-btn.prev { left: -20px; }
+.nav-btn.next { right: -20px; }
+
+/* BANNER NAVIGATION BUTTONS */
+.banner-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(255, 255, 255, 0.7); border: none; border-radius: 50%; color: var(--text-color); cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.3s; opacity: 0; }
+.hero-banner:hover .banner-nav { opacity: 1; }
+.banner-nav:hover { background: rgba(255, 255, 255, 0.9); color: var(--primary-color); }
+.banner-nav.prev { left: 15px; }
+.banner-nav.next { right: 15px; }
+
+/* DANH SÁCH TRUYỆN MỚI */
+.new-manga-box { background: var(--white); border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 50px; }
+.new-manga-box .box-header h2 { display: flex; align-items: center; gap: 10px; color: var(--text-color); }
+
+/* --- NÚT XEM THÊM --- */
+.section-footer { text-align: center; margin-top: 30px; }
+.btn-load-more {
+    background-color: var(--white); color: #007bff; border: 1px solid #007bff;
+    padding: 12px 35px; font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.3s;
+}
+.btn-load-more:hover {
+    background-color: #007bff; color: var(--white); box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+}

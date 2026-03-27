@@ -1,0 +1,79 @@
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes checkAnim { 0% { height: 0; width: 0; opacity: 0; } 100% { height: 10px; width: 5px; opacity: 1; } }
+
+/* NÚT TÌM KIẾM THEO TÁC GIẢ */
+.btn-author-search { background: #f0f8ff; border: 1px solid #cce5ff; color: #007bff; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+.btn-author-search:hover { background: #007bff; color: #fff; }
+
+/* TOAST NOTIFICATION (Thông báo góc màn hình) */
+#toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 999999; display: flex; flex-direction: column; gap: 15px; }
+.toast-msg { min-width: 250px; background-color: #fff; color: #333; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; transform: translateX(120%); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; border-left: 4px solid var(--primary-color); }
+.toast-msg.show { transform: translateX(0); opacity: 1; }
+.toast-msg.success { border-left-color: #2ecc71; }
+.toast-msg.error { border-left-color: #e74c3c; }
+.toast-msg.success i { color: #2ecc71; font-size: 18px; }
+.toast-msg.error i { color: #e74c3c; font-size: 18px; }
+
+/* CUSTOM CONFIRM POPUP (MODAL) */
+.custom-confirm-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 9999999; animation: fadeIn 0.2s ease-in-out; }
+.custom-confirm-box { background: #fff; padding: 30px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); animation: scaleUp 0.2s ease-in-out; }
+.custom-confirm-box .confirm-icon { font-size: 40px; color: #f39c12; margin-bottom: 15px; }
+.custom-confirm-box h3 { margin-bottom: 10px; color: #333; font-size: 18px; }
+.custom-confirm-box p { color: #666; font-size: 14px; margin-bottom: 25px; }
+.custom-confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.custom-confirm-actions button { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; flex: 1; }
+.custom-confirm-actions .btn-cancel { background: #f1f1f1; color: #333; }
+.custom-confirm-actions .btn-cancel:hover { background: #e1e1e1; }
+.custom-confirm-actions .btn-confirm { background: var(--secondary-color); color: #fff; }
+.custom-confirm-actions .btn-confirm:hover { background: #c0392b; }
+
+/* CUSTOM CHECKBOX */
+.custom-checkbox-wrapper { display: inline-flex; align-items: center; position: relative; cursor: pointer; user-select: none; margin-right: 15px; flex-shrink: 0; }
+.custom-checkbox-wrapper input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+.custom-checkmark { position: relative; height: 22px; width: 22px; background-color: #fff; border: 2px solid #ddd; border-radius: 6px; transition: all 0.3s ease; }
+.custom-checkbox-wrapper:hover input ~ .custom-checkmark { border-color: var(--primary-color); }
+.custom-checkbox-wrapper input:checked ~ .custom-checkmark { background-color: var(--primary-color); border-color: var(--primary-color); }
+.custom-checkmark:after { content: ""; position: absolute; display: none; }
+.custom-checkbox-wrapper input:checked ~ .custom-checkmark:after { display: block; animation: checkAnim 0.2s forwards; }
+.custom-checkbox-wrapper .custom-checkmark:after { left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+
+/* CUSTOM SELECT */
+.custom-select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-color: #fff; border: 1px solid #e0e0e0; padding: 12px 40px 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; font-family: inherit; outline: none; transition: all 0.3s ease; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23666' d='M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; background-size: 12px; }
+.custom-select:focus, .custom-select:hover { border-color: var(--primary-color); color: #007bff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+/* ADVANCED CUSTOM SELECT (JS GENERATED) */
+.custom-select-wrapper { position: relative; user-select: none; }
+.custom-select-trigger { background-color: #fff; border: 1px solid #e0e0e0; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; }
+.custom-select-trigger:hover, .custom-select-trigger.active { border-color: var(--primary-color); color: var(--primary-color); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.custom-select-trigger i { font-size: 12px; transition: transform 0.3s ease; }
+.custom-select-trigger.active i { transform: rotate(180deg); }
+.custom-select-list { position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #fff; border: 1px solid #eee; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 99999; max-height: 250px; overflow-y: auto; display: none; list-style: none; padding: 5px 0; margin: 0; }
+.custom-select-list.show { display: block; animation: fadeIn 0.15s ease-in-out; }
+.custom-select-list::-webkit-scrollbar { width: 6px; }
+.custom-select-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+.custom-select-item { padding: 12px 20px; font-size: 14px; color: #333; cursor: pointer; transition: 0.2s; }
+.custom-select-item:hover, .custom-select-item.selected { background-color: var(--primary-color) !important; color: #fff !important; font-weight: 600; }
+
+/* ==========================================
+   DROPDOWN BỘ LỌC TÌM KIẾM & SẮP XẾP (TOÀN CỤC)
+   ========================================== */
+.filter-btn { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #e0e0e0; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; transition: 0.2s; width: 100%; }
+.filter-btn:hover, .filter-btn.active { border-color: var(--primary-color) !important; color: var(--primary-color) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.filter-btn .arrow { transition: transform 0.3s ease; }
+.filter-btn.active .arrow { transform: rotate(180deg); }
+
+.filter-popup {
+    position: absolute; top: calc(100% + 5px); left: 0; width: 100%;
+    background: #fff; border: 1px solid #eee; border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 9999;
+    list-style: none; padding: 5px 0; margin: 0; display: none;
+    max-height: 250px; overflow-y: auto;
+}
+.filter-popup.show { display: block; animation: slideIn 0.2s ease-in-out; }
+.filter-popup::-webkit-scrollbar { width: 6px; }
+.filter-popup::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+
+.filter-popup li a { display: block; padding: 10px 15px; text-decoration: none; color: #333; font-size: 14px; transition: 0.2s; }
+.filter-popup li a:hover, .filter-popup li a.selected { background-color: var(--primary-color); color: #fff; }

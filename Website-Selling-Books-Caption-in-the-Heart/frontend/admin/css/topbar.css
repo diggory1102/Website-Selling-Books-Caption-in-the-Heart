@@ -1,0 +1,14 @@
+/* Topbar */
+.admin-topbar { height: 70px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
+.topbar-left { display: flex; align-items: center; gap: 20px; }
+.topbar-left h2 { font-size: 18px; color: var(--primary); }
+.btn-toggle { background: none; border: none; font-size: 20px; cursor: pointer; color: #666; }
+.admin-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative; }
+.admin-profile img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #eee; }
+.admin-info { display: flex; flex-direction: column; }
+.admin-name { font-weight: 600; font-size: 14px; }
+.admin-role { font-size: 12px; color: #888; }
+.admin-dropdown { position: absolute; top: calc(100% + 10px); right: 0; background: #fff; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); min-width: 150px; display: none; z-index: 1000; overflow: hidden;}
+.admin-dropdown.show { display: block; }
+.admin-dropdown a { display: block; padding: 12px 15px; color: #e74c3c; font-size: 14px; transition: 0.2s; }
+.admin-dropdown a:hover { background: #fdf2f2; }

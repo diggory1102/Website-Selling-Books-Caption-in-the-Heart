@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập tài khoản</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/signup.css">
+</head>
+<body>
+
+    <div class="top-banner">
+        <a href="index.html">
+            <img src="images/logo.png" alt="Logo" onerror="this.src='https://placehold.co/150x50?text=LOGO';">
+        </a>
+    </div>
+
+    <div class="auth-container">
+        <h2>ĐĂNG NHẬP</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="loginUsername" placeholder="Nhập tên đăng nhập..." required>
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="loginPassword" placeholder="Nhập mật khẩu..." required>
+            </div>
+            <button type="submit" class="auth-btn">ĐĂNG NHẬP</button>
+            
+            <div class="auth-links" style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <a href="signup.html">Đăng ký ngay</a>
+                <a href="forgot-password.html">Quên mật khẩu?</a>
+            </div>
+        </form>
+
+        <div class="divider">
+            <span>Hoặc đăng nhập bằng</span>
+        </div>
+        <div class="social-auth">
+            <button type="button" class="social-btn google-btn" onclick="loginWithGoogle()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
+                Google
+            </button>
+            <button type="button" class="social-btn facebook-btn" onclick="loginWithFacebook()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1024px-Facebook_Logo_%282019%29.png" alt="Facebook">
+                Facebook
+            </button>
+        </div>
+
+        <div id="authMessage" class="message"></div>
+    </div>
+
+<script>
+    const msgBox = document.getElementById('authMessage');
+    
+    function showMessage(msg, isSuccess = false) {
+        msgBox.textContent = msg;
+        msgBox.className = 'message ' + (isSuccess ? 'success' : 'error');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault(); 
+        
+        const data = {
+            userName: document.getElementById('loginUsername').value,
+            password: document.getElementById('loginPassword').value
+        };
+
+        try {
+            const res = await fetch('http://127.0.0.1:5000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                showMessage("Đăng nhập thành công! Đang vào trang chủ...", true);
+                // Lưu thông tin khách hàng vào bộ nhớ trình duyệt
+                localStorage.setItem('currentUser', JSON.stringify(result.user));
+                // Chuyển về trang chủ sau 1 giây
+                setTimeout(() => window.location.href = 'index.html', 1000); 
+            } else {
+                showMessage(result.message, false);
+            }
+        } catch (err) { 
+            showMessage("Lỗi kết nối máy chủ", false); 
+        }
+    });
+
+    // 2. Xử lý chuyển hướng Đăng ký Google/Facebook (Dùng chung API với Đăng nhập)
+    function loginWithGoogle() {
+        window.location.href = 'http://127.0.0.1:5000/api/auth/google';
+    }
+
+    function loginWithFacebook() {
+        window.location.href = 'http://127.0.0.1:5000/api/auth/facebook';
+    }</script>
+</body>
+</html>

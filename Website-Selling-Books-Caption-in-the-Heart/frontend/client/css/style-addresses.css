@@ -1,0 +1,41 @@
+.addr-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+.btn-add-addr { padding: 10px 20px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.btn-add-addr:hover { background: #007bff; }
+
+.addr-card { border-bottom: 1px solid #eee; padding: 20px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+.addr-card:last-child { border-bottom: none; }
+.addr-info { flex: 1; }
+.addr-name { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 5px; display: flex; align-items: center; gap: 10px;}
+.addr-phone { font-size: 14px; color: #666; margin-bottom: 5px; }
+.addr-detail { font-size: 14px; color: #555; line-height: 1.5; }
+.addr-badge { font-size: 11px; padding: 3px 8px; border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 4px; font-weight: 600; }
+
+.addr-actions { text-align: right; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+.addr-actions button { background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: 0.2s;}
+.btn-edit { color: #007bff; } .btn-edit:hover { color: #0056b3; }
+.btn-del { color: #e74c3c; } .btn-del:hover { color: #c0392b; }
+.btn-set-default { border: 1px solid var(--primary-color) !important; padding: 6px 15px; border-radius: 6px; color: var(--primary-color) !important; font-weight: 600; background: transparent; }
+.btn-set-default:hover { background: var(--primary-color) !important; color: #fff !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+.addr-empty { text-align: center; padding: 40px 0; color: #888; }
+.addr-empty i { font-size: 50px; color: #ddd; margin-bottom: 15px; }
+
+/* Modal Form Địa Chỉ */
+.addr-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 999999; animation: fadeIn 0.2s; }
+.addr-modal-overlay.show { display: flex; }
+.addr-modal { background: #fff; width: 500px; max-width: 90%; border-radius: 12px; padding: 30px; position: relative; animation: scaleUp 0.3s; }
+.addr-modal h3 { margin-bottom: 20px; font-size: 18px; color: #333; }
+.close-addr-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 20px; color: #888; transition: 0.2s;}
+.close-addr-modal:hover { color: #e74c3c; }
+
+.addr-form-group { margin-bottom: 15px; }
+.addr-form-row { display: flex; gap: 15px; }
+.addr-form-row .addr-form-group { flex: 1; }
+.addr-form-group input, .addr-form-group select { width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; }
+.addr-form-group input:focus, .addr-form-group select:focus { border-color: var(--primary-color); }
+
+.addr-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+.btn-cancel-addr { padding: 10px 20px; background: #f1f1f1; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: #333; }
+.btn-cancel-addr:hover { background: #e1e1e1; }
+.btn-save-addr { padding: 10px 20px; background: var(--primary-color); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: #fff; }
+.btn-save-addr:hover { background: #007bff; }

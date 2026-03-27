@@ -1,0 +1,113 @@
+/* ==========================================
+   BỐ CỤC TRANG CHI TIẾT ĐƠN HÀNG
+   ========================================== */
+.od-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.od-title { font-size: 24px; color: #333; }
+.od-status {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--secondary-color);
+    background: #fff0f0;
+    padding: 8px 15px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.od-layout {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 50px;
+    align-items: flex-start;
+}
+
+.od-left { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.od-right { width: 350px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
+
+/* Các khối thông tin (Card) */
+.od-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.od-card h3 {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+/* Thông tin khách hàng & Giao hàng */
+.info-row { display: flex; margin-bottom: 10px; font-size: 14px; line-height: 1.5;}
+.info-row .lbl { width: 120px; color: #666; flex-shrink: 0; }
+.info-row .val { color: #333; font-weight: 500; }
+
+/* Danh sách sản phẩm */
+.od-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px dashed #eee;
+}
+.od-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.od-item img {
+    width: 60px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.od-item-info { flex: 1; }
+.od-item-name { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 5px; line-height: 1.4; }
+.od-item-meta { font-size: 13px; color: #888; }
+.od-item-price { font-size: 14px; font-weight: bold; color: var(--secondary-color); text-align: right; }
+
+/* Bảng tính tiền */
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #555;
+}
+.summary-row.discount { color: #27ae60; font-weight: 600; }
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+.summary-total .val { color: var(--secondary-color); font-size: 22px; }
+
+/* Nút hành động */
+.od-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-action {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    border: none;
+}
+.btn-reorder { background: var(--primary-color); color: #fff; }
+.btn-reorder:hover { background: #007bff; }
+.btn-cancel { background: #f1f1f1; color: #333; }
+.btn-cancel:hover { background: #e1e1e1; }
+
+@media (max-width: 768px) { .od-layout { flex-direction: column; } .od-right { width: 100%; } }

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm - Caption In The Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/style-product-detail.css">
+</head>
+<body>
+    <!-- Tái sử dụng Header của bạn -->
+    <header class="main-header">
+        <div class="container header-content">
+            <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'"></a></div>
+
+            <div class="search-bar">
+                <input style="border-radius: 15px;" type="text" id="searchInput" name="search" autocomplete="off" placeholder="Tìm kiếm truyện tranh, tác giả...">
+                <button style="border-radius: 5px;" id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                
+                <div id="searchResults" class="search-dropdown"></div>
+            </div>
+
+            <div class="user-actions">
+                <div class="action-item" id="notiBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-regular fa-bell"></i>
+                    </div>
+                    
+                    <span>Thông báo</span>
+
+                    <div id="notiDropdown" class="noti-dropdown">
+                        <div class="noti-header">Thông báo mới </div>
+                        <div class="noti-list">
+                            <a href="#" class="noti-item unread">
+                                <img src="https://via.placeholder.com/40" alt="icon">
+                                <div class="noti-content">
+                                    <p><strong>Khuyến mãi khủng:</strong> Giảm 50% toàn bộ Manga từ NXB Kim Đồng trong hôm nay!</p>
+                                    <span class="noti-time">10 phút trước</span>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="noti-item">
+                                <img src="https://via.placeholder.com/40" alt="icon">
+                                <div class="noti-content">
+                                    <p>Đơn hàng <strong>#DH12345</strong> của bạn đã được giao cho đơn vị vận chuyển.</p>
+                                    <span class="noti-time">2 giờ trước</span>
+                                </div>
+                            </a>
+                        </div>
+                        <a href="notifications.html" class="noti-view-all">Xem tất cả</a>
+                    </div>
+                </div>
+
+                <div class="action-item" id="accountBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <span>Tài khoản</span>
+
+                    <div id="accountDropdown" class="account-dropdown">
+                        <div class="account-header">
+                            <strong id="userNameDisplay">Chào, Khách</strong> 
+                            <span id="userRoleDisplay" style="font-size: 12px; color: #888; display: block; margin-top: 3px;">Vui lòng đăng nhập</span>
+                        </div>
+                        <div class="account-list">
+                            <a href="addresses.html" class="account-item">
+                                <i class="fa-solid fa-address-card"></i> Hồ sơ của tôi (Profile)
+                            </a>
+                            <a href="#" class="account-item">
+                                <i class="fa-solid fa-box-open"></i> Đơn hàng của tôi
+                            </a>
+                            <a href="wishlist.html" class="account-item" style="text-align: left;">
+                                <i class="fa-solid fa-heart"></i> Danh sách yêu thích
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-item" id="cartBtn" style="position: relative; cursor: pointer;">
+                    <div class="icon-wrap">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                    <span>Giỏ hàng</span>
+                    
+                    <div id="cartDropdown" class="cart-dropdown-simple">
+                        <a href="cart.html" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-basket-shopping"></i> Giỏ hàng của tôi
+                        </a>
+                        <a href="review.html" class="account-item" style="text-align: left;">
+                            <i class="fa-regular fa-star"></i> Đánh giá
+                        </a>
+                        <a href="orders.html?status=Đã giao" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-box-open"></i> Đã mua
+                        </a>
+                        <a href="orders.html?status=Đã hủy" class="account-item" style="text-align: left;">
+                            <i class="fa-solid fa-ban"></i> Đã huỷ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="margin-top: 20px; min-height: 50vh;">
+        <!-- Đường dẫn Breadcrumb -->
+        <div style="margin-bottom: 20px; font-size: 14px; color: #666;">
+            <a href="index.html" style="color: #666; text-decoration: none;">Trang chủ</a> 
+            <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
+            <a href="category.html" id="bcCategory" style="color: #666; text-decoration: none;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#666'">Danh mục</a> 
+            <i class="fa-solid fa-angle-right" style="margin: 0 10px; font-size: 12px;"></i>
+            <strong id="bcProductName" style="color: var(--primary-color);">Đang tải...</strong>
+        </div>
+
+        <!-- Khung chi tiết -->
+        <div class="pd-container">
+            <div class="pd-left">
+                <span id="pdDiscountTag" class="sale-tag" style="display: none; position: absolute; top: 15px; left: 15px; font-size: 14px; padding: 5px 10px;"></span>
+                <img id="pdImage" src="" alt="Product">
+            </div>
+            
+            <div class="pd-right">
+                <h1 class="pd-title" id="pdName">Đang tải dữ liệu sản phẩm...</h1>
+                <div class="pd-meta">
+                    <p>Tác giả: <strong id="pdAuthor" style="color: var(--primary-color);">...</strong></p>
+                    <p>Nhà xuất bản: <strong id="pdPublisher">...</strong></p>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <div id="pdRating" style="color: #f1c40f; font-size: 14px;"></div>
+                    <div style="border-left: 1px solid #ddd; padding-left: 15px; font-size: 14px; color: #666;">
+                        Đã bán <strong id="pdSold">0</strong>
+                    </div>
+                </div>
+
+                <div class="pd-price-box">
+                    <span class="pd-price" id="pdPrice">0đ</span>
+                    <span id="pdOldPrice" style="color: #bbb; text-decoration: line-through; font-size: 16px; margin-left: 15px; display: none;"></span>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="font-size: 16px; margin-bottom: 10px;">Mô tả sản phẩm:</h3>
+                    <p id="pdDesc" style="font-size: 14px; line-height: 1.6; color: #444; text-align: justify;"></p>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <span style="font-size: 15px; font-weight: 600;">Số lượng:</span>
+                    <div class="qty-box">
+                        <button class="qty-btn" id="btnMinus">-</button>
+                        <input type="text" class="qty-input" id="pdQuantity" value="1" readonly>
+                        <button class="qty-btn" id="btnPlus">+</button>
+                    </div>
+                    <span id="pdStock" style="font-size: 13px; color: #888;">(Còn 0 sản phẩm)</span>
+                </div>
+
+                <div class="action-btns">
+                    <button class="btn-add-cart" id="btnAddToCart">
+                        <i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ hàng
+                    </button>
+                    <button class="btn-buy-now" id="btnBuyNow">Mua ngay</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần Gợi ý: Cùng tác giả -->
+        <div class="related-section" id="relatedAuthorSection" style="display: none; margin-top: 50px;">
+            <h2 style="font-size: 20px; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px;">Truyện cùng tác giả</h2>
+            <div class="product-grid" id="relatedAuthorGrid"></div>
+        </div>
+
+        <!-- Phần Gợi ý: Cùng thể loại -->
+        <div class="related-section" id="relatedCategorySection" style="display: none; margin-top: 50px;">
+            <h2 style="font-size: 20px; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px;">Truyện cùng thể loại</h2>
+            <div class="product-grid" id="relatedCategoryGrid"></div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-content">
+            <div class="footer-column">
+                <h4>Về chúng tôi</h4>
+                <p>Caption In The Heart - Nơi kết nối niềm đam mê truyện tranh bất tận.</p>
+                <div class="socials">
+                    <i class="fa-brands fa-facebook"></i>
+                    <i class="fa-brands fa-instagram"></i>
+                    <i class="fa-brands fa-youtube"></i>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Hỗ trợ khách hàng</h4>
+                <ul>
+                    <li><a href="#">Hướng dẫn mua hàng</a></li>
+                    <li><a href="#">Chính sách đổi trả</a></li>
+                    <li><a href="#">Phương thức thanh toán</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Đăng ký nhận tin</h4>
+                <div class="subscribe">
+                    <input type="email" id="subscribeEmailInput" placeholder="Email của bạn">
+                    <button id="subscribeSubmitBtn">Gửi</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/product-detail.js"></script>
+</body>
+</html>

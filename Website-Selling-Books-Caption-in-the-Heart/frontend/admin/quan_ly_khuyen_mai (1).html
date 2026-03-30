@@ -129,13 +129,13 @@
             <p style="font-size: 10px; color: #ccc; margin-top: 5px; letter-spacing: 2px;">ADMIN PANEL</p>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="#"><i class="fa-solid fa-house"></i> Bảng điều khiển</a></li>
-            <li><a href="#" class="active"><i class="fa-solid fa-ticket"></i> QL khuyến mãi</a></li>
-            <li><a href="#"><i class="fa-solid fa-users"></i> QL nhân viên</a></li>
-            <li><a href="#"><i class="fa-solid fa-chart-simple"></i> Thống kê</a></li>
-            <li><a href="#"><i class="fa-solid fa-box-archive"></i> QL sản phẩm</a></li>
-            <li><a href="#"><i class="fa-solid fa-user-group"></i> QL khách hàng</a></li>
-        </ul>
+    <li><a href="dashboard.html"><i class="fa-solid fa-house"></i> Bảng điều khiển</a></li>
+    <li><a href="quan_ly_khuyen_mai.html" class="active"><i class="fa-solid fa-ticket"></i> QL khuyến mãi</a></li>
+    <li><a href="nhan_vien.html"><i class="fa-solid fa-users"></i> QL nhân viên</a></li>
+    <li><a href="thong_ke.html"><i class="fa-solid fa-chart-simple"></i> Thống kê</a></li>
+    <li><a href="san_pham.html"><i class="fa-solid fa-box-archive"></i> QL sản phẩm</a></li>
+    <li><a href="khach_hang.html"><i class="fa-solid fa-user-group"></i> QL khách hàng</a></li>
+</ul>
     </aside>
 
     <main class="admin-main">
@@ -198,28 +198,71 @@
     </main>
 
     <script>
-        function addRow() {
-            const ten = document.getElementById('inp-ten').value;
-            if(!ten) return alert("Vui lòng nhập tên sản phẩm!");
+    const API_URL = 'http://localhost:5000/api/promotions';
 
-            document.getElementById('empty-box').style.display = 'none';
+    // Hàm tự động lấy dữ liệu từ MongoDB khi vừa mở trang
+    async function loadPromotions() {
+        try {
+            const res = await fetch(`${API_URL}/all`);
+            const data = await res.json();
             const tableBody = document.getElementById('promo-table-body');
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td style="font-weight: 700; color: #2B3674;">${ten}</td>
-                <td>${document.getElementById('inp-gia').value}</td>
-                <td>${document.getElementById('inp-tacgia').value}</td>
-                <td>${document.getElementById('inp-theloai').value}</td>
-                <td style="color: #05CD99; font-weight: 700;">${document.getElementById('inp-giam').value}%</td>
-                <td><button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#FF8080; cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td>
-            `;
-            tableBody.appendChild(row);
-            resetForm();
-        }
+            const emptyBox = document.getElementById('empty-box');
 
-        function resetForm() {
-            document.querySelectorAll('input').forEach(i => i.value = '');
+            if (data.length > 0) {
+                emptyBox.style.display = 'none';
+                tableBody.innerHTML = data.map(p => `
+                    <tr>
+                        <td style="font-weight: 700; color: #2B3674;">${p.productName}</td>
+                        <td>${Number(p.price).toLocaleString()}đ</td>
+                        <td>${p.author}</td>
+                        <td>${p.category}</td>
+                        <td style="color: #05CD99; font-weight: 700;">${p.discountRate}%</td>
+                        <td>
+                            <button onclick="deletePromo('${p._id}')" style="background:none; border:none; color:#FF8080; cursor:pointer;">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                emptyBox.style.display = 'block';
+                tableBody.innerHTML = '';
+            }
+        } catch (err) { console.error("Lỗi:", err); }
+    }
+
+    // Hàm Thêm mới vào Database
+    async function addRow() {
+        const promoData = {
+            productName: document.getElementById('inp-ten').value,
+            price: Number(document.getElementById('inp-gia').value),
+            author: document.getElementById('inp-tacgia').value,
+            category: document.getElementById('inp-theloai').value,
+            startDate: document.getElementById('inp-bd').value,
+            endDate: document.getElementById('inp-kt').value,
+            discountRate: Number(document.getElementById('inp-giam').value),
+            maxDiscount: Number(document.getElementById('inp-toida').value)
+        };
+
+        if(!promoData.productName) return alert("Chưa nhập tên sản phẩm!");
+
+        const res = await fetch(`${API_URL}/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(promoData)
+        });
+
+        if(res.ok) {
+            alert("Thêm thành công!");
+            resetForm();
+            loadPromotions();
         }
+    }
+
+    function resetForm() { document.querySelectorAll('input').forEach(i => i.value = ''); }
+    
+    // Gọi hàm load khi trang web tải xong
+    window.onload = loadPromotions;
     </script>
 </body>
 </html>

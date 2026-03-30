@@ -12,6 +12,7 @@ const fs = require('fs');
 const multer = require('multer');
 const mongoose = require('mongoose'); // Thêm Mongoose vào đây
 require('dotenv').config();
+const promotionRoutes = require('./routes/promotionRoutes');
 
 // ==========================================
 // KẾT NỐI MONGODB (Chuyển từ database.js sang)
@@ -61,6 +62,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // ==========================================
 // CẤU HÌNH UPLOAD ẢNH CHO ADMIN (SỬ DỤNG MULTER)

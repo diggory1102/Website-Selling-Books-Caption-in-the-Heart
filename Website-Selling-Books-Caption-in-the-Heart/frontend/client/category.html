@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh mục sản phẩm - Caption In The Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/style-category.css">
 </head>
@@ -20,6 +20,12 @@
                 <div id="searchResults" class="search-dropdown"></div>
             </div>
             <div class="user-actions">
+                
+                <div class="action-item" id="themeToggleBtn" style="position: relative; cursor: pointer;" title="Đổi giao diện">
+                    <div class="icon-wrap">
+                        <i class="fa-solid fa-moon" id="themeIcon" style="transition: 0.3s;"></i>
+                    </div>
+                </div>
                 <div class="action-item" id="notiBtn" style="position: relative; cursor: pointer;">
                     <div class="icon-wrap">
                         <i class="fa-regular fa-bell"></i>
@@ -136,7 +142,7 @@
                     
                     <!-- Nút Sắp xếp Dropdown mới -->
                     <div class="filter-dropdown-wrapper" style="position: relative; width: 220px;">
-                        <button class="filter-btn" id="btnCatSort" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: #fff; border: 1px solid #e0e0e0; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; transition: 0.2s;">
+                        <button class="filter-btn" id="btnCatSort" style="width: 100%; justify-content: space-between; display: flex; align-items: center; background: var(--surface-color); border: 1px solid #e0e0e0; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #444; cursor: pointer; transition: 0.2s;">
                             <span id="textCatSort">Sắp xếp: Mặc định</span>
                             <i class="fa-solid fa-chevron-down arrow"></i>
                         </button>

@@ -52,6 +52,35 @@ const updateUserProfile = async (req, res) => {
         const { fullName, numberPhone, email, dateOfBirth, defaultAddress, avatar } = req.body;
         const userId = req.params.id;
 
+        // --- VALIDATION INPUT ---
+        if (fullName) {
+            const nameRegex = /^[a-zA-ZÀ-Ỹà-ỹ\s]+$/;
+            if (fullName.trim().length < 2 || !nameRegex.test(fullName.trim())) {
+                return res.status(400).json({ success: false, message: "Họ và tên không hợp lệ!" });
+            }
+        }
+
+        const phoneRegex = /^0\d{9}$/;
+        if (!numberPhone) {
+            return res.status(400).json({ success: false, message: "Vui lòng nhập số điện thoại (Bắt buộc)!" });
+        } else if (!phoneRegex.test(numberPhone.trim())) {
+            return res.status(400).json({ success: false, message: "Số điện thoại không hợp lệ!" });
+        }
+
+        if (dateOfBirth) {
+            const dobDate = new Date(dateOfBirth);
+            const ageInMs = Date.now() - dobDate.getTime();
+            const ageDate = new Date(ageInMs);
+            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            
+            if (dobDate > new Date()) {
+                return res.status(400).json({ success: false, message: "Ngày sinh không thể ở tương lai!" });
+            } else if (age < 13) {
+                return res.status(400).json({ success: false, message: "Bạn phải từ 13 tuổi trở lên!" });
+            }
+        }
+        // --- END VALIDATION ---
+
         // Kiểm tra xem email muốn đổi có bị trùng với người khác không
         if (email) {
             const existingEmail = await User.findOne({ email, _id: { $ne: userId } });

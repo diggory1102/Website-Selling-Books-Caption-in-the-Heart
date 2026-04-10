@@ -10,9 +10,9 @@
 /* Thanh Tabs trạng thái */
 .orders-tabs {
     display: flex;
-    background: #fff;
+    background: var(--surface-color);
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px var(--shadow-color);
     overflow: hidden;
 }
 
@@ -35,22 +35,22 @@
 
 /* Thẻ đơn hàng */
 .order-card {
-    background: #fff;
+    background: var(--surface-color);
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px var(--shadow-color);
     margin-bottom: 20px; /* Thêm khoảng cách 20px giữa các đơn hàng */
 }
 
 .order-header {
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 15px;
     margin-bottom: 20px;
 }
 
-.order-code { font-weight: bold; color: #333; }
+.order-code { font-weight: bold; color: var(--text-color); }
 .order-status { color: #e74c3c; font-weight: 600; text-transform: uppercase; font-size: 14px; }
 
 /* Danh sách sản phẩm trong đơn */
@@ -65,17 +65,17 @@
     height: 90px;
     object-fit: cover;
     border-radius: 6px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
 }
 
 .order-item-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.order-item-name { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 5px; }
-.order-item-qty { font-size: 13px; color: #666; }
+.order-item-name { font-size: 15px; font-weight: 600; color: var(--text-color); margin-bottom: 5px; }
+.order-item-qty { font-size: 13px; color: var(--text-color); }
 .order-item-price { font-size: 15px; color: var(--secondary-color); font-weight: bold; margin-left: auto; display: flex; align-items: center; }
 
 /* Footer của đơn hàng */
 .order-footer {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-color);
     padding-top: 20px;
     display: flex;
     justify-content: space-between;

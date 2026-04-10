@@ -9,16 +9,16 @@
 .profile-sidebar {
     width: 250px;
     flex-shrink: 0;
-    background: #fff;
+    background: var(--surface-color);
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px var(--shadow-color);
 }
 
 .profile-sidebar-item {
     display: block;
     padding: 12px 15px;
-    color: #333;
+    color: var(--text-color);
     text-decoration: none;
     font-weight: 500;
     border-radius: 8px;
@@ -26,26 +26,26 @@
     transition: 0.2s;
 }
 
-.profile-sidebar-item i { width: 20px; margin-right: 10px; color: #888; }
+.profile-sidebar-item i { width: 20px; margin-right: 10px; color: var(--text-color); }
 .profile-sidebar-item:hover, .profile-sidebar-item.active { background-color: #f5faff; color: var(--primary-color); }
 .profile-sidebar-item.active i { color: var(--primary-color); }
 
 .profile-content {
     flex: 1;
-    background: #fff;
+    background: var(--surface-color);
     border-radius: 12px;
     padding: 30px 40px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px var(--shadow-color);
 }
 
 .profile-header {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 15px;
     margin-bottom: 30px;
 }
 
-.profile-header h2 { font-size: 20px; color: #333; }
-.profile-header p { font-size: 14px; color: #666; margin-top: 5px; }
+.profile-header h2 { font-size: 20px; color: var(--text-color); }
+.profile-header p { font-size: 14px; color: var(--text-color); margin-top: 5px; }
 
 .profile-form-group {
     display: flex;
@@ -66,7 +66,7 @@
     flex: 1;
     max-width: 400px;
     padding: 12px 15px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
     outline: none;
@@ -74,7 +74,7 @@
 }
 
 .profile-form-group input:focus { border-color: var(--primary-color); }
-.profile-form-group input:disabled { background-color: #f5f5f5; color: #888; cursor: not-allowed; }
+.profile-form-group input:disabled { background-color: #f5f5f5; color: var(--text-color); cursor: not-allowed; }
 
 .btn-save-profile {
     padding: 12px 30px;
@@ -92,7 +92,7 @@
 
 .stat-card {
     flex: 1; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-    border-radius: 12px; padding: 20px; border: 1px solid #eee;
+    border-radius: 12px; padding: 20px; border: 1px solid var(--border-color);
     box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px;
 }
 
@@ -103,15 +103,15 @@
 .stat-icon {
     width: 50px; height: 50px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 24px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-size: 24px; background: var(--surface-color); box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .stat-icon.tier { color: #f39c12; }
 .stat-icon.order { color: #3498db; }
 .stat-icon.money { color: #2ecc71; }
 
-.stat-info h4 { font-size: 13px; color: #666; margin-bottom: 5px; font-weight: 500;}
-.stat-info .val { font-size: 18px; font-weight: bold; color: #333; }
+.stat-info h4 { font-size: 13px; color: var(--text-color); margin-bottom: 5px; font-weight: 500;}
+.stat-info .val { font-size: 18px; font-weight: bold; color: var(--text-color); }
 .stat-info .tier-name { 
     color: #e67e22; font-size: 20px; font-weight: 800; text-transform: uppercase; 
     text-shadow: 1px 1px 0px rgba(255,255,255,0.8);

@@ -378,7 +378,8 @@ if (searchInput && searchBtn) {
             if (userRole === 'admin') roleName = "Quản trị viên";
             if (userRole === 'staff') roleName = "Nhân viên hệ thống";
 
-            const avatarUrl = user.picture || user.avatar || user.photo; 
+            // Ưu tiên hiển thị Avatar tuỳ chỉnh trong Database, nếu không có mới dùng Ảnh Google/Facebook
+            const avatarUrl = user.avatar || user.picture || user.photo; 
             if (userNameDisplay) userNameDisplay.textContent = `Chào, ${user.fullName || user.userName || user.name || 'Thành viên'}`;
             
             // CẬP NHẬT: Thay vì hardcode, ta dùng biến roleName
@@ -570,6 +571,46 @@ if (searchInput && searchBtn) {
         document.addEventListener('click', () => {
             document.querySelectorAll('.custom-select-list').forEach(el => el.classList.remove('show'));
             document.querySelectorAll('.custom-select-trigger').forEach(el => el.classList.remove('active'));
+        });
+    }
+
+    // ==========================================
+    // 8. TÍNH NĂNG CHUYỂN ĐỔI GIAO DIỆN SÁNG TỐI (DARK MODE)
+    // ==========================================
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const body = document.body;
+    
+    // Khôi phục trạng thái từ localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-theme');
+        if (themeIcon) {
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+    }
+    
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            const isDark = body.classList.contains('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            
+            if (themeIcon) {
+                // Hiệu ứng đóng mở icon mượt mà
+                themeIcon.style.transform = 'scale(0) rotate(-90deg)';
+                setTimeout(() => {
+                    if (isDark) {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                    } else {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                    }
+                    themeIcon.style.transform = 'scale(1) rotate(0)';
+                }, 150);
+            }
         });
     }
 

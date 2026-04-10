@@ -14,6 +14,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inputDob = document.getElementById('pfDob');
     const btnSave = document.getElementById('btnSaveProfile');
     const avatarImg = document.getElementById('sidebarAvatar');
+    
+    // UI Lỗi
+    const errFullName = document.getElementById('errFullName');
+    const errEmail = document.getElementById('errEmail');
+    const errPhone = document.getElementById('errPhone');
+    const errDob = document.getElementById('errDob');
+
+    // Chặn lịch: ngày sinh <= 13 năm trước
+    const today = new Date();
+    const maxDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+    inputDob.max = maxDate.toISOString().split('T')[0];
+
     let currentAvatarBase64 = null; // Biến lưu tạm chuỗi ảnh
 
     // 1. Tải dữ liệu hồ sơ từ DB
@@ -108,14 +120,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        let isValid = true;
+        if(errFullName) errFullName.style.display = 'none';
+        if(errEmail) errEmail.style.display = 'none';
+        if(errPhone) errPhone.style.display = 'none';
+        if(errDob) errDob.style.display = 'none';
+
+        const rawFullName = inputFullName.value.trim();
+        const rawEmail = inputEmail.value.trim();
+        const rawPhone = inputPhone.value.trim();
+        const rawDob = inputDob.value;
+
+        // Validation Họ Tên: >= 2 ký tự, không chứa số/ký tự đặc biệt (chấp nhận chữ tiếng Việt)
+        const nameRegex = /^[a-zA-ZÀ-Ỹà-ỹ\s]+$/;
+        if (rawFullName && rawFullName.length < 2) {
+            if(errFullName) { errFullName.textContent = 'Họ và tên phải có ít nhất 2 ký tự.'; errFullName.style.display = 'block'; }
+            isValid = false;
+        } else if (rawFullName && !nameRegex.test(rawFullName)) {
+            if(errFullName) { errFullName.textContent = 'Họ và tên không hợp lệ (không chứa số hoặc ký tự đặc biệt).'; errFullName.style.display = 'block'; }
+            isValid = false;
+        }
+
+        // Validation SĐT: Bắt buộc, chuỗi 10 số bắt đầu bằng 0
+        const phoneRegex = /^0\d{9}$/;
+        if (!rawPhone) {
+            if(errPhone) { errPhone.textContent = 'Vui lòng nhập số điện thoại (Bắt buộc).'; errPhone.style.display = 'block'; }
+            isValid = false;
+        } else if (!phoneRegex.test(rawPhone)) {
+            if(errPhone) { errPhone.textContent = 'Số điện thoại không hợp lệ (phải bắt đầu bằng 0 và gồm 10 chữ số).'; errPhone.style.display = 'block'; }
+            isValid = false;
+        }
+
+        // Validation Ngày sinh: Yêu cầu tối thiểu 13 tuổi
+        if (rawDob) {
+            const dobDate = new Date(rawDob);
+            const ageInMs = Date.now() - dobDate.getTime();
+            const ageDate = new Date(ageInMs);
+            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            
+            if (dobDate > new Date()) {
+                if(errDob) { errDob.textContent = 'Ngày sinh không thể ở tương lai.'; errDob.style.display = 'block'; }
+                isValid = false;
+            } else if (age < 13) {
+                if(errDob) { errDob.textContent = 'Bạn phải từ 13 tuổi trở lên để sử dụng hệ thống.'; errDob.style.display = 'block'; }
+                isValid = false;
+            }
+        }
+
+        if (!isValid) return; // Dừng lại nếu lỗi
+
         btnSave.disabled = true;
         btnSave.textContent = 'ĐANG LƯU...';
 
         const payload = {
-            fullName: inputFullName.value.trim(),
-            email: inputEmail.value.trim(),
-            numberPhone: inputPhone.value.trim(),
-            dateOfBirth: inputDob.value,
+            fullName: rawFullName,
+            email: rawEmail,
+            numberPhone: rawPhone,
+            dateOfBirth: rawDob,
             avatar: currentAvatarBase64
         };
 
@@ -138,7 +199,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (userStr) {
                     const uLocal = JSON.parse(userStr);
                     uLocal.fullName = data.user.fullName;
-                    if (data.user.avatar) uLocal.avatar = data.user.avatar;
+                    if (data.user.avatar) {
+                        uLocal.avatar = data.user.avatar;
+                        uLocal.picture = data.user.avatar; // Đè luôn link google
+                        uLocal.photo = data.user.avatar; // Đè luôn link facebook
+                    }
                     localStorage.setItem('currentUser', JSON.stringify(uLocal));
                     if (typeof checkLoginStatus === 'function') checkLoginStatus(); // Render lại Header ngay
                 }

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sản phẩm - Captain Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4318FF;
+            --bg-body: #F4F7FE;
+            --text-main: #2B3674;
+            --text-grey: #A3AED0;
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg-body); display: flex; color: var(--text-main); }
+
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background: white; height: 100vh; position: fixed; border-right: 1px solid #E9EDF7; padding: 25px; }
+        .sidebar-brand { text-align: center; margin-bottom: 40px; font-weight: 800; font-size: 20px; color: var(--primary); }
+        .sidebar-menu { list-style: none; }
+        .sidebar-menu li { margin-bottom: 10px; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 15px; text-decoration: none; color: var(--text-grey); font-weight: 600; border-radius: 15px; transition: 0.3s; }
+        .sidebar-menu a i { margin-right: 15px; font-size: 18px; width: 25px; }
+        .sidebar-menu a.active { background: var(--bg-body); color: var(--primary); border-right: 4px solid var(--primary); }
+
+        /* MAIN */
+        .main-content { flex: 1; margin-left: var(--sidebar-width); padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        /* FORM CARD */
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); margin-bottom: 25px; }
+        .card-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--primary); }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 13px; font-weight: 700; }
+        .form-group input, .form-group select { padding: 12px; border: 1px solid #E0E5F2; border-radius: 15px; outline: none; }
+        
+        .btn-group { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+        .btn { padding: 12px 35px; border-radius: 20px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-add { background: #05CD99; color: white; }
+        .btn-update { background: #4318FF; color: white; }
+        .btn-delete { background: white; border: 1px solid var(--text-main); }
+
+        /* TABLE */
+        .table-container { background: white; border-radius: 20px; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: var(--text-grey); font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #F4F7FE; }
+        td { padding: 15px; font-size: 14px; border-bottom: 1px solid #F4F7FE; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">CAPTAIN ADMIN</div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="fa-solid fa-house"></i> Bảng điều khiển</a></li>
+            <li><a href="quan_ly_khuyen_mai.html"><i class="fa-solid fa-ticket"></i> QL khuyến mãi</a></li>
+            <li><a href="san_pham.html" class="active"><i class="fa-solid fa-box-archive"></i> QL sản phẩm</a></li>
+            <li><a href="nhan_vien.html"><i class="fa-solid fa-users"></i> QL nhân viên</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <h2>Quản lý sản phẩm</h2>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Thông tin sản phẩm</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Tên sản phẩm :</label>
+                    <input type="text" id="p-name">
+                </div>
+                <div class="form-group">
+                    <label>Nhà xuất bản :</label>
+                    <input type="text" id="p-nxb">
+                </div>
+                <div class="form-group">
+                    <label>Tác giả :</label>
+                    <input type="text" id="p-author">
+                </div>
+                <div class="form-group">
+                    <label>Thể loại :</label>
+                    <select id="p-category">
+                        <option value="Tiểu thuyết">Tiểu thuyết</option>
+                        <option value="Kỹ năng">Kỹ năng sống</option>
+                        <option value="Truyện tranh">Truyện tranh</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Giá bán (đ) :</label>
+                    <input type="number" id="p-price">
+                </div>
+                <div class="form-group">
+                    <label>Số lượng :</label>
+                    <input type="number" id="p-stock">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-add" onclick="addProduct()">Thêm</button>
+                <button class="btn btn-update">Cập nhật</button>
+                <button class="btn btn-delete" onclick="resetForm()">Xóa trắng</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên sản phẩm</th>
+                        <th>Thể loại</th>
+                        <th>Tác giả</th>
+                        <th>Giá bán</th>
+                        <th>Số lượng</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="product-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/products';
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_URL}/all`);
+                const data = await res.json();
+                const body = document.getElementById('product-table-body');
+                body.innerHTML = data.map(p => `
+                    <tr>
+                        <td style="font-weight:700">${p.name}</td>
+                        <td>${p.category}</td>
+                        <td>${p.author}</td>
+                        <td>${Number(p.price).toLocaleString()}đ</td>
+                        <td>${p.stock}</td>
+                        <td><i class="fa-solid fa-trash" style="color:#FF8080; cursor:pointer" onclick="deleteProduct('${p._id}')"></i></td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.log("Lỗi tải sản phẩm"); }
+        }
+
+        async function addProduct() {
+            const product = {
+                name: document.getElementById('p-name').value,
+                nxb: document.getElementById('p-nxb').value,
+                author: document.getElementById('p-author').value,
+                category: document.getElementById('p-category').value,
+                price: document.getElementById('p-price').value,
+                stock: document.getElementById('p-stock').value
+            };
+
+            const res = await fetch(`${API_URL}/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product)
+            });
+
+            if(res.ok) {
+                alert("Thêm thành công!");
+                loadProducts();
+                resetForm();
+            }
+        }
+
+        function resetForm() { document.querySelectorAll('input').forEach(i => i.value = ''); }
+        window.onload = loadProducts;
+    </script>
+</body>
+</html>

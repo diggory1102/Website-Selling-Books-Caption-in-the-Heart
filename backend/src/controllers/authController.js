@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { User } = require('../database');
+const { User } = require('../models/database');
 const { execFile } = require('child_process');
 const path = require('path');
 
@@ -85,7 +85,7 @@ const adminLogin = async (req, res) => {
         const roleName = user.roleId ? user.roleId.name.toLowerCase() : "customer";
 
         // Đã cập nhật lại đường dẫn lùi 2 cấp thư mục (../../) do file này nằm trong controllers/
-        const cppExePath = path.join(__dirname, '../../cpp_auth_core/auth_system.exe'); 
+        const cppExePath = path.join(__dirname, '../../../cpp_auth_core/auth_system.exe'); 
 
         execFile(cppExePath, [email, roleName], (error, stdout, stderr) => {
             if (error) {

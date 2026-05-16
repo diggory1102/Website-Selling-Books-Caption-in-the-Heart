@@ -3,7 +3,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const bcrypt = require('bcryptjs'); 
-const { User } = require('./database'); // Đảm bảo đã import User từ database.js
+const { User } = require('./models/database'); // Đảm bảo đã import User từ database.js
 const express = require('express');
 const cors = require('cors');
 const { execFile } = require('child_process');
@@ -22,7 +22,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/web_ban_t
     .catch(err => console.log('❌ Lỗi kết nối MongoDB:', err));
 
 // IMPORT CÁC BẢNG (MODELS) TỪ FILE database.js
-const { Category, Product, Subscriber, Bill, Payment, Delivery, Promotion } = require('./database');
+const { Category, Product, Subscriber, Bill, Payment, Delivery, Promotion } = require('./models/database');
 
 // IMPORT ROUTES
 const productRoutes = require('./routes/productRoutes');
@@ -38,7 +38,7 @@ app.use(express.json({ limit: '50mb' })); // Tăng giới hạn tải JSON lên 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Mở thư mục tĩnh để trình duyệt có thể đọc được ảnh từ thư mục uploads của Server
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Cấu hình Session (bắt buộc để dùng Passport)
 app.use(session({ secret: 'caption-in-the-heart-secret', resave: false, saveUninitialized: true }));
@@ -67,7 +67,7 @@ app.use('/api/promotions', promotionRoutes);
 // ==========================================
 // CẤU HÌNH UPLOAD ẢNH CHO ADMIN (SỬ DỤNG MULTER)
 // ==========================================
-const uploadDir = path.join(__dirname, 'uploads');
+const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)){
     fs.mkdirSync(uploadDir); // Tự động tạo thư mục uploads nếu chưa có
 }

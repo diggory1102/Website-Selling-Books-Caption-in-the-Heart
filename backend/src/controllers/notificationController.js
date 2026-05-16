@@ -1,4 +1,4 @@
-const { Notification } = require('../database');
+const { Notification } = require('../models/database');
 
 // Lấy danh sách thông báo của User
 const getUserNotifications = async (req, res) => {

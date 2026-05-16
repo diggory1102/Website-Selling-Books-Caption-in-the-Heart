@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý nhân viên - Captain In One Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #4318FF;
+            --bg-body: #F4F7FE;
+            --sidebar-width: 260px;
+            --text-dark: #2B3674;
+            --border-color: #E0E5F2;
+            --success-color: #05CD99;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-dark); display: flex; }
+
+        /* SIDEBAR (Đồng bộ toàn hệ thống) */
+        .admin-sidebar { 
+            width: var(--sidebar-width); background: white; height: 100vh; 
+            position: fixed; border-right: 1px solid #E9EDF7; padding: 20px; 
+        }
+        .sidebar-header { text-align: center; margin-bottom: 40px; }
+        .sidebar-header img { width: 120px; margin-bottom: 10px; }
+        
+        .sidebar-menu { list-style: none; }
+        .sidebar-menu li { margin-bottom: 10px; }
+        .sidebar-menu a { 
+            display: flex; align-items: center; padding: 15px 20px; 
+            text-decoration: none; color: #A3AED0; font-weight: 600; border-radius: 15px; 
+        }
+        .sidebar-menu a.active { background: #F4F7FE; color: var(--primary-color); border-right: 5px solid var(--primary-color); }
+        .sidebar-menu i { margin-right: 15px; font-size: 18px; }
+
+        /* MAIN CONTENT */
+        .admin-main { flex: 1; margin-left: var(--sidebar-width); padding: 30px; }
+        
+        /* TOPBAR */
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .topbar-right { display: flex; align-items: center; gap: 20px; }
+        .search-box { background: white; border-radius: 30px; padding: 8px 15px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .search-box input { border: none; outline: none; margin-left: 10px; width: 200px; }
+
+        /* FORM INPUT SECTION (Theo mẫu image_3d7a13.png) */
+        .form-section { background: white; border-radius: 20px; padding: 25px; margin-bottom: 30px; display: flex; gap: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        .avatar-placeholder { width: 180px; height: 180px; background: #E9EDF7; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 80px; color: #A3AED0; }
+        
+        .form-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { display: flex; align-items: center; gap: 10px; }
+        .form-group label { min-width: 120px; font-size: 13px; font-weight: 600; color: var(--text-dark); }
+        .form-group input { flex: 1; padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; font-size: 13px; }
+
+        .btn-group { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; }
+        .btn { padding: 10px 25px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.3s; }
+        .btn-add { background: #2DCE89; color: white; }
+        .btn-update { background: #E9EDF7; color: var(--text-dark); }
+        .btn-delete { background: #E9EDF7; color: var(--text-dark); }
+
+        /* TABLE SECTION */
+        .table-section { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: #A3AED0; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #F4F7FE; }
+        td { padding: 15px; font-size: 13px; font-weight: 600; border-bottom: 1px solid #F4F7FE; }
+        
+        .btn-detail { border: 1px solid var(--border-color); background: white; padding: 5px 15px; border-radius: 15px; cursor: pointer; font-size: 11px; font-weight: 700; color: #A3AED0; }
+        
+        /* PAGINATION */
+        .pagination { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .page-btn { padding: 5px 10px; text-decoration: none; color: #A3AED0; font-weight: 700; font-size: 12px; }
+        .page-btn.active { background: var(--secondary-color); color: white; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <nav class="admin-sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="CAPTAIN" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=logo'">
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="admin-dashboard.html"><i class="fa-solid fa-house"></i> Bảng điều khiển</a></li>
+            <li><a href="promotions.html"><i class="fa-solid fa-ticket"></i> QL khuyến mãi</a></li>
+            <li><a href="employees.html" class="active"><i class="fa-solid fa-user-tie"></i> QL nhân viên</a></li>
+            <li><a href="statistics.html"><i class="fa-solid fa-chart-line"></i> Thống kê</a></li>
+            <li><a href="products.html"><i class="fa-solid fa-box"></i> QL sản phẩm</a></li>
+            <li><a href="customers.html"><i class="fa-solid fa-users"></i> QL khách hàng</a></li>
+        </ul>
+    </nav>
+
+    <main class="admin-main">
+        <header class="topbar">
+            <h2 style="font-weight: 800;">Quản lý nhân viên</h2>
+            <div class="topbar-right">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass" style="color: #A3AED0;"></i>
+                    <input type="text" placeholder="Tìm kiếm">
+                </div>
+                <i class="fa-solid fa-gear" style="color: #A3AED0;"></i>
+                <i class="fa-solid fa-bell" style="color: #FF8080;"></i>
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" width="35" style="border-radius: 50%;">
+            </div>
+        </header>
+
+        <section class="form-section">
+            <div class="avatar-placeholder">
+                <i class="fa-regular fa-face-frown"></i>
+            </div>
+            <div style="flex: 1;">
+                <div class="form-grid">
+                    <div class="form-group"><label>Tên nhân viên:</label><input type="text"></div>
+                    <div class="form-group"><label>Giới tính:</label><input type="text"></div>
+                    <div class="form-group"><label>Mã nhân viên:</label><input type="text"></div>
+                    <div class="form-group"><label>CCCD:</label><input type="text"></div>
+                    <div class="form-group"><label>Ngày sinh:</label><input type="text"></div>
+                    <div class="form-group"><label>Tài khoản:</label><input type="text"></div>
+                    <div class="form-group"><label>Số điện thoại:</label><input type="text"></div>
+                    <div class="form-group"><label>Mật khẩu:</label><input type="password"></div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-add">Thêm</button>
+                    <button class="btn btn-update">Cập nhật</button>
+                    <button class="btn btn-delete">Xóa</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã nhân viên</th>
+                        <th>Tên nhân viên</th>
+                        <th>Điện thoại</th>
+                        <th>Lương</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="employee-list">
+                    <tr>
+                        <td>01.</td>
+                        <td>A44189</td>
+                        <td>Minh</td>
+                        <td>012345678</td>
+                        <td>1</td>
+                        <td><button class="btn-detail">Chi tiết</button></td>
+                    </tr>
+                    <tr>
+                        <td>02.</td>
+                        <td>A44643</td>
+                        <td>Việt</td>
+                        <td>123445255</td>
+                        <td>200.000.000</td>
+                        <td><button class="btn-detail">Chi tiết</button></td>
+                    </tr>
+                    <tr>
+                        <td>03.</td>
+                        <td>A44941</td>
+                        <td>Nam</td>
+                        <td>472354548</td>
+                        <td>300.000.000</td>
+                        <td><button class="btn-detail">Chi tiết</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <a href="#" class="page-btn">< Trước</a>
+                <a href="#" class="page-btn active">1</a>
+                <a href="#" class="page-btn">2</a>
+                <a href="#" class="page-btn">3</a>
+                <a href="#" class="page-btn">4</a>
+                <a href="#" class="page-btn">Sau ></a>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>

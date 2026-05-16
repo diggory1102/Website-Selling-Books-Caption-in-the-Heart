@@ -1,5 +1,5 @@
 // backend/controllers/promotionController.js
-const { Promotion } = require('../database'); // Quan trọng: Phải import model từ database.js
+const { Promotion } = require('../models/database'); // Quan trọng: Phải import model từ database.js
 
 exports.addPromotion = async (req, res) => {
     try {

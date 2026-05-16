@@ -1,4 +1,4 @@
-const { Bill, Payment, Delivery, Promotion } = require('../database');
+const { Bill, Payment, Delivery, Promotion } = require('../models/database');
 
 const createOrder = async (req, res) => {
     try {

@@ -1,4 +1,4 @@
-const { User, Bill } = require('../database');
+const { User, Bill } = require('../models/database');
 const bcrypt = require('bcryptjs'); // Thêm thư viện mã hóa mật khẩu
 
 // Lấy thông tin hồ sơ kèm theo THỐNG KÊ HẠNG THÀNH VIÊN

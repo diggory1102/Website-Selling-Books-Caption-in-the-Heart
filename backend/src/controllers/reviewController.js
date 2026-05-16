@@ -1,4 +1,4 @@
-const { Bill, Rate, Product } = require('../database');
+const { Bill, Rate, Product } = require('../models/database');
 
 // Lấy danh sách sản phẩm chưa đánh giá từ các đơn hàng Đã giao
 const getReviewableProducts = async (req, res) => {

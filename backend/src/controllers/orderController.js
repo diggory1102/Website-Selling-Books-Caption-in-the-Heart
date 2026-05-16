@@ -73,6 +73,15 @@ const getAllOrders = async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: "Lỗi lấy danh sách tất cả đơn hàng" }); }
 };
 
+const updateOrderStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const order = await Bill.findByIdAndUpdate(req.params.id, { status }, { new: true });
+        if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+        res.json({ success: true, message: "Cập nhật trạng thái thành công!", order });
+    } catch (err) { res.status(500).json({ success: false, message: "Lỗi cập nhật trạng thái: " + err.message }); }
+};
+
 module.exports = {
-    createOrder, getUserOrders, getOrderById, cancelOrder, getAllOrders
+    createOrder, getUserOrders, getOrderById, cancelOrder, getAllOrders, updateOrderStatus
 };

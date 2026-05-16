@@ -12,7 +12,19 @@ const getCategories = async (req, res) => {
 const getBestSellers = async (req, res) => {
     try {
         const products = await Product.find().sort({ sold: -1 }).limit(8); 
-        res.json(products);
+        const formatted = products.map(p => ({
+            id: p._id,
+            _id: p._id,
+            name: p.name,
+            price: p.price,
+            discount: p.discount,
+            sold: p.sold,
+            imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
+            averageRating: p.averageRating || 0,
+            totalReviews: p.totalReviews || 0,
+            authorName: p.authorName
+        }));
+        res.json(formatted);
     } catch (err) {
         res.status(500).json({ error: "Lỗi Server" });
     }
@@ -112,6 +124,57 @@ const getAllProducts = async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Lỗi Server" }); }
 };
 
+const addProduct = async (req, res) => {
+    try {
+        const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl } = req.body;
+        // Tìm categoryId từ tên category
+        const cat = await Category.findOne({ name: category });
+        
+        await Product.create({
+            name,
+            authorName: author,
+            publisherName: nxb,
+            price,
+            stock,
+            isbn,
+            imageUrl,
+            categoryName: category,
+            categoryId: cat ? cat._id : null,
+            publishDate
+        });
+        res.json({ success: true, message: "Đã thêm sản phẩm!" });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};
+
+const updateProduct = async (req, res) => {
+    try {
+        const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl } = req.body;
+        const cat = await Category.findOne({ name: category });
+        
+        const updated = await Product.findByIdAndUpdate(req.params.id, {
+            name,
+            authorName: author,
+            publisherName: nxb,
+            price,
+            stock,
+            isbn,
+            imageUrl,
+            categoryName: category,
+            categoryId: cat ? cat._id : null,
+            publishDate
+        }, { new: true });
+        
+        res.json({ success: true, product: updated });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};
+
+const deleteProduct = async (req, res) => {
+    try {
+        await Product.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Đã xóa sản phẩm!" });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};
+
 module.exports = {
     getCategories,
     getBestSellers,
@@ -119,5 +182,8 @@ module.exports = {
     getProductById,
     getRelatedProducts,
     searchProducts,
-    getAllProducts
+    getAllProducts,
+    addProduct,
+    updateProduct,
+    deleteProduct
 };

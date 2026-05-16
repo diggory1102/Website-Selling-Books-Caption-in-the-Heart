@@ -6,176 +6,182 @@
     <title>Quản lý nhân viên - Captain In One Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #4A90E2;
-            --secondary-color: #4318FF;
-            --bg-body: #F4F7FE;
-            --sidebar-width: 260px;
-            --text-dark: #2B3674;
-            --border-color: #E0E5F2;
-            --success-color: #05CD99;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-dark); display: flex; }
-
-        /* SIDEBAR (Đồng bộ toàn hệ thống) */
-        .admin-sidebar { 
-            width: var(--sidebar-width); background: white; height: 100vh; 
-            position: fixed; border-right: 1px solid #E9EDF7; padding: 20px; 
-        }
-        .sidebar-header { text-align: center; margin-bottom: 40px; }
-        .sidebar-header img { width: 120px; margin-bottom: 10px; }
-        
-        .sidebar-menu { list-style: none; }
-        .sidebar-menu li { margin-bottom: 10px; }
-        .sidebar-menu a { 
-            display: flex; align-items: center; padding: 15px 20px; 
-            text-decoration: none; color: #A3AED0; font-weight: 600; border-radius: 15px; 
-        }
-        .sidebar-menu a.active { background: #F4F7FE; color: var(--primary-color); border-right: 5px solid var(--primary-color); }
-        .sidebar-menu i { margin-right: 15px; font-size: 18px; }
-
-        /* MAIN CONTENT */
-        .admin-main { flex: 1; margin-left: var(--sidebar-width); padding: 30px; }
-        
-        /* TOPBAR */
-        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .topbar-right { display: flex; align-items: center; gap: 20px; }
-        .search-box { background: white; border-radius: 30px; padding: 8px 15px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-        .search-box input { border: none; outline: none; margin-left: 10px; width: 200px; }
-
-        /* FORM INPUT SECTION (Theo mẫu image_3d7a13.png) */
-        .form-section { background: white; border-radius: 20px; padding: 25px; margin-bottom: 30px; display: flex; gap: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-        .avatar-placeholder { width: 180px; height: 180px; background: #E9EDF7; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 80px; color: #A3AED0; }
-        
-        .form-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .form-group { display: flex; align-items: center; gap: 10px; }
-        .form-group label { min-width: 120px; font-size: 13px; font-weight: 600; color: var(--text-dark); }
-        .form-group input { flex: 1; padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; font-size: 13px; }
-
-        .btn-group { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; }
-        .btn { padding: 10px 25px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.3s; }
-        .btn-add { background: #2DCE89; color: white; }
-        .btn-update { background: #E9EDF7; color: var(--text-dark); }
-        .btn-delete { background: #E9EDF7; color: var(--text-dark); }
-
-        /* TABLE SECTION */
-        .table-section { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: #A3AED0; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #F4F7FE; }
-        td { padding: 15px; font-size: 13px; font-weight: 600; border-bottom: 1px solid #F4F7FE; }
-        
-        .btn-detail { border: 1px solid var(--border-color); background: white; padding: 5px 15px; border-radius: 15px; cursor: pointer; font-size: 11px; font-weight: 700; color: #A3AED0; }
-        
-        /* PAGINATION */
-        .pagination { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        .page-btn { padding: 5px 10px; text-decoration: none; color: #A3AED0; font-weight: 700; font-size: 12px; }
-        .page-btn.active { background: var(--secondary-color); color: white; border-radius: 5px; }
-    </style>
+    <link rel="stylesheet" href="css/admin-global.css">
 </head>
 <body>
-
-    <nav class="admin-sidebar">
-        <div class="sidebar-header">
-            <img src="logo.png" alt="CAPTAIN" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=logo'">
-        </div>
-        <ul class="sidebar-menu">
-            <li><a href="admin-dashboard.html"><i class="fa-solid fa-house"></i> Bảng điều khiển</a></li>
-            <li><a href="promotions.html"><i class="fa-solid fa-ticket"></i> QL khuyến mãi</a></li>
-            <li><a href="employees.html" class="active"><i class="fa-solid fa-user-tie"></i> QL nhân viên</a></li>
-            <li><a href="statistics.html"><i class="fa-solid fa-chart-line"></i> Thống kê</a></li>
-            <li><a href="products.html"><i class="fa-solid fa-box"></i> QL sản phẩm</a></li>
-            <li><a href="customers.html"><i class="fa-solid fa-users"></i> QL khách hàng</a></li>
-        </ul>
-    </nav>
+    <div id="sidebar-container"></div>
 
     <main class="admin-main">
-        <header class="topbar">
-            <h2 style="font-weight: 800;">Quản lý nhân viên</h2>
-            <div class="topbar-right">
-                <div class="search-box">
-                    <i class="fa-solid fa-magnifying-glass" style="color: #A3AED0;"></i>
-                    <input type="text" placeholder="Tìm kiếm">
-                </div>
-                <i class="fa-solid fa-gear" style="color: #A3AED0;"></i>
-                <i class="fa-solid fa-bell" style="color: #FF8080;"></i>
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" width="35" style="border-radius: 50%;">
-            </div>
-        </header>
+        <div id="topbar-container" data-title="Quản lý nhân viên"></div>
 
-        <section class="form-section">
-            <div class="avatar-placeholder">
-                <i class="fa-regular fa-face-frown"></i>
+        <div class="card-figma" style="display: flex; gap: 30px;">
+            <div class="avatar-placeholder" id="avatarPreview" onclick="document.getElementById('emp-avatar-input').click()" style="width: 150px; height: 150px; background: #f3f4f6; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 50px; color: #9ca3af; border: 1px dashed var(--border-color); cursor: pointer; overflow: hidden;">
+                <i class="fa-regular fa-user"></i>
             </div>
+            <input type="file" id="emp-avatar-input" hidden accept="image/*" onchange="previewAvatar(this)">
+            
             <div style="flex: 1;">
-                <div class="form-grid">
-                    <div class="form-group"><label>Tên nhân viên:</label><input type="text"></div>
-                    <div class="form-group"><label>Giới tính:</label><input type="text"></div>
-                    <div class="form-group"><label>Mã nhân viên:</label><input type="text"></div>
-                    <div class="form-group"><label>CCCD:</label><input type="text"></div>
-                    <div class="form-group"><label>Ngày sinh:</label><input type="text"></div>
-                    <div class="form-group"><label>Tài khoản:</label><input type="text"></div>
-                    <div class="form-group"><label>Số điện thoại:</label><input type="text"></div>
-                    <div class="form-group"><label>Mật khẩu:</label><input type="password"></div>
+                <h3 class="card-title">Thiết lập thông tin nhân viên</h3>
+                <div class="form-grid-figma" style="grid-template-columns: 1fr 1fr; border: none;">
+                    <div class="form-group-figma"><label>Tên nhân viên</label><input type="text" id="emp-name" class="form-control-figma" placeholder="Họ và tên..."></div>
+                    <div class="form-group-figma"><label>Giới tính</label><input type="text" id="emp-gender" class="form-control-figma" placeholder="Nam/Nữ..."></div>
+                    <div class="form-group-figma"><label>Mã nhân viên</label><input type="text" id="emp-code" class="form-control-figma" placeholder="NV-001..."></div>
+                    <div class="form-group-figma"><label>CCCD</label><input type="text" id="emp-cccd" class="form-control-figma" placeholder="Số định danh..."></div>
+                    <div class="form-group-figma"><label>Ngày sinh</label><input type="date" id="emp-dob" class="form-control-figma"></div>
+                    <div class="form-group-figma"><label>Tài khoản</label><input type="text" id="emp-username" class="form-control-figma" placeholder="Tên đăng nhập..."></div>
+                    <div class="form-group-figma"><label>Số điện thoại</label><input type="text" id="emp-phone" class="form-control-figma" placeholder="0xxx..."></div>
+                    <div class="form-group-figma"><label>Mật khẩu</label><input type="password" id="emp-password" class="form-control-figma" placeholder="********"></div>
+                    <div class="form-group-figma"><label>Email</label><input type="email" id="emp-email" class="form-control-figma" placeholder="example@gmail.com"></div>
+                    <div class="form-group-figma">
+                        <label>Chức vụ</label>
+                        <select id="emp-role" class="form-control-figma">
+                            <option value="staff">Nhân viên (Staff)</option>
+                            <option value="admin">Quản trị viên (Admin)</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="btn-group">
-                    <button class="btn btn-add">Thêm</button>
-                    <button class="btn btn-update">Cập nhật</button>
-                    <button class="btn btn-delete">Xóa</button>
+                <div class="btn-group-figma">
+                    <button class="btn-figma btn-figma-outline" onclick="resetForm()">Làm mới</button>
+                    <button class="btn-figma btn-figma-primary" onclick="saveEmployee()">Lưu nhân viên</button>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <section class="table-section">
-            <table>
+        <div class="card-figma">
+            <h3 class="card-title">Danh sách nhân viên</h3>
+            <table class="table-figma">
                 <thead>
                     <tr>
-                        <th>STT</th>
-                        <th>Mã nhân viên</th>
+                        <th>Ảnh</th>
+                        <th>Mã NV</th>
                         <th>Tên nhân viên</th>
-                        <th>Điện thoại</th>
-                        <th>Lương</th>
-                        <th></th>
+                        <th>Tài khoản</th>
+                        <th>Chức vụ</th>
+                        <th style="text-align: right;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody id="employee-list">
-                    <tr>
-                        <td>01.</td>
-                        <td>A44189</td>
-                        <td>Minh</td>
-                        <td>012345678</td>
-                        <td>1</td>
-                        <td><button class="btn-detail">Chi tiết</button></td>
-                    </tr>
-                    <tr>
-                        <td>02.</td>
-                        <td>A44643</td>
-                        <td>Việt</td>
-                        <td>123445255</td>
-                        <td>200.000.000</td>
-                        <td><button class="btn-detail">Chi tiết</button></td>
-                    </tr>
-                    <tr>
-                        <td>03.</td>
-                        <td>A44941</td>
-                        <td>Nam</td>
-                        <td>472354548</td>
-                        <td>300.000.000</td>
-                        <td><button class="btn-detail">Chi tiết</button></td>
-                    </tr>
+                    <!-- Data here -->
                 </tbody>
             </table>
-            <div class="pagination">
-                <a href="#" class="page-btn">< Trước</a>
-                <a href="#" class="page-btn active">1</a>
-                <a href="#" class="page-btn">2</a>
-                <a href="#" class="page-btn">3</a>
-                <a href="#" class="page-btn">4</a>
-                <a href="#" class="page-btn">Sau ></a>
+            <div id="empty-box" class="empty-chart" style="display: none;">
+                <i class="fa-regular fa-face-frown"></i>
+                <p>Không có dữ liệu nhân viên</p>
             </div>
-        </section>
+        </div>
     </main>
 
+    <script>
+        const API_URL = 'http://localhost:5000/api/employees';
+        const UPLOAD_URL = 'http://localhost:5000/api/upload';
+
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function loadEmployees() {
+            try {
+                const res = await fetch(`${API_URL}/all`);
+                const data = await res.json();
+                const tableBody = document.getElementById('employee-list');
+                const emptyBox = document.getElementById('empty-box');
+
+                if (data.success && data.employees.length > 0) {
+                    emptyBox.style.display = 'none';
+                    tableBody.innerHTML = data.employees.map(emp => `
+                        <tr>
+                            <td><img src="${emp.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + emp.userName}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:1px solid #eee;"></td>
+                            <td>${emp.cccd || '---'}</td>
+                            <td style="font-weight:700; color: var(--text-main);">${emp.fullName || 'Chưa đặt tên'}</td>
+                            <td>@${emp.userName}</td>
+                            <td><span class="badge-status ${emp.roleId?.name === 'admin' ? 'completed' : 'shipping'}" style="text-transform: capitalize;">${emp.roleId?.name || 'staff'}</span></td>
+                            <td style="text-align: right;">
+                                <button onclick="deleteEmployee('${emp._id}', '${emp.userName}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: var(--active-red); border-color: #ffe4e4;">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    emptyBox.style.display = 'flex';
+                    tableBody.innerHTML = '';
+                }
+            } catch (err) { console.error("Lỗi:", err); }
+        }
+
+        async function saveEmployee() {
+            const fileInput = document.getElementById('emp-avatar-input');
+            let avatarUrl = '';
+
+            // 1. Upload ảnh trước nếu có chọn
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('image', fileInput.files[0]);
+                try {
+                    const uploadRes = await fetch(UPLOAD_URL, { method: 'POST', body: formData });
+                    const uploadData = await uploadRes.json();
+                    if (uploadData.success) avatarUrl = uploadData.imageUrl;
+                } catch (err) { console.error("Lỗi upload:", err); }
+            }
+
+            const empData = {
+                fullName: document.getElementById('emp-name').value,
+                userName: document.getElementById('emp-username').value,
+                password: document.getElementById('emp-password').value,
+                email: document.getElementById('emp-email').value,
+                phone: document.getElementById('emp-phone').value,
+                roleName: document.getElementById('emp-role').value,
+                gender: document.getElementById('emp-gender').value,
+                dob: document.getElementById('emp-dob').value,
+                cccd: document.getElementById('emp-code').value, // dùng cccd làm mã nhân viên
+                avatar: avatarUrl
+            };
+            
+            if(!empData.userName || !empData.password) return alert("Vui lòng nhập Tài khoản và Mật khẩu!");
+
+            try {
+                const res = await fetch(`${API_URL}/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(empData)
+                });
+                const result = await res.json();
+                if(result.success) {
+                    alert("Thêm nhân viên thành công!");
+                    resetForm();
+                    loadEmployees();
+                } else {
+                    alert("Lỗi: " + result.message);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function deleteEmployee(id, userName) {
+            if(!confirm(`Xác nhận xóa nhân viên ${userName}?`)) return;
+            try {
+                const res = await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if(result.success) {
+                    loadEmployees();
+                } else {
+                    alert(result.message);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function resetForm() {
+            document.querySelectorAll('input, select').forEach(i => i.value = '');
+            document.getElementById('avatarPreview').innerHTML = `<i class="fa-regular fa-user"></i>`;
+        }
+
+        window.onload = loadEmployees;
+    </script>
+    <script src="js/admin-layout.js"></script>
 </body>
 </html>

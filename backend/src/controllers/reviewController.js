@@ -59,4 +59,14 @@ const getProductReviews = async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: "Lỗi tải đánh giá" }); }
 };
 
-module.exports = { getReviewableProducts, submitReview, getProductReviews };
+const getAllReviews = async (req, res) => {
+    try {
+        const reviews = await Rate.find()
+            .populate('userId', 'fullName userName')
+            .populate('productId', 'name')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, reviews });
+    } catch (error) { res.status(500).json({ success: false, message: "Lỗi lấy tất cả đánh giá" }); }
+};
+
+module.exports = { getReviewableProducts, submitReview, getProductReviews, getAllReviews };

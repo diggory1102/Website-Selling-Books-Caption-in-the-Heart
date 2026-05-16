@@ -19,3 +19,12 @@ exports.getAllPromotions = async (req, res) => {
         res.status(500).json({ message: "Lỗi hệ thống khi lấy dữ liệu", error });
     }
 };
+
+exports.deletePromotion = async (req, res) => {
+    try {
+        await Promotion.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Đã xóa mã khuyến mãi!" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi khi xóa", error });
+    }
+};

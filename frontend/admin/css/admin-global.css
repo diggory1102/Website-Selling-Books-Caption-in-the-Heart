@@ -1,0 +1,536 @@
+/* ADMIN GLOBAL DESIGN SYSTEM - CAPTION IN THE HEART (FIGMA MATCH) */
+:root {
+    --bg-body: #F4F6F8;
+    --white: #FFFFFF;
+    --text-main: #1f2937;
+    --text-gray: #6b7280;
+    --text-light: #9ca3af;
+    --border-color: #e5e7eb;
+    --active-black: #000000;
+    --active-red: #ef4444;
+    --sidebar-width: 250px;
+    --border-radius-card: 20px;
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --transition: all 0.2s ease-in-out;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR STYLES */
+.admin-sidebar {
+    width: var(--sidebar-width);
+    background: var(--white);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+}
+
+.sidebar-brand {
+    text-align: center;
+    padding: 0 20px 20px 20px;
+}
+
+.sidebar-brand img {
+    max-width: 140px;
+    height: auto;
+}
+
+.sidebar-menu {
+    list-style: none;
+    flex: 1;
+    padding: 0 15px;
+}
+
+.sidebar-menu li {
+    margin-bottom: 5px;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: var(--text-light);
+    font-weight: 500;
+    font-size: 15px;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.sidebar-menu a i {
+    margin-right: 15px;
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.sidebar-menu a:hover {
+    color: var(--text-main);
+    background: #f9fafb;
+}
+
+.sidebar-menu a.active {
+    color: var(--text-main);
+    font-weight: 700;
+    position: relative;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* The black underline for active sidebar item */
+.sidebar-menu a.active::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 45px; /* Aligns roughly with text start */
+    right: 20px;
+    height: 2px;
+    background-color: var(--active-black);
+}
+
+/* MAIN CONTENT */
+.admin-main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - var(--sidebar-width));
+}
+
+/* TOPBAR */
+.admin-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.admin-topbar h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Search Bar (Pill shape) */
+.search-pill {
+    display: flex;
+    align-items: center;
+    background: #f3f4f6;
+    border-radius: 9999px;
+    padding: 8px 16px;
+    width: 250px;
+}
+
+.search-pill i {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.search-pill input {
+    border: none;
+    background: transparent;
+    outline: none;
+    margin-left: 10px;
+    width: 100%;
+    color: var(--text-main);
+    font-size: 14px;
+}
+
+.search-pill input::placeholder {
+    color: var(--text-light);
+}
+
+/* Circular Icons */
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--active-black);
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.icon-btn:hover {
+    background: #f9fafb;
+}
+
+.notification-dot {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 6px;
+    height: 6px;
+    background: var(--active-red);
+    border-radius: 50%;
+}
+
+.topbar-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+/* UTILITIES: CARDS */
+.card-figma {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-card);
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-card);
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: var(--text-main);
+}
+
+/* Columns for Results Card */
+.results-grid {
+    display: flex;
+    justify-content: space-between;
+}
+
+.result-col {
+    flex: 1;
+    text-align: center;
+    padding: 0 20px;
+    border-right: 1px solid var(--border-color);
+}
+
+.result-col:last-child {
+    border-right: none;
+}
+
+.result-col p {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.result-col h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* Tabs for Chart Card */
+.card-tabs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+.tabs-left {
+    display: flex;
+    gap: 30px;
+    position: relative;
+}
+
+.tab-item {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    position: relative;
+    padding-bottom: 15px;
+    margin-bottom: -16px; /* Overlap border */
+}
+
+.tab-item.active {
+    font-weight: 700;
+}
+
+.tab-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--active-red);
+}
+
+.tab-separator {
+    width: 1px;
+    height: 20px;
+    background-color: var(--border-color);
+    margin-top: 3px;
+}
+
+.tabs-right {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* Empty State */
+.empty-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 0;
+}
+
+.empty-chart i {
+    font-size: 60px;
+    color: var(--active-black);
+    margin-bottom: 15px;
+}
+
+.empty-chart p {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* STANDARDIZED FORMS */
+.form-grid-figma {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 30px;
+    margin-bottom: 25px;
+}
+
+.form-divider {
+    background: var(--border-color);
+    width: 1px;
+    height: 100%;
+}
+
+.form-group-figma {
+    margin-bottom: 20px;
+}
+
+.form-group-figma label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.form-control-figma {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    outline: none;
+    font-size: 14px;
+    color: var(--text-main);
+    transition: var(--transition);
+}
+
+.form-control-figma:focus {
+    border-color: var(--active-black);
+}
+
+/* STANDARDIZED TABLES */
+.table-figma {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-figma th {
+    text-align: left;
+    padding: 15px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border-color);
+    text-transform: uppercase;
+}
+
+.table-figma td {
+    padding: 20px 15px;
+    font-size: 14px;
+    color: var(--text-main);
+    border-bottom: 1px solid #f9fafb;
+}
+
+.table-figma tr:last-child td {
+    border-bottom: none;
+}
+
+/* STANDARDIZED BUTTONS */
+.btn-group-figma {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-figma {
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+}
+
+.btn-figma-primary {
+    background: var(--active-black);
+    color: var(--white);
+}
+
+.btn-figma-primary:hover {
+    background: #333;
+}
+
+.btn-figma-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.btn-figma-outline:hover {
+    background: #f9fafb;
+}
+
+.btn-figma-danger {
+    background: var(--active-red);
+    color: var(--white);
+}
+
+.btn-figma-danger:hover {
+    opacity: 0.9;
+}
+
+/* --- IMAGE UPLOAD --- */
+.image-preview {
+    width: 100%;
+    height: 250px;
+    background: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: 0.3s;
+}
+.image-preview:hover {
+    border-color: var(--active-black);
+    background: #f1f5f9;
+}
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.image-preview i {
+    font-size: 40px;
+    color: #94a3b8;
+    margin-bottom: 10px;
+}
+.image-preview p {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* --- Admin Profile Dropdown --- */
+.admin-profile-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.admin-dropdown-menu {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    width: 200px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    display: none;
+    z-index: 9999;
+    flex-direction: column;
+}
+
+.admin-dropdown-menu.show {
+    display: flex;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border-radius: 10px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background: #f8fafc;
+    color: var(--active-black);
+}
+
+.dropdown-item.logout {
+    color: var(--active-red);
+    border-top: 1px solid var(--border-color);
+    margin-top: 8px;
+    padding-top: 15px;
+}
+
+.dropdown-item.logout:hover {
+    background: #fef2f2;
+}

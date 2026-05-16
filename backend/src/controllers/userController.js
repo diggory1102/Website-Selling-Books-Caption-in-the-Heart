@@ -215,4 +215,29 @@ const setDefaultAddress = async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: "Lỗi thiết lập mặc định" }); }
 };
 
-module.exports = { getUserProfile, updateUserProfile, syncCart, getCart, changePassword, addAddress, updateAddress, deleteAddress, setDefaultAddress };
+// Admin: Lấy tất cả người dùng (thường là khách hàng)
+const getAllUsers = async (req, res) => {
+    try {
+        // Chỉ lấy những người có roleId tương ứng với 'customer' (tùy chọn)
+        const users = await User.find().populate('roleId', 'name').select('-password');
+        res.json({ success: true, users });
+    } catch (err) { res.status(500).json({ success: false, message: "Lỗi Server" }); }
+};
+
+// Admin: Chặn/Bỏ chặn người dùng
+const toggleUserStatus = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
+
+        user.status = user.status === 'active' ? 'blocked' : 'active';
+        await user.save();
+        res.json({ success: true, message: `Đã ${user.status === 'active' ? 'bỏ chặn' : 'chặn'} người dùng này!`, status: user.status });
+    } catch (err) { res.status(500).json({ success: false, message: "Lỗi Server" }); }
+};
+
+module.exports = { 
+    getUserProfile, updateUserProfile, syncCart, getCart, 
+    changePassword, addAddress, updateAddress, deleteAddress, 
+    setDefaultAddress, getAllUsers, toggleUserStatus 
+};

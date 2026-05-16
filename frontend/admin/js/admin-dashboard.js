@@ -1,7 +1,10 @@
+let chartInstance = null;
+let dashboardData = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Kiểm tra đăng nhập (Bảo mật: Phải là admin hoặc staff)
+    // 1. Kiểm tra đăng nhập
     const userStr = localStorage.getItem('currentUser');
-    const userRole = localStorage.getItem('userRole'); // Biến này lưu từ C++ truyền về
+    const userRole = localStorage.getItem('userRole');
 
     if (!userStr || (userRole !== 'admin' && userRole !== 'staff')) {
         alert("Truy cập bị từ chối! Vui lòng đăng nhập bằng tài khoản Quản trị.");
@@ -9,74 +12,117 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const user = JSON.parse(userStr);
-    document.getElementById('adminName').textContent = user.fullName || user.userName;
-    document.getElementById('adminRole').textContent = userRole === 'admin' ? 'Quản trị viên (C++)' : 'Nhân viên';
-    if (user.avatar) {
-        document.getElementById('adminAvatar').src = user.avatar;
-    }
-
-    // 2. Logic Menu thả xuống của Avatar
-    const profileBtn = document.getElementById('adminProfileBtn');
-    const dropdown = document.getElementById('adminDropdown');
-    profileBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdown.classList.toggle('show');
-    });
-    document.addEventListener('click', () => dropdown.classList.remove('show'));
-
-    document.getElementById('btnLogout').addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('userRole');
-        window.location.href = "admin-login.html";
-    });
-
-    // Nút điều hướng quay về trang Khách (Dành cho Admin muốn xem web)
-    document.getElementById('btnGoToClient').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.location.href = "../client/index.html";
-    });
-
-    // 3. Gọi API lấy dữ liệu thống kê
-    try {
-        const resOrders = await fetch('http://127.0.0.1:5000/api/orders');
-        const dataOrders = await resOrders.json();
-        
-        const resProducts = await fetch('http://127.0.0.1:5000/api/products');
-        const products = await resProducts.json();
-
-        // Tương thích với cả trường hợp Backend trả về mảng trực tiếp hoặc object { success: true, orders: [...] }
-        const orders = Array.isArray(dataOrders) ? dataOrders : (dataOrders.orders || []);
-        
-        // Sắp xếp để đơn hàng mới nhất (vừa đặt) lên đầu
-        orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
-        document.getElementById('statOrders').textContent = orders.length;
-
-        // Tính tổng doanh thu (Chỉ tính đơn Đã giao)
-        const totalRevenue = orders.filter(o => o.status === 'Đã giao').reduce((sum, o) => sum + o.totalPrice, 0);
-        document.getElementById('statRevenue').textContent = Number(totalRevenue).toLocaleString() + 'đ';
-
-        // Render 5 đơn hàng mới nhất vào bảng
-        const recentOrders = orders.slice(0, 5); 
-        const tbody = document.getElementById('recentOrdersTable');
-        
-        if (recentOrders.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Chưa có đơn hàng nào</td></tr>`;
-        } else {
-            tbody.innerHTML = recentOrders.map(o => {
-                const dateStr = new Date(o.createdAt).toLocaleDateString('vi-VN');
-                let statusClass = 'status-pending';
-                if (o.status === 'Đang giao') statusClass = 'status-delivering';
-                if (o.status === 'Đã giao') statusClass = 'status-completed';
-                if (o.status === 'Đã hủy') statusClass = 'status-cancelled';
-
-                return `<tr> <td style="font-weight: 600;">${o.billCode || o._id.substring(0,8).toUpperCase()}</td> <td>${o.customerName}</td> <td>${dateStr}</td> <td style="font-weight: bold; color: var(--secondary);">${Number(o.totalPrice).toLocaleString()}đ</td> <td><span class="status-badge ${statusClass}">${o.status}</span></td> </tr>`;
-            }).join('');
-        }
-        
-        const productsArray = Array.isArray(products) ? products : (products.products || []);
-        document.getElementById('statProducts').textContent = productsArray.length || 0;
-    } catch (err) { console.error("Lỗi tải dữ liệu Dashboard:", err); }
+    // 2. Tải dữ liệu Dashboard
+    await fetchDashboardData();
 });
+
+async function fetchDashboardData() {
+    try {
+        const res = await fetch('http://localhost:5000/api/stats/dashboard');
+        const data = await res.json();
+
+        if (data.success) {
+            dashboardData = data;
+            updateSummaryCards(data.summary);
+            renderRevenueChart(); // Mặc định hiện biểu đồ doanh thu
+        } else {
+            document.getElementById('empty-chart').style.display = 'flex';
+            document.getElementById('chart-container').style.display = 'none';
+        }
+    } catch (err) { 
+        console.error("Lỗi Dashboard:", err); 
+        document.getElementById('empty-chart').style.display = 'flex';
+    }
+}
+
+function updateSummaryCards(summary) {
+    if (document.getElementById('statRevenue')) {
+        document.getElementById('statRevenue').textContent = Number(summary.totalRevenue).toLocaleString() + ' đ';
+    }
+    if (document.getElementById('statOrders')) {
+        document.getElementById('statOrders').textContent = summary.totalOrders + ' đơn';
+    }
+    if (document.getElementById('statUsers')) {
+        document.getElementById('statUsers').textContent = summary.totalUsers + ' người';
+    }
+}
+
+function renderRevenueChart() {
+    const ctx = document.getElementById('dashboardChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    const labels = dashboardData.revenueChart.map(item => item.date);
+    const values = dashboardData.revenueChart.map(item => item.revenue);
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: values,
+                borderColor: '#4F46E5',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#4F46E5'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: (value) => value.toLocaleString() + 'đ' },
+                    grid: { color: '#f3f4f6' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderDistributionChart() {
+    const ctx = document.getElementById('dashboardChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    const labels = Object.keys(dashboardData.statusDistribution);
+    const values = Object.values(dashboardData.statusDistribution);
+
+    chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ['#f97316', '#3b82f6', '#22c55e', '#ef4444'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            },
+            cutout: '70%'
+        }
+    });
+}
+
+function switchTab(type) {
+    document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+    if (type === 'revenue') {
+        document.getElementById('tab-revenue').classList.add('active');
+        renderRevenueChart();
+    } else {
+        document.getElementById('tab-distribution').classList.add('active');
+        renderDistributionChart();
+    }
+}

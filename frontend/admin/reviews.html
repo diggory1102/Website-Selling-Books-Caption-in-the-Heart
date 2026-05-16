@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đánh giá - Captain In One Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin-global.css">
+    <style>
+        .review-card-item {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.3s;
+        }
+        .review-card-item:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .review-main-info {
+            display: flex;
+            gap: 40px;
+            flex: 1;
+        }
+        .info-col {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .info-col p { font-size: 12px; color: var(--text-light); font-weight: 600; }
+        .info-col span { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        
+        .stars { color: #facc15; font-size: 14px; }
+        .stats-grid-review {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .stat-card-review {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid var(--border-color);
+        }
+        .stat-icon-circle {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+
+    <main class="admin-main">
+        <div id="topbar-container" data-title="Quản lý đánh giá"></div>
+
+        <!-- Summary Stats -->
+        <div class="stats-grid-review">
+            <div class="stat-card-review">
+                <div class="stat-icon-circle" style="background: #eff6ff; color: #2563eb;"><i class="fa-solid fa-shield-heart"></i></div>
+                <div>
+                    <p style="color: var(--text-light); font-size: 14px; font-weight: 600;">Đánh giá tích cực</p>
+                    <h2 id="positiveCount">0</h2>
+                </div>
+            </div>
+            <div class="stat-card-review">
+                <div class="stat-icon-circle" style="background: #fff7ed; color: #ea580c;"><i class="fa-solid fa-lock"></i></div>
+                <div>
+                    <p style="color: var(--text-light); font-size: 14px; font-weight: 600;">Đánh giá tiêu cực</p>
+                    <h2 id="negativeCount">0</h2>
+                </div>
+            </div>
+            <div class="stat-card-review">
+                <div class="stat-icon-circle" style="background: #f0fdf4; color: #16a34a;"><i class="fa-solid fa-circle-check"></i></div>
+                <div>
+                    <p style="color: var(--text-light); font-size: 14px; font-weight: 600;">Tổng số đánh giá</p>
+                    <h2 id="totalCount">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="card-title" style="margin-bottom: 25px;">Các lượt đánh giá</h3>
+        
+        <div id="review-list-container">
+            <div style="text-align: center; padding: 50px; color: var(--text-light);">Đang tải dữ liệu...</div>
+        </div>
+
+        <div class="pagination" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px;">
+            <a href="#" class="btn-figma btn-figma-outline" style="padding: 5px 15px;">Trước</a>
+            <a href="#" class="btn-figma btn-figma-primary" style="padding: 5px 15px;">1</a>
+            <a href="#" class="btn-figma btn-figma-outline" style="padding: 5px 15px;">Sau</a>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/reviews/all';
+
+        async function fetchReviews() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                if(data.success) {
+                    renderReviews(data.reviews);
+                    updateStats(data.reviews);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function renderReviews(reviews) {
+            const container = document.getElementById('review-list-container');
+            if(!reviews || reviews.length === 0) {
+                container.innerHTML = '<div class="empty-chart"><i class="fa-regular fa-face-frown"></i><p>Chưa có đánh giá nào</p></div>';
+                return;
+            }
+
+            container.innerHTML = reviews.map(r => {
+                const stars = Array(5).fill(0).map((_, i) => `<i class="${i < r.rating ? 'fa-solid' : 'fa-regular'} fa-star"></i>`).join('');
+                return `
+                    <div class="review-card-item">
+                        <div class="review-main-info">
+                            <div class="info-col" style="width: 180px;">
+                                <p>Tên khách hàng</p>
+                                <span>${r.userId?.fullName || r.userId?.userName || 'Khách ẩn danh'}</span>
+                            </div>
+                            <div class="info-col" style="width: 120px;">
+                                <p>Đánh giá</p>
+                                <div class="stars">${stars}</div>
+                            </div>
+                            <div class="info-col" style="flex: 1;">
+                                <p>Nội dung</p>
+                                <span style="font-weight: 500;">${r.content || 'Không có nội dung'}</span>
+                            </div>
+                            <div class="info-col" style="width: 200px;">
+                                <p>Sản phẩm</p>
+                                <span>${r.productId?.name || 'Sản phẩm đã xóa'}</span>
+                            </div>
+                        </div>
+                        <button class="btn-figma btn-figma-outline" style="padding: 8px 25px; border-radius: 30px;">Phản hồi</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats(reviews) {
+            const total = reviews.length;
+            const positive = reviews.filter(r => r.rating >= 4).length;
+            const negative = reviews.filter(r => r.rating <= 2).length;
+
+            document.getElementById('totalCount').innerText = total;
+            document.getElementById('positiveCount').innerText = positive;
+            document.getElementById('negativeCount').innerText = negative;
+        }
+
+        window.onload = fetchReviews;
+    </script>
+    <script src="js/admin-layout.js"></script>
+</body>
+</html>

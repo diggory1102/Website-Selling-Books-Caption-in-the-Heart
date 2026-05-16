@@ -39,6 +39,7 @@ const UserSchema = new mongoose.Schema({
     defaultAddress: String, // Lưu nhanh địa chỉ giao hàng
     avatar: String, // Lưu ảnh đại diện (Chuỗi Base64)
     isOnline: { type: Boolean, default: false },
+    status: { type: String, default: 'active' }, // 'active' hoặc 'blocked'
     
     // DANH SÁCH YÊU THÍCH ĐƯỢC GỘP VÀO ĐÂY (Chuẩn 100%)
     wishlist: [{ 

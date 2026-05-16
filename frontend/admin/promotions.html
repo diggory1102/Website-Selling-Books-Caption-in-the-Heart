@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý khuyến mãi - Captain In One Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin-global.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+
+    <main class="admin-main">
+        <div id="topbar-container" data-title="Quản lý khuyến mãi"></div>
+
+        <div class="card-figma">
+            <h3 class="card-title">Thiết lập mã giảm giá (Voucher)</h3>
+            <div class="form-grid-figma" style="grid-template-columns: 1fr 1fr; border: none;">
+                <div class="form-group-figma">
+                    <label>Mã giảm giá</label>
+                    <input type="text" class="form-control-figma" id="promo-code" placeholder="Ví dụ: GIAMGIA50K">
+                </div>
+                <div class="form-group-figma">
+                    <label>Loại giảm giá</label>
+                    <select id="promo-type" class="form-control-figma">
+                        <option value="percent">Giảm theo phần trăm (%)</option>
+                        <option value="amount">Giảm theo số tiền cố định (đ)</option>
+                    </select>
+                </div>
+                <div class="form-group-figma">
+                    <label>Giá trị giảm</label>
+                    <input type="number" class="form-control-figma" id="promo-value" placeholder="Ví dụ: 10 (%) hoặc 50000 (đ)">
+                </div>
+                <div class="form-group-figma">
+                    <label>Đơn tối thiểu (VNĐ)</label>
+                    <input type="number" class="form-control-figma" id="promo-min" placeholder="0">
+                </div>
+                <div class="form-group-figma">
+                    <label>Ngày bắt đầu</label>
+                    <input type="date" class="form-control-figma" id="promo-start">
+                </div>
+                <div class="form-group-figma">
+                    <label>Ngày kết thúc</label>
+                    <input type="date" class="form-control-figma" id="promo-end">
+                </div>
+                <div class="form-group-figma">
+                    <label>Giới hạn lượt dùng</label>
+                    <input type="number" class="form-control-figma" id="promo-limit" placeholder="100">
+                </div>
+            </div>
+            <div class="btn-group-figma">
+                <button class="btn-figma btn-figma-outline" onclick="resetForm()">Làm mới</button>
+                <button class="btn-figma btn-figma-primary" onclick="addPromotion()">Tạo mã khuyến mãi</button>
+            </div>
+        </div>
+
+        <div class="card-figma">
+            <h3 class="card-title">Danh sách mã giảm giá hiện có</h3>
+            <table class="table-figma">
+                <thead>
+                    <tr>
+                        <th>Mã CODE</th>
+                        <th>Loại giảm</th>
+                        <th>Giá trị</th>
+                        <th>Đơn tối thiểu</th>
+                        <th>Hạn dùng</th>
+                        <th>Đã dùng</th>
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="promo-table-body">
+                </tbody>
+            </table>
+            <div id="empty-box" class="empty-chart" style="display: none;">
+                <i class="fa-regular fa-face-frown"></i>
+                <p>Không có dữ liệu khuyến mãi</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const API_URL = 'http://localhost:5000/api/promotions';
+
+    async function loadPromotions() {
+        try {
+            const res = await fetch(`${API_URL}/all`);
+            const data = await res.json();
+            const tableBody = document.getElementById('promo-table-body');
+            const emptyBox = document.getElementById('empty-box');
+
+            if (data && data.length > 0) {
+                emptyBox.style.display = 'none';
+                tableBody.innerHTML = data.map(p => {
+                    const typeText = p.discountPercent > 0 ? 'Phần trăm' : 'Số tiền';
+                    const valueText = p.discountPercent > 0 ? `-${p.discountPercent}%` : `-${Number(p.discountAmount).toLocaleString()}đ`;
+                    const dateRange = `${new Date(p.startDate).toLocaleDateString()} - ${new Date(p.endDate).toLocaleDateString()}`;
+                    
+                    return `
+                        <tr>
+                            <td style="font-weight: 700; color: var(--text-main); font-size: 15px;">${p.code}</td>
+                            <td>${typeText}</td>
+                            <td style="color: #05CD99; font-weight: 700;">${valueText}</td>
+                            <td>${Number(p.minOrderValue).toLocaleString()}đ</td>
+                            <td style="font-size: 12px; color: var(--text-light);">${dateRange}</td>
+                            <td>${p.usedCount}/${p.usageLimit}</td>
+                            <td style="text-align: right;">
+                                <button onclick="deletePromo('${p._id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: var(--active-red); border-color: #ffe4e4;">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                emptyBox.style.display = 'flex';
+                tableBody.innerHTML = '';
+            }
+        } catch (err) { console.error("Lỗi:", err); }
+    }
+
+    async function addPromotion() {
+        const type = document.getElementById('promo-type').value;
+        const val = Number(document.getElementById('promo-value').value);
+
+        const promoData = {
+            code: document.getElementById('promo-code').value.toUpperCase(),
+            discountPercent: type === 'percent' ? val : 0,
+            discountAmount: type === 'amount' ? val : 0,
+            minOrderValue: Number(document.getElementById('promo-min').value),
+            startDate: document.getElementById('promo-start').value,
+            endDate: document.getElementById('promo-end').value,
+            usageLimit: Number(document.getElementById('promo-limit').value || 100)
+        };
+
+        if(!promoData.code || !val) return alert("Vui lòng nhập Mã CODE và Giá trị giảm!");
+
+        try {
+            const res = await fetch(`${API_URL}/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(promoData)
+            });
+
+            if(res.ok) {
+                alert("Tạo mã khuyến mãi thành công!");
+                resetForm();
+                loadPromotions();
+            } else {
+                const err = await res.json();
+                alert("Lỗi: " + (err.message || "Không thể lưu"));
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    async function deletePromo(id) {
+        if(!confirm("Bạn có chắc muốn xóa mã giảm giá này?")) return;
+        try {
+            const res = await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
+            if(res.ok) loadPromotions();
+        } catch (err) { console.error(err); }
+    }
+
+    function resetForm() { document.querySelectorAll('input').forEach(i => i.value = ''); }
+    
+    window.onload = loadPromotions;
+    </script>
+    <script src="js/admin-layout.js"></script>
+</body>
+</html>

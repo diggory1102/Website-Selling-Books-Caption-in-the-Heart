@@ -6,231 +6,127 @@
     <title>Quản lý sản phẩm - Captain In One Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #4A90E2;
-            --bg-body: #F4F7FE;
-            --sidebar-width: 260px;
-            --text-dark: #2B3674;
-            --border-color: #E0E5F2;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-dark); display: flex; }
-
-        /* SIDEBAR */
-        .admin-sidebar { 
-            width: var(--sidebar-width); 
-            background: white; 
-            height: 100vh; 
-            position: fixed; 
-            border-right: 1px solid #E9EDF7; 
-            padding: 20px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .sidebar-header { 
-            width: 100%;
-            text-align: center; 
-            margin-bottom: 40px; 
-            padding-bottom: 20px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .logo-container { width: 150px; height: auto; margin: 0 auto; }
-        .logo-container img { width: 100%; height: auto; object-fit: contain; }
-
-        .sidebar-menu { list-style: none; width: 100%; }
-        .sidebar-menu li { margin-bottom: 12px; }
-        .sidebar-menu a { 
-            display: flex; 
-            align-items: center; 
-            padding: 15px 20px; 
-            text-decoration: none; 
-            color: #A3AED0; 
-            font-weight: 600; 
-            border-radius: 15px; 
-            transition: 0.3s; 
-        }
-        .sidebar-menu a i { margin-right: 15px; font-size: 20px; width: 25px; }
-        .sidebar-menu a.active { 
-            background: #F4F7FE; 
-            color: var(--primary-color); 
-            border-right: 5px solid var(--primary-color);
-            border-radius: 15px 0 0 15px;
-        }
-        .sidebar-menu a:hover:not(.active) { background: #f8f9ff; color: var(--text-dark); }
-
-        /* Main Content */
-        .admin-main { flex: 1; margin-left: var(--sidebar-width); padding: 40px; }
-        .admin-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        
-        .topbar-right { display: flex; align-items: center; gap: 20px; }
-        .search-wrapper { position: relative; background: white; border-radius: 30px; padding: 5px 15px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .search-wrapper i { color: #A3AED0; margin-right: 10px; }
-        .search-wrapper input { border: none; padding: 8px; outline: none; width: 200px; font-size: 13px; }
-        .profile-box { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .profile-box img { width: 35px; height: 35px; border-radius: 50%; }
-
-        /* FORM QUẢN LÝ SẢN PHẨM */
-        .card { background: white; border-radius: 30px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 40px; }
-        .product-form-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1px 1fr; 
-            gap: 30px; 
-            padding: 30px; 
-            border: 1px solid var(--border-color); 
-            border-radius: 25px; 
-            margin-bottom: 20px;
-        }
-        .divider { background: var(--border-color); height: 100%; }
-        
-        .form-group { display: flex; align-items: center; margin-bottom: 20px; }
-        .form-group label { width: 150px; font-size: 14px; font-weight: 700; color: var(--text-dark); }
-        .form-group input, .form-group select { flex: 1; padding: 10px 20px; border: 1px solid var(--border-color); border-radius: 25px; outline: none; }
-
-        .btn-group { display: flex; justify-content: flex-end; gap: 15px; }
-        .btn { padding: 12px 40px; border-radius: 25px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 14px; }
-        .btn-add { background: #2dfc52; color: #000; box-shadow: 0 5px 15px rgba(45, 252, 82, 0.2); }
-        .btn-update { background: white; border: 1.5px solid #000; }
-        .btn-delete { background: white; border: 1.5px solid #000; }
-
-        /* Table */
-        .table-section { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
-        .table-header { font-size: 18px; font-weight: 700; color: #4318FF; margin-bottom: 25px; }
-        .admin-table { width: 100%; border-collapse: collapse; }
-        .admin-table th { text-align: left; color: #A3AED0; font-size: 12px; text-transform: uppercase; padding: 15px; border-bottom: 1px solid #f0f0f0; }
-        .admin-table td { padding: 20px 15px; font-size: 14px; border-bottom: 1px solid #f0f0f0; }
-
-        .empty-state { text-align: center; padding: 60px; color: #A3AED0; }
-        .empty-state i { font-size: 80px; margin-bottom: 20px; display: block; opacity: 0.5; }
-    </style>
+    <link rel="stylesheet" href="css/admin-global.css">
 </head>
 <body>
-
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <div class="logo-container">
-                <img src="logo.png" alt="CAPTAIN LOGO" onerror="this.src='https://via.placeholder.com/150x80?text=LOGO+LOI'">
-            </div>
-            <p style="font-size: 10px; color: #ccc; margin-top: 5px; letter-spacing: 2px;">ADMIN PANEL</p>
-        </div>
-        <ul class="sidebar-menu">
-            <li><a href="dashboard.html"><i class="fa-solid fa-house"></i> Bảng điều khiển</a></li>
-            <li><a href="quan_ly_khuyen_mai.html"><i class="fa-solid fa-ticket"></i> QL khuyến mãi</a></li>
-            <li><a href="nhan_vien.html"><i class="fa-solid fa-users"></i> QL nhân viên</a></li>
-            <li><a href="thong_ke.html"><i class="fa-solid fa-chart-simple"></i> Thống kê</a></li>
-            <li><a href="san_pham.html" class="active"><i class="fa-solid fa-box-archive"></i> QL sản phẩm</a></li>
-            <li><a href="khach_hang.html"><i class="fa-solid fa-user-group"></i> QL khách hàng</a></li>
-        </ul>
-    </aside>
+    <div id="sidebar-container"></div>
 
     <main class="admin-main">
-        <header class="admin-topbar">
-            <h2 style="color: #2B3674; font-weight: 800;">Quản lý sản phẩm</h2>
-            <div class="topbar-right">
-                <div class="search-wrapper">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Tìm kiếm">
-                </div>
-                <i class="fa-solid fa-gear" style="color: #A3AED0;"></i>
-                <i class="fa-solid fa-bell" style="color: #FF8080;"></i>
-                <div class="profile-box">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Naruto">
-                    <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: #A3AED0;"></i>
-                </div>
-            </div>
-        </header>
+        <div id="topbar-container" data-title="Quản lý sản phẩm"></div>
 
-        <div class="card">
-            <div class="product-form-grid">
+        <div class="card-figma">
+            <h3 class="card-title" id="form-title">Thêm sản phẩm mới</h3>
+            <div class="form-grid-figma" style="grid-template-columns: 200px 1fr 1px 1fr;">
+                <!-- Image Upload Section -->
+                <div class="form-image-section">
+                    <div class="image-preview" id="imagePreview" onclick="document.getElementById('p-image-input').click()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p>Tải ảnh bìa</p>
+                    </div>
+                    <input type="file" id="p-image-input" hidden accept="image/*" onchange="previewImage(this)">
+                    <button class="btn-figma btn-figma-outline" style="width: 100%; margin-top: 10px; font-size: 12px;" onclick="document.getElementById('p-image-input').click()">Chọn tệp ảnh</button>
+                </div>
+
                 <div class="form-left">
-                    <div class="form-group"><label>Tên sản phẩm :</label><input type="text" id="p-name"></div>
-                    <div class="form-group"><label>Nhà xuất bản :</label><input type="text" id="p-nxb"></div>
-                    <div class="form-group"><label>Tác giả :</label><input type="text" id="p-author"></div>
-                    <div class="form-group">
-                        <label>Thể loại :</label>
-                        <select id="p-category">
-                            <option value="Tiểu thuyết">Tiểu thuyết</option>
-                            <option value="Kỹ năng sống">Kỹ năng sống</option>
-                            <option value="Truyện tranh">Truyện tranh</option>
-                            <option value="Kinh tế">Kinh tế</option>
+                    <div class="form-group-figma"><label>Tên sản phẩm</label><input type="text" class="form-control-figma" id="p-name" placeholder="Nhập tên sách..."></div>
+                    <div class="form-group-figma"><label>Nhà xuất bản</label><input type="text" class="form-control-figma" id="p-nxb" placeholder="Tên NXB..."></div>
+                    <div class="form-group-figma"><label>Tác giả</label><input type="text" class="form-control-figma" id="p-author" placeholder="Tên tác giả..."></div>
+                    <div class="form-group-figma">
+                        <label>Thể loại</label>
+                        <select id="p-category" class="form-control-figma">
+                            <!-- Categories will be loaded here -->
                         </select>
                     </div>
                 </div>
-                <div class="divider"></div>
+                <div class="form-divider"></div>
                 <div class="form-right">
-                    <div class="form-group"><label>Ngày xuất bản :</label><input type="date" id="p-date"></div>
-                    <div class="form-group"><label>Giá bán :</label><input type="number" id="p-price"></div>
-                    <div class="form-group"><label>Số lượng kho :</label><input type="number" id="p-stock"></div>
-                    <div class="form-group"><label>Mã ISBN :</label><input type="text" id="p-isbn"></div>
+                    <div class="form-group-figma"><label>Ngày xuất bản</label><input type="date" class="form-control-figma" id="p-date"></div>
+                    <div class="form-group-figma"><label>Giá bán (VNĐ)</label><input type="number" class="form-control-figma" id="p-price" placeholder="Ví dụ: 150000"></div>
+                    <div class="form-group-figma"><label>Số lượng kho</label><input type="number" class="form-control-figma" id="p-stock" placeholder="0"></div>
+                    <div class="form-group-figma"><label>Mã ISBN</label><input type="text" class="form-control-figma" id="p-isbn" placeholder="Mã định danh sách..."></div>
                 </div>
             </div>
-            <div class="btn-group">
-                <button class="btn btn-add" onclick="addProduct()">Thêm</button>
-                <button class="btn btn-update">Cập nhật</button>
-                <button class="btn btn-delete" onclick="resetForm()">Xóa</button>
+            <div class="btn-group-figma">
+                <button class="btn-figma btn-figma-outline" onclick="resetForm()">Làm mới</button>
+                <button class="btn-figma btn-figma-primary" id="btn-submit" onclick="handleSubmit()">Lưu sản phẩm</button>
             </div>
         </div>
 
-        <div class="table-section">
-            <div class="table-header">Danh sách sản phẩm</div>
-            <table class="admin-table">
+        <div class="card-figma">
+            <h3 class="card-title">Danh sách sản phẩm hiện có</h3>
+            <table class="table-figma">
                 <thead>
                     <tr>
+                        <th>Ảnh</th>
                         <th>Tên sản phẩm</th>
                         <th>Thể loại</th>
                         <th>Tác giả</th>
                         <th>Giá bán</th>
                         <th>Kho</th>
-                        <th>Hành động</th>
+                        <th style="text-align: right;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody id="product-table-body">
                 </tbody>
             </table>
-            <div id="empty-box" class="empty-state">
-                <i class="fa-solid fa-face-frown"></i>
-                <p style="font-weight: 700; font-size: 20px; color: #2B3674;">Không có dữ liệu</p>
+            <div id="empty-box" class="empty-chart" style="display: none;">
+                <i class="fa-regular fa-face-frown"></i>
+                <p>Không có dữ liệu</p>
             </div>
         </div>
     </main>
 
     <script>
     const API_URL = 'http://localhost:5000/api/products';
+    const UPLOAD_URL = 'http://localhost:5000/api/upload';
+    let currentEditId = null;
+    let currentImageUrl = '';
 
-    // Tự động load danh sách sản phẩm
+    // Load categories for select
+    async function loadCategories() {
+        try {
+            const res = await fetch(`${API_URL}/categories`);
+            const data = await res.json();
+            const select = document.getElementById('p-category');
+            select.innerHTML = data.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        } catch (err) { console.error(err); }
+    }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     async function loadProducts() {
         try {
             const res = await fetch(`${API_URL}/all`);
             const data = await res.json();
-            const tableBody = document.getElementById('product-table-body');
-            const emptyBox = document.getElementById('empty-box');
-
-            if (data.length > 0) {
-                emptyBox.style.display = 'none';
-                tableBody.innerHTML = data.map(p => `
-                    <tr>
-                        <td style="font-weight: 700; color: #2B3674;">${p.name}</td>
-                        <td>${p.category}</td>
-                        <td>${p.author}</td>
-                        <td style="color: #4A90E2; font-weight: 700;">${Number(p.price).toLocaleString()}đ</td>
-                        <td>${p.stock}</td>
-                        <td>
-                            <button onclick="deleteProduct('${p._id}')" style="background:none; border:none; color:#FF8080; cursor:pointer;">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                emptyBox.style.display = 'block';
-                tableBody.innerHTML = '';
+            if (data.success) {
+                renderProducts(data.products);
             }
         } catch (err) { console.error("Lỗi:", err); }
     }
 
-    // Hàm Thêm mới Sản phẩm
-    async function addProduct() {
+    async function handleSubmit() {
+        const fileInput = document.getElementById('p-image-input');
+        let imageUrl = currentImageUrl;
+
+        // 1. Upload image if new file selected
+        if (fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            try {
+                const uploadRes = await fetch(UPLOAD_URL, { method: 'POST', body: formData });
+                const uploadData = await uploadRes.json();
+                if (uploadData.success) imageUrl = uploadData.imageUrl;
+            } catch (err) { console.error(err); }
+        }
+
         const productData = {
             name: document.getElementById('p-name').value,
             nxb: document.getElementById('p-nxb').value,
@@ -239,27 +135,117 @@
             publishDate: document.getElementById('p-date').value,
             price: Number(document.getElementById('p-price').value),
             stock: Number(document.getElementById('p-stock').value),
-            isbn: document.getElementById('p-isbn').value
+            isbn: document.getElementById('p-isbn').value,
+            imageUrl: imageUrl
         };
 
-        if(!productData.name) return alert("Chưa nhập tên sản phẩm!");
+        if(!productData.name) return alert("Vui lòng nhập tên sản phẩm!");
 
-        const res = await fetch(`${API_URL}/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
-        });
+        const method = currentEditId ? 'PUT' : 'POST';
+        const url = currentEditId ? `${API_URL}/update/${currentEditId}` : `${API_URL}/add`;
 
-        if(res.ok) {
-            alert("Thêm sản phẩm thành công!");
-            resetForm();
-            loadProducts();
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productData)
+            });
+            const result = await res.json();
+            if(result.success) {
+                alert(currentEditId ? "Cập nhật thành công!" : "Thêm thành công!");
+                resetForm();
+                loadProducts();
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    async function editProduct(id) {
+        try {
+            const res = await fetch(`${API_URL}/${id}`);
+            const p = await res.json();
+            
+            currentEditId = id;
+            currentImageUrl = p.imageUrl;
+            
+            document.getElementById('form-title').innerText = "Chỉnh sửa sản phẩm";
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-nxb').value = p.publisherName || p.nxb || '';
+            document.getElementById('p-author').value = p.authorName || p.author || '';
+            document.getElementById('p-category').value = p.categoryName || p.category || '';
+            document.getElementById('p-date').value = p.publishDate ? p.publishDate.split('T')[0] : '';
+            document.getElementById('p-price').value = p.price;
+            document.getElementById('p-stock').value = p.stock;
+            document.getElementById('p-isbn').value = p.isbn || '';
+            
+            document.getElementById('imagePreview').innerHTML = `<img src="${p.imageUrl || 'https://via.placeholder.com/200x250'}" alt="Preview">`;
+            document.getElementById('btn-submit').innerText = "Cập nhật sản phẩm";
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) { console.error(err); }
+    }
+
+    async function deleteProduct(id) {
+        if(!confirm("Xác nhận xóa sản phẩm này?")) return;
+        try {
+            const res = await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
+            if(res.ok) loadProducts();
+        } catch (err) { console.error(err); }
+    }
+
+    // Search Handler for Global Search Input
+    window.handleSearch = async function(query) {
+        if(!query) return loadProducts();
+        try {
+            const res = await fetch(`${API_URL}/search?q=${query}`);
+            const data = await res.json();
+            // Reuse loadProducts logic with filtered data
+            renderProducts(data.products); 
+        } catch (err) { console.error(err); }
+    };
+
+    function renderProducts(products) {
+        const tableBody = document.getElementById('product-table-body');
+        const emptyBox = document.getElementById('empty-box');
+        if (products.length > 0) {
+            emptyBox.style.display = 'none';
+            tableBody.innerHTML = products.map(p => `
+                <tr>
+                    <td><img src="${p.imageUrl || 'https://via.placeholder.com/40x60'}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 5px;"></td>
+                    <td style="font-weight: 700; color: var(--text-main);">${p.name || p.productName}</td>
+                    <td>${p.categoryName || p.category || '---'}</td>
+                    <td>${p.authorName || p.author || '---'}</td>
+                    <td style="color: var(--active-red); font-weight: 700;">${Number(p.price).toLocaleString()}đ</td>
+                    <td>${p.sold || 0}</td>
+                    <td style="text-align: right;">
+                        <button onclick="editProduct('${p._id || p.id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: #4A90E2; border-color: #e2f0ff; margin-right: 5px;">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="deleteProduct('${p._id || p.id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: var(--active-red); border-color: #ffe4e4;">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            emptyBox.style.display = 'flex';
+            tableBody.innerHTML = '';
         }
     }
 
-    function resetForm() { document.querySelectorAll('input, select').forEach(i => i.value = ''); }
+    function resetForm() {
+        currentEditId = null;
+        currentImageUrl = '';
+        document.getElementById('form-title').innerText = "Thêm sản phẩm mới";
+        document.querySelectorAll('input, select').forEach(i => i.value = '');
+        document.getElementById('imagePreview').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><p>Tải ảnh bìa</p>`;
+        document.getElementById('btn-submit').innerText = "Lưu sản phẩm";
+    }
     
-    window.onload = loadProducts;
+    window.onload = () => {
+        loadCategories();
+        loadProducts();
+    };
     </script>
+    <script src="js/admin-layout.js"></script>
 </body>
 </html>

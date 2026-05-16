@@ -31,6 +31,8 @@ const authRoutes = require('./routes/authRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const userRoutes = require('./routes/userRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const statisticsRoutes = require('./routes/statisticsRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
 
 const app = express();
 app.use(cors());
@@ -56,13 +58,15 @@ passport.deserializeUser((user, done) => done(null, user));
 app.get('/', (req, res) => res.send("🚀 Backend API đang chạy tốt!"));
 
 // SỬ DỤNG ROUTES ĐÃ ĐƯỢC TÁCH
-app.use('/api', productRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/stats', statisticsRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // ==========================================
 // CẤU HÌNH UPLOAD ẢNH CHO ADMIN (SỬ DỤNG MULTER)

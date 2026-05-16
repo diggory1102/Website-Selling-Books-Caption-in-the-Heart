@@ -7,5 +7,6 @@ const promoController = require('../controllers/promotionController');
 router.post('/add', promoController.addPromotion);
 router.get('/all', promoController.getAllPromotions);
 router.delete('/delete/:id', promoController.deletePromotion);
+router.post('/validate', promoController.validateVoucher);
 
 module.exports = router;

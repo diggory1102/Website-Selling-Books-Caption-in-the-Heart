@@ -1,4 +1,4 @@
-const { Product, Category } = require('../models/database');
+const { Product, Category, Author, Publisher } = require('../models/database');
 
 const getCategories = async (req, res) => {
     try {
@@ -127,20 +127,11 @@ const getAllProducts = async (req, res) => {
 const addProduct = async (req, res) => {
     try {
         const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl } = req.body;
-        // Tìm categoryId từ tên category
         const cat = await Category.findOne({ name: category });
         
         await Product.create({
-            name,
-            authorName: author,
-            publisherName: nxb,
-            price,
-            stock,
-            isbn,
-            imageUrl,
-            categoryName: category,
-            categoryId: cat ? cat._id : null,
-            publishDate
+            name, authorName: author, publisherName: nxb, price, stock, isbn, imageUrl,
+            categoryName: category, categoryId: cat ? cat._id : null, publishDate
         });
         res.json({ success: true, message: "Đã thêm sản phẩm!" });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -150,20 +141,10 @@ const updateProduct = async (req, res) => {
     try {
         const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl } = req.body;
         const cat = await Category.findOne({ name: category });
-        
         const updated = await Product.findByIdAndUpdate(req.params.id, {
-            name,
-            authorName: author,
-            publisherName: nxb,
-            price,
-            stock,
-            isbn,
-            imageUrl,
-            categoryName: category,
-            categoryId: cat ? cat._id : null,
-            publishDate
+            name, authorName: author, publisherName: nxb, price, stock, isbn, imageUrl,
+            categoryName: category, categoryId: cat ? cat._id : null, publishDate
         }, { new: true });
-        
         res.json({ success: true, product: updated });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
@@ -175,15 +156,26 @@ const deleteProduct = async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
+const getProductMetadata = async (req, res) => {
+    try {
+        const categories = await Category.find({}, 'name');
+        const authors = await Author.find({}, 'name');
+        const publishers = await Publisher.find({}, 'name');
+        const products = await Product.find({}, 'name');
+
+        res.json({
+            success: true,
+            categories: categories.map(c => c.name),
+            authors: authors.map(a => a.name),
+            publishers: publishers.map(p => p.name),
+            products: products.map(p => ({ id: p._id, name: p.name }))
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
 module.exports = {
-    getCategories,
-    getBestSellers,
-    getNewestProducts,
-    getProductById,
-    getRelatedProducts,
-    searchProducts,
-    getAllProducts,
-    addProduct,
-    updateProduct,
-    deleteProduct
+    getCategories, getBestSellers, getNewestProducts, getProductById, getRelatedProducts,
+    searchProducts, getAllProducts, addProduct, updateProduct, deleteProduct, getProductMetadata
 };

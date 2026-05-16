@@ -103,16 +103,30 @@ const RateSchema = new mongoose.Schema({
 }, schemaOptions);
 const Rate = mongoose.model('Rate', RateSchema);
 
-// --- BẢNG KHUYẾN MÃI (BỔ SUNG THEO ĐẶC TẢ WORD) ---
+// --- BẢNG KHUYẾN MÃI (LINH HOẠT TỐI ĐA) ---
 const PromotionSchema = new mongoose.Schema({
-    code: { type: String, required: true, unique: true }, // Mã giảm giá (VD: TET2024)
-    discountAmount: { type: Number, default: 0 },         // Giảm theo số tiền (VD: 20000)
-    discountPercent: { type: Number, default: 0 },        // Giảm theo % (VD: 15)
-    minOrderValue: { type: Number, default: 0 },          // Đơn tối thiểu để áp dụng
+    name: { type: String, required: true },               // Tên chương trình (VD: Sale Hè 2024)
+    type: { type: String, enum: ['DIRECT', 'VOUCHER'], required: true }, // Loại: Giảm trực tiếp hoặc Mã nhập
+    code: { type: String, unique: true, sparse: true },    // Mã (chỉ dùng nếu type = VOUCHER)
+    
+    discountType: { type: String, enum: ['PERCENT', 'AMOUNT'], default: 'PERCENT' },
+    discountValue: { type: Number, required: true },      // % hoặc số tiền
+    
+    // Đối tượng áp dụng (Targeting)
+    applyTo: { type: String, enum: ['ALL', 'PRODUCT', 'CATEGORY', 'AUTHOR', 'PUBLISHER', 'RANK'], default: 'ALL' },
+    targetValues: [{ type: String }], // Mảng chứa ID sản phẩm hoặc Tên Tác giả/Thể loại/NXB/Hạng TV
+    
+    minOrderValue: { type: Number, default: 0 },
+    maxDiscount: { type: Number },                        // Giảm tối đa nếu là %
+    
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
-    usageLimit: { type: Number, default: 100 },           // Giới hạn số lượt dùng
-    usedCount: { type: Number, default: 0 }               // Số lượt đã dùng
+    
+    usageLimit: { type: Number, default: 999999 },        // Tổng lượt dùng hệ thống
+    userLimit: { type: Number, default: 1 },              // Lượt dùng tối đa mỗi khách
+    usedCount: { type: Number, default: 0 },
+    
+    status: { type: String, enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' }
 }, schemaOptions);
 const Promotion = mongoose.model('Promotion', PromotionSchema);
 

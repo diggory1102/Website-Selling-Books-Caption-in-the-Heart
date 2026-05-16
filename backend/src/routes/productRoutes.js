@@ -5,6 +5,7 @@ const productController = require('../controllers/productController');
 router.get('/categories', productController.getCategories);
 router.get('/search', productController.searchProducts);
 router.get('/all', productController.getAllProducts);
+router.get('/metadata', productController.getProductMetadata);
 router.post('/add', productController.addProduct);
 router.put('/update/:id', productController.updateProduct);
 router.delete('/delete/:id', productController.deleteProduct);

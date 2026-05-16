@@ -7,6 +7,52 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-global.css">
+    <style>
+        .promo-type-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .type-tab { padding: 10px 25px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border-color); font-weight: 600; transition: 0.3s; }
+        .type-tab.active { background: var(--active-black); color: white; border-color: var(--active-black); }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        .modal-figma {
+            background: white;
+            width: 500px;
+            max-height: 80vh;
+            border-radius: 20px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        .multi-select-list {
+            flex: 1;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+        }
+        .multi-select-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            gap: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .multi-select-item:hover { background: #f8fafc; }
+        .multi-select-item input { width: 18px; height: 18px; accent-color: var(--active-black); }
+    </style>
 </head>
 <body>
     <div id="sidebar-container"></div>
@@ -15,56 +61,108 @@
         <div id="topbar-container" data-title="Quản lý khuyến mãi"></div>
 
         <div class="card-figma">
-            <h3 class="card-title">Thiết lập mã giảm giá (Voucher)</h3>
-            <div class="form-grid-figma" style="grid-template-columns: 1fr 1fr; border: none;">
-                <div class="form-group-figma">
-                    <label>Mã giảm giá</label>
-                    <input type="text" class="form-control-figma" id="promo-code" placeholder="Ví dụ: GIAMGIA50K">
+            <h3 class="card-title">Thiết lập chương trình khuyến mãi linh hoạt</h3>
+            
+            <div class="promo-type-tabs">
+                <div class="type-tab active" id="type-direct" onclick="setPromoType('DIRECT')">Giảm giá trực tiếp (Direct)</div>
+                <div class="type-tab" id="type-voucher" onclick="setPromoType('VOUCHER')">Mã Voucher (Nhập code)</div>
+            </div>
+
+            <div class="form-grid-figma" style="grid-template-columns: 1fr 1fr; border: none; padding-top: 0;">
+                
+                <div class="form-group-figma" style="grid-column: span 2;">
+                    <label>Tên chương trình khuyến mãi</label>
+                    <input type="text" class="form-control-figma" id="promo-name" placeholder="Ví dụ: Sale Hè Rực Rỡ">
                 </div>
+
+                <div class="form-group-figma" id="code-group" style="display: none;">
+                    <label>Mã Voucher</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="form-control-figma" id="promo-code" placeholder="GIAMGIA50K">
+                        <button class="btn-figma btn-figma-outline" onclick="generateCode()" style="white-space: nowrap;">Tự tạo</button>
+                    </div>
+                </div>
+
                 <div class="form-group-figma">
                     <label>Loại giảm giá</label>
-                    <select id="promo-type" class="form-control-figma">
-                        <option value="percent">Giảm theo phần trăm (%)</option>
-                        <option value="amount">Giảm theo số tiền cố định (đ)</option>
+                    <select id="discount-type" class="form-control-figma">
+                        <option value="PERCENT">Phần trăm (%)</option>
+                        <option value="AMOUNT">Số tiền cố định (đ)</option>
                     </select>
                 </div>
+
                 <div class="form-group-figma">
                     <label>Giá trị giảm</label>
-                    <input type="number" class="form-control-figma" id="promo-value" placeholder="Ví dụ: 10 (%) hoặc 50000 (đ)">
+                    <input type="number" class="form-control-figma" id="discount-value" placeholder="10 (%) hoặc 50000 (đ)">
                 </div>
+
+                <div class="form-group-figma">
+                    <label>Áp dụng cho</label>
+                    <select id="apply-to" class="form-control-figma" onchange="handleApplyToChange()">
+                        <option value="ALL">Toàn bộ sản phẩm</option>
+                        <option value="PRODUCT">Danh sách sách cụ thể</option>
+                        <option value="CATEGORY">Theo Thể loại</option>
+                        <option value="AUTHOR">Theo Tác giả</option>
+                        <option value="PUBLISHER">Theo Nhà xuất bản</option>
+                        <option value="RANK">Theo Hạng thành viên</option>
+                    </select>
+                </div>
+
+                <div class="form-group-figma" id="target-btn-group" style="display: none;">
+                    <label id="target-label">Đối tượng áp dụng</label>
+                    <button class="btn-figma btn-figma-outline" style="width: 100%; text-align: left; padding: 12px;" onclick="openTargetModal()">
+                        <i class="fa-solid fa-list-check"></i> <span id="selected-summary">Bấm để chọn mục áp dụng...</span>
+                    </button>
+                </div>
+
                 <div class="form-group-figma">
                     <label>Đơn tối thiểu (VNĐ)</label>
-                    <input type="number" class="form-control-figma" id="promo-min" placeholder="0">
+                    <input type="number" class="form-control-figma" id="min-order" value="0">
                 </div>
+
+                <div class="form-group-figma">
+                    <label>Giảm tối đa (VNĐ - dành cho %)</label>
+                    <input type="number" class="form-control-figma" id="max-discount" placeholder="Không giới hạn">
+                </div>
+
                 <div class="form-group-figma">
                     <label>Ngày bắt đầu</label>
-                    <input type="date" class="form-control-figma" id="promo-start">
+                    <input type="date" class="form-control-figma" id="start-date">
                 </div>
+
                 <div class="form-group-figma">
                     <label>Ngày kết thúc</label>
-                    <input type="date" class="form-control-figma" id="promo-end">
+                    <input type="date" class="form-control-figma" id="end-date">
                 </div>
+
                 <div class="form-group-figma">
-                    <label>Giới hạn lượt dùng</label>
-                    <input type="number" class="form-control-figma" id="promo-limit" placeholder="100">
+                    <label>Tổng lượt dùng hệ thống</label>
+                    <input type="number" class="form-control-figma" id="usage-limit" value="9999">
                 </div>
+
+                <div class="form-group-figma">
+                    <label>Lượt dùng/Khách hàng</label>
+                    <input type="number" class="form-control-figma" id="user-limit" value="1">
+                </div>
+
             </div>
+
             <div class="btn-group-figma">
                 <button class="btn-figma btn-figma-outline" onclick="resetForm()">Làm mới</button>
-                <button class="btn-figma btn-figma-primary" onclick="addPromotion()">Tạo mã khuyến mãi</button>
+                <button class="btn-figma btn-figma-primary" onclick="addPromotion()">Lưu chương trình</button>
             </div>
         </div>
 
         <div class="card-figma">
-            <h3 class="card-title">Danh sách mã giảm giá hiện có</h3>
+            <h3 class="card-title">Danh sách chương trình đang chạy</h3>
             <table class="table-figma">
                 <thead>
                     <tr>
-                        <th>Mã CODE</th>
-                        <th>Loại giảm</th>
-                        <th>Giá trị</th>
-                        <th>Đơn tối thiểu</th>
-                        <th>Hạn dùng</th>
+                        <th>Tên / Mã</th>
+                        <th>Loại</th>
+                        <th>Áp dụng cho</th>
+                        <th>Mức giảm</th>
+                        <th>Thời hạn</th>
                         <th>Đã dùng</th>
                         <th style="text-align: right;">Hành động</th>
                     </tr>
@@ -74,13 +172,110 @@
             </table>
             <div id="empty-box" class="empty-chart" style="display: none;">
                 <i class="fa-regular fa-face-frown"></i>
-                <p>Không có dữ liệu khuyến mãi</p>
+                <p>Chưa có chương trình khuyến mãi nào</p>
             </div>
         </div>
     </main>
 
+    <!-- Modal chọn đối tượng -->
+    <div class="modal-overlay" id="targetModal">
+        <div class="modal-figma">
+            <div class="modal-header">
+                <h3 id="modal-title">Chọn đối tượng</h3>
+                <i class="fa-solid fa-xmark" onclick="closeTargetModal()" style="cursor:pointer; font-size: 20px;"></i>
+            </div>
+            <input type="text" class="form-control-figma" placeholder="Tìm kiếm nhanh..." onkeyup="filterOptions(this.value)">
+            
+            <div id="options-list" class="multi-select-list"></div>
+
+            <button class="btn-figma btn-figma-primary" style="width: 100%;" onclick="closeTargetModal()">Xác nhận chọn</button>
+        </div>
+    </div>
+
     <script>
     const API_URL = 'http://localhost:5000/api/promotions';
+    const META_URL = 'http://localhost:5000/api/products/metadata';
+    let currentType = 'DIRECT';
+    let metadata = { categories: [], authors: [], publishers: [], products: [] };
+    let selectedTargets = [];
+
+    async function fetchMetadata() {
+        try {
+            const res = await fetch(META_URL);
+            const data = await res.json();
+            if(data.success) metadata = data;
+        } catch (err) { console.error(err); }
+    }
+
+    function setPromoType(type) {
+        currentType = type;
+        document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`type-${type.toLowerCase()}`).classList.add('active');
+        document.getElementById('code-group').style.display = type === 'VOUCHER' ? 'block' : 'none';
+    }
+
+    function handleApplyToChange() {
+        const applyTo = document.getElementById('apply-to').value;
+        const btnGroup = document.getElementById('target-btn-group');
+        btnGroup.style.display = applyTo === 'ALL' ? 'none' : 'block';
+        selectedTargets = [];
+        updateSummary();
+    }
+
+    function openTargetModal() {
+        const applyTo = document.getElementById('apply-to').value;
+        const list = document.getElementById('options-list');
+        document.getElementById('modal-title').innerText = `Chọn ${applyTo}`;
+
+        let items = [];
+        if (applyTo === 'PRODUCT') items = metadata.products.map(p => ({ id: p.id, name: p.name }));
+        else if (applyTo === 'CATEGORY') items = metadata.categories.map(c => ({ id: c, name: c }));
+        else if (applyTo === 'AUTHOR') items = metadata.authors.map(a => ({ id: a, name: a }));
+        else if (applyTo === 'PUBLISHER') items = metadata.publishers.map(p => ({ id: p, name: p }));
+        else if (applyTo === 'RANK') items = ['Thành viên Mới', 'Đồng', 'Bạc', 'Vàng', 'Kim Cương'].map(r => ({ id: r, name: r }));
+
+        list.innerHTML = items.map(item => `
+            <label class="multi-select-item" data-search="${item.name.toLowerCase()}">
+                <input type="checkbox" value="${item.id}" onchange="toggleSelect('${item.id}')" ${selectedTargets.includes(item.id) ? 'checked' : ''}>
+                <span>${item.name}</span>
+            </label>
+        `).join('');
+
+        document.getElementById('targetModal').style.display = 'flex';
+    }
+
+    function toggleSelect(id) {
+        if (selectedTargets.includes(id)) {
+            selectedTargets = selectedTargets.filter(t => t !== id);
+        } else {
+            selectedTargets.push(id);
+        }
+        updateSummary();
+    }
+
+    function updateSummary() {
+        const summary = document.getElementById('selected-summary');
+        if (selectedTargets.length === 0) {
+            summary.innerText = 'Bấm để chọn mục áp dụng...';
+        } else {
+            summary.innerText = `Đã chọn ${selectedTargets.length} mục`;
+        }
+    }
+
+    function filterOptions(val) {
+        const items = document.querySelectorAll('.multi-select-item');
+        items.forEach(item => {
+            const text = item.getAttribute('data-search');
+            item.style.display = text.includes(val.toLowerCase()) ? 'flex' : 'none';
+        });
+    }
+
+    function closeTargetModal() { document.getElementById('targetModal').style.display = 'none'; }
+
+    function generateCode() {
+        const code = 'PROMO' + Math.random().toString(36).substring(2, 7).toUpperCase();
+        document.getElementById('promo-code').value = code;
+    }
 
     async function loadPromotions() {
         try {
@@ -92,17 +287,16 @@
             if (data && data.length > 0) {
                 emptyBox.style.display = 'none';
                 tableBody.innerHTML = data.map(p => {
-                    const typeText = p.discountPercent > 0 ? 'Phần trăm' : 'Số tiền';
-                    const valueText = p.discountPercent > 0 ? `-${p.discountPercent}%` : `-${Number(p.discountAmount).toLocaleString()}đ`;
-                    const dateRange = `${new Date(p.startDate).toLocaleDateString()} - ${new Date(p.endDate).toLocaleDateString()}`;
+                    const displayCode = p.type === 'VOUCHER' ? `<br><small style="color:#4F46E5; font-weight:bold;">Code: ${p.code}</small>` : '';
+                    const valueText = p.discountType === 'PERCENT' ? `-${p.discountValue}%` : `-${Number(p.discountValue).toLocaleString()}đ`;
                     
                     return `
                         <tr>
-                            <td style="font-weight: 700; color: var(--text-main); font-size: 15px;">${p.code}</td>
-                            <td>${typeText}</td>
+                            <td style="font-weight: 700; color: var(--text-main);">${p.name}${displayCode}</td>
+                            <td><span class="badge-status ${p.type === 'DIRECT' ? 'completed' : 'pending'}" style="font-size:10px;">${p.type}</span></td>
+                            <td><small>${p.applyTo}: ${p.targetValues.length > 2 ? p.targetValues.length + ' mục' : p.targetValues.join(', ')}</small></td>
                             <td style="color: #05CD99; font-weight: 700;">${valueText}</td>
-                            <td>${Number(p.minOrderValue).toLocaleString()}đ</td>
-                            <td style="font-size: 12px; color: var(--text-light);">${dateRange}</td>
+                            <td style="font-size: 11px;">${new Date(p.endDate).toLocaleDateString()}</td>
                             <td>${p.usedCount}/${p.usageLimit}</td>
                             <td style="text-align: right;">
                                 <button onclick="deletePromo('${p._id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: var(--active-red); border-color: #ffe4e4;">
@@ -116,24 +310,32 @@
                 emptyBox.style.display = 'flex';
                 tableBody.innerHTML = '';
             }
-        } catch (err) { console.error("Lỗi:", err); }
+        } catch (err) { console.error(err); }
     }
 
     async function addPromotion() {
-        const type = document.getElementById('promo-type').value;
-        const val = Number(document.getElementById('promo-value').value);
-
         const promoData = {
-            code: document.getElementById('promo-code').value.toUpperCase(),
-            discountPercent: type === 'percent' ? val : 0,
-            discountAmount: type === 'amount' ? val : 0,
-            minOrderValue: Number(document.getElementById('promo-min').value),
-            startDate: document.getElementById('promo-start').value,
-            endDate: document.getElementById('promo-end').value,
-            usageLimit: Number(document.getElementById('promo-limit').value || 100)
+            name: document.getElementById('promo-name').value,
+            type: currentType,
+            code: currentType === 'VOUCHER' ? document.getElementById('promo-code').value.toUpperCase() : undefined,
+            discountType: document.getElementById('discount-type').value,
+            discountValue: Number(document.getElementById('discount-value').value),
+            applyTo: document.getElementById('apply-to').value,
+            targetValues: selectedTargets,
+            minOrderValue: Number(document.getElementById('min-order').value),
+            maxDiscount: Number(document.getElementById('max-discount').value || 0),
+            startDate: document.getElementById('start-date').value,
+            endDate: document.getElementById('end-date').value,
+            usageLimit: Number(document.getElementById('usage-limit').value),
+            userLimit: Number(document.getElementById('user-limit').value)
         };
 
-        if(!promoData.code || !val) return alert("Vui lòng nhập Mã CODE và Giá trị giảm!");
+        if(!promoData.name || !promoData.discountValue || !promoData.startDate || !promoData.endDate) {
+            return alert("Vui lòng điền đầy đủ các thông tin bắt buộc!");
+        }
+        if(promoData.applyTo !== 'ALL' && selectedTargets.length === 0) {
+            return alert("Vui lòng chọn ít nhất một đối tượng áp dụng!");
+        }
 
         try {
             const res = await fetch(`${API_URL}/add`, {
@@ -143,7 +345,7 @@
             });
 
             if(res.ok) {
-                alert("Tạo mã khuyến mãi thành công!");
+                alert("Lưu chương trình thành công!");
                 resetForm();
                 loadPromotions();
             } else {
@@ -154,16 +356,26 @@
     }
 
     async function deletePromo(id) {
-        if(!confirm("Bạn có chắc muốn xóa mã giảm giá này?")) return;
+        if(!confirm("Bạn có chắc muốn xóa chương trình này?")) return;
         try {
             const res = await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
             if(res.ok) loadPromotions();
         } catch (err) { console.error(err); }
     }
 
-    function resetForm() { document.querySelectorAll('input').forEach(i => i.value = ''); }
+    function resetForm() { 
+        document.querySelectorAll('input').forEach(i => i.value = ''); 
+        selectedTargets = [];
+        updateSummary();
+        document.getElementById('min-order').value = 0;
+        document.getElementById('usage-limit').value = 9999;
+        document.getElementById('user-limit').value = 1;
+    }
     
-    window.onload = loadPromotions;
+    window.onload = async () => {
+        await fetchMetadata();
+        loadPromotions();
+    };
     </script>
     <script src="js/admin-layout.js"></script>
 </body>

@@ -202,8 +202,12 @@ app.get('/api/wishlist/details/:userId', async (req, res) => {
         const user = await User.findById(req.params.userId).populate('wishlist');
         if (!user) return res.status(404).json({ message: "Không tìm thấy user" });
 
+        // Áp dụng khuyến mãi trực tiếp cho các sản phẩm yêu thích
+        const { applyDirectPromotionsToProducts } = require('./controllers/productController');
+        const promoProducts = await applyDirectPromotionsToProducts(user.wishlist || []);
+
         // Trả về mảng chứa FULL thông tin sản phẩm (đã được populate)
-        res.json(user.wishlist || []);
+        res.json(promoProducts);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

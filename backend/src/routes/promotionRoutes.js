@@ -8,5 +8,7 @@ router.post('/add', promoController.addPromotion);
 router.get('/all', promoController.getAllPromotions);
 router.delete('/delete/:id', promoController.deletePromotion);
 router.post('/validate', promoController.validateVoucher);
+router.get('/available', promoController.getAvailableVouchers);
+router.post('/apply', promoController.applyVoucher);
 
 module.exports = router;

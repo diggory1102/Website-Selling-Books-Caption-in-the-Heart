@@ -153,6 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <a href="product-detail.html?id=${productId}" style="text-decoration: none; color: inherit;">
                         <div class="img-box">
+                            ${item.discount ? `<span class="sale-tag">${item.discount}</span>` : ''}
                             <img src="${item.imageUrl}" onerror="this.src='https://placehold.jp/200x250.png?text=No+Image'">
                         </div>
                         <div class="info-box">

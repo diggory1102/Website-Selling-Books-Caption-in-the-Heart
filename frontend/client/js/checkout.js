@@ -357,7 +357,7 @@ async function loadProvinces(savedAddress = null) {
                 const res = await fetch('http://127.0.0.1:5000/api/promotions/apply', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, orderValue: subTotal })
+                    body: JSON.stringify({ code, orderValue: subTotal, userId: currentUserId === 'guest' ? null : currentUserId })
                 });
                 const data = await res.json();
 

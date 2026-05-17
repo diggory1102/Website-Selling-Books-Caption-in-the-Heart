@@ -1,4 +1,76 @@
-const { Product, Category, Author, Publisher } = require('../models/database');
+const { Product, Category, Author, Publisher, Promotion } = require('../models/database');
+
+// Helper to compute and apply direct discounts to products
+const applyDirectPromotionsToProducts = async (products) => {
+    try {
+        const now = new Date();
+        const activePromos = await Promotion.find({
+            type: 'DIRECT',
+            status: 'ACTIVE',
+            startDate: { $lte: now },
+            endDate: { $gte: now }
+        });
+
+        if (!activePromos || activePromos.length === 0) return products;
+
+        return products.map(p => {
+            const productObj = p.toObject ? p.toObject() : p;
+            const productIdStr = productObj._id ? productObj._id.toString() : (productObj.id ? productObj.id.toString() : '');
+
+            let bestDiscountAmount = 0;
+            let bestDiscountString = productObj.discount || null;
+
+            for (const promo of activePromos) {
+                let isApplicable = false;
+                if (promo.applyTo === 'ALL') {
+                    isApplicable = true;
+                } else if (promo.applyTo === 'PRODUCT' && promo.targetValues.includes(productIdStr)) {
+                    isApplicable = true;
+                } else if (promo.applyTo === 'CATEGORY' && promo.targetValues.includes(productObj.categoryName)) {
+                    isApplicable = true;
+                } else if (promo.applyTo === 'AUTHOR' && promo.targetValues.includes(productObj.authorName)) {
+                    isApplicable = true;
+                } else if (promo.applyTo === 'PUBLISHER' && promo.targetValues.includes(productObj.publisherName)) {
+                    isApplicable = true;
+                }
+
+                if (isApplicable) {
+                    let discountAmount = 0;
+                    if (promo.discountType === 'PERCENT') {
+                        discountAmount = (productObj.price * promo.discountValue) / 100;
+                        if (promo.maxDiscount && discountAmount > promo.maxDiscount) {
+                            discountAmount = promo.maxDiscount;
+                        }
+                    } else if (promo.discountType === 'AMOUNT') {
+                        discountAmount = promo.discountValue;
+                    }
+
+                    if (discountAmount > bestDiscountAmount) {
+                        bestDiscountAmount = discountAmount;
+                        if (promo.discountType === 'PERCENT') {
+                            bestDiscountString = `-${promo.discountValue}%`;
+                        } else {
+                            bestDiscountString = `-${Math.round((discountAmount / productObj.price) * 100)}%`;
+                        }
+                    }
+                }
+            }
+
+            if (bestDiscountAmount > 0) {
+                return {
+                    ...productObj,
+                    discount: bestDiscountString,
+                    discountedPrice: productObj.price - bestDiscountAmount
+                };
+            }
+
+            return productObj;
+        });
+    } catch (err) {
+        console.error("Lỗi applyDirectPromotionsToProducts:", err);
+        return products;
+    }
+};
 
 const getCategories = async (req, res) => {
     try {
@@ -12,7 +84,8 @@ const getCategories = async (req, res) => {
 const getBestSellers = async (req, res) => {
     try {
         const products = await Product.find().sort({ sold: -1 }).limit(8); 
-        const formatted = products.map(p => ({
+        const promoProducts = await applyDirectPromotionsToProducts(products);
+        const formatted = promoProducts.map(p => ({
             id: p._id,
             _id: p._id,
             name: p.name,
@@ -41,7 +114,9 @@ const getNewestProducts = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        const formattedProducts = productsFromDB.map(p => ({
+        const promoProducts = await applyDirectPromotionsToProducts(productsFromDB);
+
+        const formattedProducts = promoProducts.map(p => ({
             id: p._id, name: p.name, price: p.price,
             imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
             discount: p.discount || null, sold: p.sold || 0,
@@ -59,7 +134,8 @@ const getProductById = async (req, res) => {
         const product = await Product.findById(req.params.id)
             .populate('categoryId').populate('authorId').populate('publisherId');
         if (!product) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
-        res.json(product);
+        const promoProducts = await applyDirectPromotionsToProducts([product]);
+        res.json(promoProducts[0]);
     } catch (err) { res.status(500).json({ error: "Lỗi Server" }); }
 };
 
@@ -71,7 +147,10 @@ const getRelatedProducts = async (req, res) => {
         const sameAuthor = await Product.find({ authorName: product.authorName, _id: { $ne: product._id } }).limit(4); 
         const sameCategory = await Product.find({ categoryId: product.categoryId, _id: { $ne: product._id } }).limit(4);
 
-        res.json({ sameAuthor, sameCategory });
+        const promoSameAuthor = await applyDirectPromotionsToProducts(sameAuthor);
+        const promoSameCategory = await applyDirectPromotionsToProducts(sameCategory);
+
+        res.json({ sameAuthor: promoSameAuthor, sameCategory: promoSameCategory });
     } catch (err) { res.status(500).json({ error: "Lỗi Server" }); }
 };
 
@@ -106,8 +185,10 @@ const searchProducts = async (req, res) => {
 
         const products = await Product.find(queryObj).sort(sortObj).skip(skip).limit(limit);
 
-        const formattedProducts = products.map(p => ({
-            id: p.id, productName: p.name, price: p.price, discount: p.discount,
+        const promoProducts = await applyDirectPromotionsToProducts(products);
+
+        const formattedProducts = promoProducts.map(p => ({
+            id: p._id || p.id, productName: p.name, price: p.price, discount: p.discount,
             imageUrl: p.imageUrl || 'https://placehold.jp/200x280.png?text=No+Image',
             authorName: p.authorName, averageRating: p.averageRating, sold: p.sold,
             totalReviews: p.totalReviews || 0
@@ -177,5 +258,6 @@ const getProductMetadata = async (req, res) => {
 
 module.exports = {
     getCategories, getBestSellers, getNewestProducts, getProductById, getRelatedProducts,
-    searchProducts, getAllProducts, addProduct, updateProduct, deleteProduct, getProductMetadata
+    searchProducts, getAllProducts, addProduct, updateProduct, deleteProduct, getProductMetadata,
+    applyDirectPromotionsToProducts
 };

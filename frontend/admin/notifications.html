@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Thông báo - Caption In The Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin-global.css">
+    <style>
+        .noti-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        @media(max-width: 1024px) {
+            .noti-grid { grid-template-columns: 1fr; }
+        }
+        
+        .noti-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            margin-top: 15px;
+            background: #fff;
+        }
+        .noti-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            border-bottom: 1px solid #f8fafc;
+            gap: 15px;
+        }
+        .noti-row:hover { background: #f8fafc; }
+        
+        .noti-icon {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            background: #f1f5f9;
+            font-size: 16px;
+        }
+        .noti-icon.SYSTEM { color: #3b82f6; background: #eff6ff; }
+        .noti-icon.PROMOTION { color: #f59e0b; background: #fffbeb; }
+        .noti-icon.ORDER { color: #10b981; background: #ecfdf5; }
+        .noti-icon.WARNING { color: #ef4444; background: #fef2f2; }
+
+        .noti-content-wrap { flex: 1; }
+        .noti-title { font-weight: 600; color: #1e293b; margin-bottom: 4px; font-size: 14px; }
+        .noti-body { color: #64748b; font-size: 13px; line-height: 1.5; margin-bottom: 6px; }
+        .noti-meta { display: flex; gap: 15px; font-size: 11px; color: #94a3b8; }
+        
+        .target-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            color: #475569;
+            font-weight: 500;
+        }
+        .target-badge.public { background: #dbeafe; color: #1d4ed8; }
+
+        .btn-delete-noti {
+            background: none; border: none; color: #ef4444; cursor: pointer;
+            padding: 8px; border-radius: 6px; transition: 0.2s;
+        }
+        .btn-delete-noti:hover { background: #fee2e2; }
+
+        /* Custom Toast Notification inside Admin */
+        #adminToastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .admin-toast {
+            background: #000; color: #fff; padding: 12px 20px; border-radius: 10px;
+            font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 10px;
+            transform: translateY(-20px); opacity: 0; transition: 0.3s;
+        }
+        .admin-toast.show { transform: translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    <div id="adminToastContainer"></div>
+
+    <main class="admin-main">
+        <div id="topbar-container" data-title="Quản lý Thông báo"></div>
+
+        <div class="noti-grid">
+            
+            <!-- Left Column: Composer -->
+            <div class="card-figma">
+                <h3 class="card-title"><i class="fa-solid fa-bullhorn"></i> Phát hành thông báo mới</h3>
+                <p style="font-size: 13px; color: #64748b; margin-top: -10px; margin-bottom: 25px;">
+                    Chủ động gửi thông báo hệ thống đến tất cả khách hàng hoặc một khách hàng cụ thể.
+                </p>
+
+                <div class="form-grid-figma" style="border: none; padding-top: 0; gap: 15px;">
+                    <div class="form-group-figma" style="grid-column: span 2;">
+                        <label>Tiêu đề thông báo</label>
+                        <input type="text" class="form-control-figma" id="notiTitle" placeholder="Ví dụ: Bảo trì hệ thống đêm nay">
+                    </div>
+
+                    <div class="form-group-figma" style="grid-column: span 2;">
+                        <label>Nội dung chi tiết</label>
+                        <textarea class="form-control-figma" id="notiContent" rows="4" placeholder="Nội dung sẽ hiển thị khi khách hàng xem thông báo..."></textarea>
+                    </div>
+
+                    <div class="form-group-figma">
+                        <label>Loại thông báo</label>
+                        <select id="notiType" class="form-control-figma">
+                            <option value="SYSTEM">🔔 Cập nhật hệ thống</option>
+                            <option value="PROMOTION">🎫 Sự kiện / Ưu đãi</option>
+                            <option value="WARNING">⚠️ Cảnh báo</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-figma">
+                        <label>Đối tượng nhận (Tùy chọn)</label>
+                        <input type="text" class="form-control-figma" id="notiTargetUser" placeholder="Để trống nếu gửi Tất cả, hoặc nhập ID/Email User">
+                    </div>
+
+                    <div class="form-group-figma" style="grid-column: span 2; display: flex; gap: 12px; margin-top: 10px;">
+                        <button id="btnSendNoti" class="btn-figma" style="flex: 1;"><i class="fa-solid fa-paper-plane"></i> Phát hành ngay</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: History -->
+            <div class="card-figma">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử đã gửi</h3>
+                        <p style="font-size: 12px; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                            Toàn bộ thông báo đã phát sinh trên hệ thống (Bao gồm tự động và thủ công).
+                        </p>
+                    </div>
+                    <button class="btn-figma btn-figma-outline" onclick="fetchNotifications()" style="padding: 8px 15px;"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
+                </div>
+
+                <div class="noti-list" id="notiListContainer">
+                    <div style="text-align: center; padding: 30px; color: #888;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="js/admin-layout.js"></script>
+    <script>
+        // Custom Toast Helper
+        function showAdminToast(message, type = 'success') {
+            const container = document.getElementById('adminToastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'admin-toast';
+            const icon = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+            toast.innerHTML = `<i class="${icon}" style="color: ${type === 'success' ? '#10b981' : '#ef4444'}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 50);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Fetch All Notifications
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/notifications/admin/all');
+                const data = await response.json();
+                if (data.success) {
+                    renderNotifications(data.notifications);
+                }
+            } catch (err) {
+                console.error("Lỗi lấy danh sách thông báo:", err);
+                document.getElementById('notiListContainer').innerHTML = 
+                    `<div style="text-align: center; padding: 20px; color: red;">Lỗi kết nối Server!</div>`;
+            }
+        }
+
+        // Render Notifications to list
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notiListContainer');
+            if (notifications.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 30px; color: #888; font-size: 13px;">Chưa có thông báo nào trong hệ thống.</div>`;
+                return;
+            }
+
+            container.innerHTML = notifications.map(noti => {
+                let iconClass = 'fa-solid fa-bell';
+                if (noti.type === 'ORDER') iconClass = 'fa-solid fa-box-open';
+                else if (noti.type === 'PROMOTION') iconClass = 'fa-solid fa-ticket';
+                else if (noti.type === 'WARNING') iconClass = 'fa-solid fa-triangle-exclamation';
+
+                const dateStr = new Date(noti.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                let targetHtml = `<span class="target-badge public"><i class="fa-solid fa-globe"></i> Tất cả người dùng</span>`;
+                if (noti.userId) {
+                    const userName = noti.userId.email || noti.userId.userName || 'Người dùng';
+                    targetHtml = `<span class="target-badge"><i class="fa-solid fa-user"></i> Gửi riêng: ${userName}</span>`;
+                }
+
+                return `
+                    <div class="noti-row">
+                        <div class="noti-icon ${noti.type || 'SYSTEM'}"><i class="${iconClass}"></i></div>
+                        <div class="noti-content-wrap">
+                            <div class="noti-title">${noti.title}</div>
+                            <div class="noti-body">${noti.content}</div>
+                            <div class="noti-meta">
+                                <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                                ${targetHtml}
+                            </div>
+                        </div>
+                        <button class="btn-delete-noti" onclick="deleteNotification('${noti._id}')" title="Thu hồi thông báo này">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Delete Notification
+        async function deleteNotification(id) {
+            if (!confirm("Bạn có chắc muốn thu hồi/xóa thông báo này khỏi hệ thống không? (Khách hàng sẽ không nhìn thấy nữa)")) return;
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/notifications/admin/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (data.success) {
+                    showAdminToast("Đã thu hồi thông báo thành công!");
+                    fetchNotifications();
+                } else {
+                    showAdminToast(data.message || "Lỗi thu hồi", "error");
+                }
+            } catch (err) {
+                showAdminToast("Lỗi khi xóa thông báo!", "error");
+            }
+        }
+
+        // Create Notification
+        document.getElementById('btnSendNoti').addEventListener('click', async () => {
+            const title = document.getElementById('notiTitle').value.trim();
+            const content = document.getElementById('notiContent').value.trim();
+            const type = document.getElementById('notiType').value;
+            const targetUser = document.getElementById('notiTargetUser').value.trim();
+
+            if (!title || !content) {
+                showAdminToast("Vui lòng điền đủ Tiêu đề và Nội dung!", "error");
+                return;
+            }
+
+            // Note: In a real system we would resolve the email/username to an ObjectId first via an API search.
+            // For now, if they enter something, we pass it. If it's not an ObjectId, mongoose might throw cast error unless handled in backend.
+            // Assuming they provide a valid ObjectId if they want a specific user for now.
+            let userId = null;
+            if (targetUser && targetUser.length === 24) {
+                userId = targetUser; // Assume it's a valid ObjectId
+            } else if (targetUser) {
+                showAdminToast("Tính năng tìm kiếm user bằng email đang được xây dựng, vui lòng nhập chính xác User ID (24 ký tự) hoặc để trống.", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btnSendNoti');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phát hành...';
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/notifications/admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content, type, userId })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAdminToast(data.message || "Đã phát hành thông báo thành công!", "success");
+                    document.getElementById('notiTitle').value = '';
+                    document.getElementById('notiContent').value = '';
+                    document.getElementById('notiTargetUser').value = '';
+                    fetchNotifications();
+                } else {
+                    showAdminToast(data.message || "Phát hành thất bại!", "error");
+                }
+            } catch (err) {
+                showAdminToast("Lỗi kết nối Server!", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Phát hành ngay';
+            }
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNotifications();
+        });
+    </script>
+</body>
+</html>

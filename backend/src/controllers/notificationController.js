@@ -38,4 +38,47 @@ const markAllAsRead = async (req, res) => {
     } catch (error) { res.status(500).json({ success: false }); }
 };
 
-module.exports = { getUserNotifications, markAsRead, markAllAsRead };
+// ==========================================
+// ADMIN APIS
+// ==========================================
+
+// Lấy toàn bộ thông báo trong hệ thống
+const getAllNotifications = async (req, res) => {
+    try {
+        const notifications = await Notification.find().populate('userId', 'email userName fullName').sort({ createdAt: -1 });
+        res.json({ success: true, notifications });
+    } catch (error) { res.status(500).json({ success: false, message: "Lỗi Server khi tải danh sách thông báo" }); }
+};
+
+// Admin chủ động tạo thông báo mới
+const createSystemNotification = async (req, res) => {
+    try {
+        const { title, content, type, userId } = req.body;
+        
+        if (!title || !content) {
+            return res.status(400).json({ success: false, message: "Vui lòng điền tiêu đề và nội dung thông báo!" });
+        }
+
+        const newNoti = await Notification.create({
+            title, 
+            content, 
+            type: type || 'SYSTEM', 
+            userId: userId || null
+        });
+
+        res.json({ success: true, message: "Đã phát hành thông báo thành công!", notification: newNoti });
+    } catch (error) { res.status(500).json({ success: false, message: "Lỗi Server khi tạo thông báo" }); }
+};
+
+// Admin xóa thông báo
+const deleteNotification = async (req, res) => {
+    try {
+        await Notification.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Đã thu hồi/xóa thông báo thành công!" });
+    } catch (error) { res.status(500).json({ success: false, message: "Lỗi Server khi xóa thông báo" }); }
+};
+
+module.exports = { 
+    getUserNotifications, markAsRead, markAllAsRead,
+    getAllNotifications, createSystemNotification, deleteNotification
+};

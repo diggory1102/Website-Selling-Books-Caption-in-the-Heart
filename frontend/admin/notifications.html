@@ -120,8 +120,11 @@
                     </div>
 
                     <div class="form-group-figma">
-                        <label>Đối tượng nhận (Tùy chọn)</label>
-                        <input type="text" class="form-control-figma" id="notiTargetUser" placeholder="Để trống nếu gửi Tất cả, hoặc nhập ID/Email User">
+                        <label>Đối tượng nhận</label>
+                        <select id="notiTargetUser" class="form-control-figma">
+                            <option value="">🌐 Tất cả khách hàng (Public)</option>
+                            <!-- Users injected here via JS -->
+                        </select>
                     </div>
 
                     <div class="form-group-figma" style="grid-column: span 2; display: flex; gap: 12px; margin-top: 10px;">
@@ -165,6 +168,25 @@
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
+        }
+
+        // Load users for select dropdown
+        async function loadTargetUsers() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/users/admin/all');
+                const data = await response.json();
+                if (data.success) {
+                    const select = document.getElementById('notiTargetUser');
+                    data.users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user._id;
+                        option.textContent = `👤 ${user.email} - ${user.fullName || user.userName || 'Chưa cập nhật tên'}`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error("Lỗi tải danh sách users:", err);
+            }
         }
 
         // Fetch All Notifications
@@ -245,23 +267,15 @@
             const title = document.getElementById('notiTitle').value.trim();
             const content = document.getElementById('notiContent').value.trim();
             const type = document.getElementById('notiType').value;
-            const targetUser = document.getElementById('notiTargetUser').value.trim();
+            const targetUser = document.getElementById('notiTargetUser').value;
 
             if (!title || !content) {
                 showAdminToast("Vui lòng điền đủ Tiêu đề và Nội dung!", "error");
                 return;
             }
 
-            // Note: In a real system we would resolve the email/username to an ObjectId first via an API search.
-            // For now, if they enter something, we pass it. If it's not an ObjectId, mongoose might throw cast error unless handled in backend.
-            // Assuming they provide a valid ObjectId if they want a specific user for now.
-            let userId = null;
-            if (targetUser && targetUser.length === 24) {
-                userId = targetUser; // Assume it's a valid ObjectId
-            } else if (targetUser) {
-                showAdminToast("Tính năng tìm kiếm user bằng email đang được xây dựng, vui lòng nhập chính xác User ID (24 ký tự) hoặc để trống.", "error");
-                return;
-            }
+            // Target user is now directly the ObjectId from the dropdown or empty for all.
+            let userId = targetUser || null;
 
             const btn = document.getElementById('btnSendNoti');
             btn.disabled = true;
@@ -295,6 +309,7 @@
         // Initialize page
         document.addEventListener('DOMContentLoaded', () => {
             fetchNotifications();
+            loadTargetUsers();
         });
     </script>
 </body>

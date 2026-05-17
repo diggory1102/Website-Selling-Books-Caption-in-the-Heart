@@ -83,7 +83,7 @@ async function seedData() {
                 price: item.price,
                 discount: item.discount,
                 sold: item.sold,
-                imageUrl: item.imageUrl,
+                imageUrl: `http://127.0.0.1:5000/uploads/${item.imageUrl.split('/').pop()}`,
                 categoryId: getCatId(item.cat),
                 categoryName: item.cat,
                 stock: 100,

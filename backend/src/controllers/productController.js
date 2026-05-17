@@ -200,19 +200,60 @@ const searchProducts = async (req, res) => {
 
 const getAllProducts = async (req, res) => {
     try {
-        const products = await Product.find().sort({ createdAt: -1 });
-        res.json({ success: true, products });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+
+        let query = {};
+        if (search) {
+            query = {
+                $or: [
+                    { name: new RegExp(search, 'i') },
+                    { isbn: new RegExp(search, 'i') }
+                ]
+            };
+        }
+
+        const skip = (page - 1) * limit;
+        const products = await Product.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
+        const total = await Product.countDocuments(query);
+
+        res.json({ 
+            success: true, 
+            products, 
+            total, 
+            totalPages: Math.ceil(total / limit), 
+            currentPage: page 
+        });
     } catch (err) { res.status(500).json({ error: "Lỗi Server" }); }
 };
 
 const addProduct = async (req, res) => {
     try {
-        const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl } = req.body;
+        const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl, description } = req.body;
+        
+        // Lookup Category
         const cat = await Category.findOne({ name: category });
         
+        // Auto-create Author if not exists
+        let authObj = null;
+        if (author) {
+            authObj = await Author.findOne({ name: author });
+            if (!authObj) authObj = await Author.create({ name: author });
+        }
+
+        // Auto-create Publisher if not exists
+        let pubObj = null;
+        if (nxb) {
+            pubObj = await Publisher.findOne({ name: nxb });
+            if (!pubObj) pubObj = await Publisher.create({ name: nxb });
+        }
+        
         await Product.create({
-            name, authorName: author, publisherName: nxb, price, stock, isbn, imageUrl,
-            categoryName: category, categoryId: cat ? cat._id : null, publishDate
+            name, price, stock, isbn, imageUrl, publishDate, description,
+            authorName: author, authorId: authObj ? authObj._id : null,
+            publisherName: nxb, publisherId: pubObj ? pubObj._id : null,
+            categoryName: category, categoryId: cat ? cat._id : null
         });
         res.json({ success: true, message: "Đã thêm sản phẩm!" });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -220,11 +261,27 @@ const addProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl } = req.body;
+        const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl, description } = req.body;
+        
         const cat = await Category.findOne({ name: category });
+        
+        let authObj = null;
+        if (author) {
+            authObj = await Author.findOne({ name: author });
+            if (!authObj) authObj = await Author.create({ name: author });
+        }
+
+        let pubObj = null;
+        if (nxb) {
+            pubObj = await Publisher.findOne({ name: nxb });
+            if (!pubObj) pubObj = await Publisher.create({ name: nxb });
+        }
+
         const updated = await Product.findByIdAndUpdate(req.params.id, {
-            name, authorName: author, publisherName: nxb, price, stock, isbn, imageUrl,
-            categoryName: category, categoryId: cat ? cat._id : null, publishDate
+            name, price, stock, isbn, imageUrl, publishDate, description,
+            authorName: author, authorId: authObj ? authObj._id : null,
+            publisherName: nxb, publisherId: pubObj ? pubObj._id : null,
+            categoryName: category, categoryId: cat ? cat._id : null
         }, { new: true });
         res.json({ success: true, product: updated });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }

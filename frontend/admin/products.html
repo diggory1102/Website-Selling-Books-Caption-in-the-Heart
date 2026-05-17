@@ -3,10 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý sản phẩm - Captain In One Heart</title>
+    <title>Quản lý sản phẩm - Caption In The Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-global.css">
+    <style>
+        .pagination-container {
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;
+        }
+        .page-btn {
+            background: #fff; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #1e293b;
+            transition: 0.2s;
+        }
+        .page-btn:hover { background: #f1f5f9; }
+        .page-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .search-bar-wrap {
+            display: flex; gap: 10px; margin-bottom: 15px; align-items: center;
+        }
+        .search-input {
+            flex: 1; padding: 10px 15px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; transition: 0.2s;
+        }
+        .search-input:focus { border-color: #3b82f6; }
+    </style>
 </head>
 <body>
     <div id="sidebar-container"></div>
@@ -29,13 +49,20 @@
 
                 <div class="form-left">
                     <div class="form-group-figma"><label>Tên sản phẩm</label><input type="text" class="form-control-figma" id="p-name" placeholder="Nhập tên sách..."></div>
-                    <div class="form-group-figma"><label>Nhà xuất bản</label><input type="text" class="form-control-figma" id="p-nxb" placeholder="Tên NXB..."></div>
-                    <div class="form-group-figma"><label>Tác giả</label><input type="text" class="form-control-figma" id="p-author" placeholder="Tên tác giả..."></div>
+                    <div class="form-group-figma">
+                        <label>Nhà xuất bản</label>
+                        <input type="text" list="publisher-list" class="form-control-figma" id="p-nxb" placeholder="Chọn hoặc nhập NXB mới...">
+                        <datalist id="publisher-list"></datalist>
+                    </div>
+                    <div class="form-group-figma">
+                        <label>Tác giả</label>
+                        <input type="text" list="author-list" class="form-control-figma" id="p-author" placeholder="Chọn hoặc nhập tác giả mới...">
+                        <datalist id="author-list"></datalist>
+                    </div>
                     <div class="form-group-figma">
                         <label>Thể loại</label>
-                        <select id="p-category" class="form-control-figma">
-                            <!-- Categories will be loaded here -->
-                        </select>
+                        <input type="text" list="category-list" class="form-control-figma" id="p-category" placeholder="Chọn hoặc nhập thể loại...">
+                        <datalist id="category-list"></datalist>
                     </div>
                 </div>
                 <div class="form-divider"></div>
@@ -46,7 +73,13 @@
                     <div class="form-group-figma"><label>Mã ISBN</label><input type="text" class="form-control-figma" id="p-isbn" placeholder="Mã định danh sách..."></div>
                 </div>
             </div>
-            <div class="btn-group-figma">
+            
+            <div class="form-group-figma" style="margin-top: 15px;">
+                <label>Mô tả nội dung</label>
+                <textarea class="form-control-figma" id="p-description" rows="4" placeholder="Nhập mô tả nội dung cuốn sách..."></textarea>
+            </div>
+
+            <div class="btn-group-figma" style="margin-top: 20px;">
                 <button class="btn-figma btn-figma-outline" onclick="resetForm()">Làm mới</button>
                 <button class="btn-figma btn-figma-primary" id="btn-submit" onclick="handleSubmit()">Lưu sản phẩm</button>
             </div>
@@ -54,13 +87,20 @@
 
         <div class="card-figma">
             <h3 class="card-title">Danh sách sản phẩm hiện có</h3>
+            
+            <div class="search-bar-wrap">
+                <input type="text" class="search-input" id="search-product-input" placeholder="Tìm kiếm theo Tên sách hoặc Mã ISBN..." autocomplete="off">
+                <button class="btn-figma btn-figma-primary" onclick="handleSearchClick()"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                <button class="btn-figma btn-figma-outline" onclick="resetSearch()"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+
             <table class="table-figma">
                 <thead>
                     <tr>
                         <th>Ảnh</th>
-                        <th>Tên sản phẩm</th>
+                        <th>Tên sản phẩm / ISBN</th>
                         <th>Thể loại</th>
-                        <th>Tác giả</th>
+                        <th>Tác giả / NXB</th>
                         <th>Giá bán</th>
                         <th>Kho</th>
                         <th style="text-align: right;">Hành động</th>
@@ -71,24 +111,32 @@
             </table>
             <div id="empty-box" class="empty-chart" style="display: none;">
                 <i class="fa-regular fa-face-frown"></i>
-                <p>Không có dữ liệu</p>
+                <p>Không tìm thấy dữ liệu</p>
             </div>
+            
+            <div class="pagination-container" id="pagination-container"></div>
         </div>
     </main>
 
     <script>
     const API_URL = 'http://localhost:5000/api/products';
     const UPLOAD_URL = 'http://localhost:5000/api/upload';
+    
     let currentEditId = null;
     let currentImageUrl = '';
+    let currentPage = 1;
+    let currentSearch = '';
 
-    // Load categories for select
-    async function loadCategories() {
+    // Load Metadata (Categories, Authors, Publishers) for Datalist
+    async function loadMetadata() {
         try {
-            const res = await fetch(`${API_URL}/categories`);
+            const res = await fetch(`${API_URL}/metadata`);
             const data = await res.json();
-            const select = document.getElementById('p-category');
-            select.innerHTML = data.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            if(data.success) {
+                document.getElementById('category-list').innerHTML = data.categories.map(c => `<option value="${c}">`).join('');
+                document.getElementById('author-list').innerHTML = data.authors.map(a => `<option value="${a}">`).join('');
+                document.getElementById('publisher-list').innerHTML = data.publishers.map(p => `<option value="${p}">`).join('');
+            }
         } catch (err) { console.error(err); }
     }
 
@@ -102,15 +150,32 @@
         }
     }
 
-    async function loadProducts() {
+    async function loadProducts(page = 1, search = '') {
         try {
-            const res = await fetch(`${API_URL}/all`);
+            const res = await fetch(`${API_URL}/all?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
             const data = await res.json();
             if (data.success) {
+                currentPage = data.currentPage;
+                currentSearch = search;
                 renderProducts(data.products);
+                renderPagination(data.currentPage, data.totalPages);
             }
-        } catch (err) { console.error("Lỗi:", err); }
+        } catch (err) { console.error("Lỗi tải sản phẩm:", err); }
     }
+
+    function handleSearchClick() {
+        const query = document.getElementById('search-product-input').value.trim();
+        loadProducts(1, query);
+    }
+    
+    function resetSearch() {
+        document.getElementById('search-product-input').value = '';
+        loadProducts(1, '');
+    }
+
+    document.getElementById('search-product-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') handleSearchClick();
+    });
 
     async function handleSubmit() {
         const fileInput = document.getElementById('p-image-input');
@@ -128,18 +193,19 @@
         }
 
         const productData = {
-            name: document.getElementById('p-name').value,
-            nxb: document.getElementById('p-nxb').value,
-            author: document.getElementById('p-author').value,
-            category: document.getElementById('p-category').value,
+            name: document.getElementById('p-name').value.trim(),
+            nxb: document.getElementById('p-nxb').value.trim(),
+            author: document.getElementById('p-author').value.trim(),
+            category: document.getElementById('p-category').value.trim(),
             publishDate: document.getElementById('p-date').value,
             price: Number(document.getElementById('p-price').value),
             stock: Number(document.getElementById('p-stock').value),
-            isbn: document.getElementById('p-isbn').value,
+            isbn: document.getElementById('p-isbn').value.trim(),
+            description: document.getElementById('p-description').value.trim(),
             imageUrl: imageUrl
         };
 
-        if(!productData.name) return alert("Vui lòng nhập tên sản phẩm!");
+        if(!productData.name || !productData.price) return alert("Vui lòng nhập Tên và Giá bán!");
 
         const method = currentEditId ? 'PUT' : 'POST';
         const url = currentEditId ? `${API_URL}/update/${currentEditId}` : `${API_URL}/add`;
@@ -154,7 +220,10 @@
             if(result.success) {
                 alert(currentEditId ? "Cập nhật thành công!" : "Thêm thành công!");
                 resetForm();
-                loadProducts();
+                loadProducts(currentPage, currentSearch);
+                loadMetadata(); // Refresh dropdown lists just in case new author/publisher was created
+            } else {
+                alert("Lỗi: " + result.message);
             }
         } catch (err) { console.error(err); }
     }
@@ -174,8 +243,9 @@
             document.getElementById('p-category').value = p.categoryName || p.category || '';
             document.getElementById('p-date').value = p.publishDate ? p.publishDate.split('T')[0] : '';
             document.getElementById('p-price').value = p.price;
-            document.getElementById('p-stock').value = p.stock;
+            document.getElementById('p-stock').value = p.stock || 0;
             document.getElementById('p-isbn').value = p.isbn || '';
+            document.getElementById('p-description').value = p.description || '';
             
             document.getElementById('imagePreview').innerHTML = `<img src="${p.imageUrl || 'https://via.placeholder.com/200x250'}" alt="Preview">`;
             document.getElementById('btn-submit').innerText = "Cập nhật sản phẩm";
@@ -185,42 +255,38 @@
     }
 
     async function deleteProduct(id) {
-        if(!confirm("Xác nhận xóa sản phẩm này?")) return;
+        if(!confirm("Xác nhận xóa vĩnh viễn sản phẩm này?")) return;
         try {
             const res = await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
-            if(res.ok) loadProducts();
+            if(res.ok) loadProducts(currentPage, currentSearch);
         } catch (err) { console.error(err); }
     }
-
-    // Search Handler for Global Search Input
-    window.handleSearch = async function(query) {
-        if(!query) return loadProducts();
-        try {
-            const res = await fetch(`${API_URL}/search?q=${query}`);
-            const data = await res.json();
-            // Reuse loadProducts logic with filtered data
-            renderProducts(data.products); 
-        } catch (err) { console.error(err); }
-    };
 
     function renderProducts(products) {
         const tableBody = document.getElementById('product-table-body');
         const emptyBox = document.getElementById('empty-box');
+        
         if (products.length > 0) {
             emptyBox.style.display = 'none';
             tableBody.innerHTML = products.map(p => `
                 <tr>
                     <td><img src="${p.imageUrl || 'https://via.placeholder.com/40x60'}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 5px;"></td>
-                    <td style="font-weight: 700; color: var(--text-main);">${p.name || p.productName}</td>
-                    <td>${p.categoryName || p.category || '---'}</td>
-                    <td>${p.authorName || p.author || '---'}</td>
-                    <td style="color: var(--active-red); font-weight: 700;">${Number(p.price).toLocaleString()}đ</td>
-                    <td>${p.sold || 0}</td>
+                    <td>
+                        <div style="font-weight: 700; color: #1e293b;">${p.name}</div>
+                        <div style="font-size: 11px; color: #64748b;">ISBN: ${p.isbn || 'N/A'}</div>
+                    </td>
+                    <td><span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${p.categoryName || '---'}</span></td>
+                    <td>
+                        <div style="font-size: 13px;">Tác giả: <b>${p.authorName || '---'}</b></div>
+                        <div style="font-size: 12px; color: #64748b;">NXB: ${p.publisherName || '---'}</div>
+                    </td>
+                    <td style="color: #ef4444; font-weight: 700;">${Number(p.price).toLocaleString()}đ</td>
+                    <td>${p.stock || 0}</td>
                     <td style="text-align: right;">
-                        <button onclick="editProduct('${p._id || p.id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: #4A90E2; border-color: #e2f0ff; margin-right: 5px;">
+                        <button onclick="editProduct('${p._id || p.id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: #3b82f6; border-color: #dbeafe; margin-right: 5px;" title="Sửa">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
-                        <button onclick="deleteProduct('${p._id || p.id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: var(--active-red); border-color: #ffe4e4;">
+                        <button onclick="deleteProduct('${p._id || p.id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: #ef4444; border-color: #fee2e2;" title="Xóa">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
@@ -232,17 +298,38 @@
         }
     }
 
+    function renderPagination(page, totalPages) {
+        const container = document.getElementById('pagination-container');
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = `<button class="page-btn" ${page === 1 ? 'disabled' : ''} onclick="loadProducts(${page - 1}, currentSearch)"><i class="fa-solid fa-chevron-left"></i></button>`;
+        
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) {
+                html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="loadProducts(${i}, currentSearch)">${i}</button>`;
+            } else if (i === page - 3 || i === page + 3) {
+                html += `<span style="color:#94a3b8">...</span>`;
+            }
+        }
+
+        html += `<button class="page-btn" ${page === totalPages ? 'disabled' : ''} onclick="loadProducts(${page + 1}, currentSearch)"><i class="fa-solid fa-chevron-right"></i></button>`;
+        container.innerHTML = html;
+    }
+
     function resetForm() {
         currentEditId = null;
         currentImageUrl = '';
         document.getElementById('form-title').innerText = "Thêm sản phẩm mới";
-        document.querySelectorAll('input, select').forEach(i => i.value = '');
+        document.querySelectorAll('input:not([type="file"]), select, textarea').forEach(i => i.value = '');
         document.getElementById('imagePreview').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><p>Tải ảnh bìa</p>`;
         document.getElementById('btn-submit').innerText = "Lưu sản phẩm";
     }
     
     window.onload = () => {
-        loadCategories();
+        loadMetadata();
         loadProducts();
     };
     </script>

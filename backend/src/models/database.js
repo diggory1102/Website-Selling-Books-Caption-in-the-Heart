@@ -84,7 +84,10 @@ const ProductSchema = new mongoose.Schema({
     discount: { type: String }, 
     sold: { type: Number, default: 0 },
     stock: { type: Number, default: 0 },
-    description: String,
+    
+    description: { type: String }, // Bổ sung mô tả chi tiết
+    publishDate: { type: String }, // Bổ sung ngày xuất bản (YYYY-MM-DD)
+    isbn: { type: String },        // Bổ sung mã vạch ISBN
     imageUrl: String,
     
     // Cho phép đánh giá sản phẩm (Lưu trung bình sao để load nhanh)

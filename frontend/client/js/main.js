@@ -47,10 +47,11 @@ async function fetchUserWishlist() {
     try {
         const res = await fetch(`http://127.0.0.1:5000/api/wishlist/${userId}`);
         const data = await res.json();
-        globalWishlist = data; 
+        globalWishlist = Array.isArray(data) ? data : []; 
         updateWishlistCount(); 
     } catch (error) {
         console.error("Lỗi tải wishlist từ Server:", error);
+        globalWishlist = [];
     }
 }
 

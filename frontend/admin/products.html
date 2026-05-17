@@ -127,6 +127,14 @@
     let currentPage = 1;
     let currentSearch = '';
 
+    function resolveImageUrl(url) {
+        if (!url) return 'https://via.placeholder.com/40x60';
+        if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+            return url;
+        }
+        return `../client/${url}`;
+    }
+
     // Load Metadata (Categories, Authors, Publishers) for Datalist
     async function loadMetadata() {
         try {
@@ -247,7 +255,7 @@
             document.getElementById('p-isbn').value = p.isbn || '';
             document.getElementById('p-description').value = p.description || '';
             
-            document.getElementById('imagePreview').innerHTML = `<img src="${p.imageUrl || 'https://via.placeholder.com/200x250'}" alt="Preview">`;
+            document.getElementById('imagePreview').innerHTML = `<img src="${resolveImageUrl(p.imageUrl)}" alt="Preview">`;
             document.getElementById('btn-submit').innerText = "Cập nhật sản phẩm";
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -270,7 +278,7 @@
             emptyBox.style.display = 'none';
             tableBody.innerHTML = products.map(p => `
                 <tr>
-                    <td><img src="${p.imageUrl || 'https://via.placeholder.com/40x60'}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 5px;"></td>
+                    <td><img src="${resolveImageUrl(p.imageUrl)}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 5px;"></td>
                     <td>
                         <div style="font-weight: 700; color: #1e293b;">${p.name}</div>
                         <div style="font-size: 11px; color: #64748b;">ISBN: ${p.isbn || 'N/A'}</div>

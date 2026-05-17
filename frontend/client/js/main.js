@@ -312,6 +312,32 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
+    // Helper lấy icon tương ứng với tên danh mục để giữ thiết kế đẹp nguyên bản
+    function getCategoryIcon(name) {
+        const n = name.toLowerCase();
+        if (n.includes('hot') || n.includes('nổi bật')) return 'fa-solid fa-fire';
+        if (n.includes('manga') || n.includes('truyện tranh')) return 'fa-solid fa-book';
+        if (n.includes('manhwa')) return 'fa-solid fa-moon';
+        if (n.includes('comic')) return 'fa-solid fa-mask';
+        if (n.includes('tình cảm') || n.includes('lãng mạn')) return 'fa-solid fa-heart';
+        if (n.includes('kinh dị') || n.includes('ma')) return 'fa-solid fa-ghost';
+        if (n.includes('hài hước') || n.includes('hài')) return 'fa-solid fa-face-laugh-squint';
+        if (n.includes('trinh thám')) return 'fa-solid fa-magnifying-glass';
+        if (n.includes('viễn tưởng')) return 'fa-solid fa-dragon';
+        if (n.includes('hành động')) return 'fa-solid fa-bolt';
+        if (n.includes('học đường')) return 'fa-solid fa-graduation-cap';
+        if (n.includes('xuyên không')) return 'fa-solid fa-clock-rotate-left';
+        if (n.includes('thể thao')) return 'fa-solid fa-volleyball';
+        if (n.includes('phiêu lưu')) return 'fa-solid fa-compass';
+        if (n.includes('cổ trang')) return 'fa-solid fa-scroll';
+        if (n.includes('tâm lý')) return 'fa-solid fa-brain';
+        if (n.includes('phép thuật')) return 'fa-solid fa-wand-magic-sparkles';
+        if (n.includes('mecha') || n.includes('robot')) return 'fa-solid fa-robot';
+        if (n.includes('nấu ăn') || n.includes('ẩm thực')) return 'fa-solid fa-utensils';
+        if (n.includes('âm nhạc')) return 'fa-solid fa-music';
+        return 'fa-solid fa-book-open';
+    }
+
     // 2. TẢI DANH MỤC
     async function loadCategories() {
         if (!categoryMenu) return;
@@ -321,11 +347,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             if (categories && categories.length > 0) {
                 categoryMenu.innerHTML = categories.map(cat => 
-                    `<li><a href="category.html?id=${cat._id || cat.id}">${cat.name}</a></li>`
+                    `<li><a href="category.html?id=${cat._id || cat.id}"><i class="${getCategoryIcon(cat.name)}"></i>${cat.name}</a></li>`
                 ).join('');
             }
         } catch (error) {
-            categoryMenu.innerHTML = '<li><a href="#">Lỗi kết nối Server</a></li>';
+            categoryMenu.innerHTML = '<li><a href="#"><i class="fa-solid fa-triangle-exclamation"></i>Lỗi kết nối Server</a></li>';
         }
     }
 

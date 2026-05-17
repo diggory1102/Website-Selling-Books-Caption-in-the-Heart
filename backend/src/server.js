@@ -68,6 +68,16 @@ app.use('/api/promotions', promotionRoutes);
 app.use('/api/stats', statisticsRoutes);
 app.use('/api/employees', employeeRoutes);
 
+// Thêm route lấy toàn bộ danh mục cho Client (tránh lỗi kết nối /api/categories)
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await Category.find().sort({ name: 1 });
+        res.json(categories);
+    } catch (err) {
+        res.status(500).json({ error: "Lỗi Server" });
+    }
+});
+
 // ==========================================
 // CẤU HÌNH UPLOAD ẢNH CHO ADMIN (SỬ DỤNG MULTER)
 // ==========================================

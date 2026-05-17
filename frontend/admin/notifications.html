@@ -81,6 +81,87 @@
             transform: translateY(-20px); opacity: 0; transition: 0.3s;
         }
         .admin-toast.show { transform: translateY(0); opacity: 1; }
+
+        /* Super Combo Box Styles */
+        .combo-box-container {
+            position: relative;
+            width: 100%;
+        }
+        .combo-input {
+            width: 100%;
+            padding: 12px 15px; padding-right: 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fff;
+            color: #1e293b;
+            transition: all 0.3s;
+        }
+        .combo-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .combo-dropdown {
+            position: absolute;
+            top: 100%; left: 0; right: 0;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 5px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+        }
+        .combo-dropdown.show {
+            display: block;
+        }
+        .combo-group-label {
+            padding: 8px 15px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            background: #f8fafc;
+        }
+        .combo-item {
+            padding: 10px 15px;
+            font-size: 14px;
+            color: #334155;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .combo-item:hover {
+            background: #f1f5f9;
+        }
+        .combo-item.selected {
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        .combo-spinner {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            display: none;
+        }
+        .combo-clear {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            cursor: pointer;
+            display: none;
+        }
+        .combo-clear:hover { color: #ef4444; }
     </style>
 </head>
 <body>
@@ -121,10 +202,32 @@
 
                     <div class="form-group-figma">
                         <label>Đối tượng nhận</label>
-                        <select id="notiTargetUser" class="form-control-figma">
-                            <option value="">🌐 Tất cả khách hàng (Public)</option>
-                            <!-- Users injected here via JS -->
-                        </select>
+                        <div class="combo-box-container" id="targetComboContainer">
+                            <input type="text" class="combo-input" id="comboInput" placeholder="Tìm tên/email cá nhân..." autocomplete="off">
+                            <i class="fa-solid fa-spinner fa-spin combo-spinner" id="comboSpinner"></i>
+                            <i class="fa-solid fa-xmark combo-clear" id="comboClear"></i>
+                            
+                            <!-- Hidden input to store value -->
+                            <input type="hidden" id="comboValue" value="RANK_ALL">
+
+                            <div class="combo-dropdown" id="comboDropdown">
+                                <!-- Default Groups -->
+                                <div id="comboDefaultOptions">
+                                    <div class="combo-group-label">Nhóm phân khúc (Hạng)</div>
+                                    <div class="combo-item selected" data-value="RANK_ALL" data-label="🌐 Tất cả khách hàng (Public)">🌐 Tất cả khách hàng (Public)</div>
+                                    <div class="combo-item" data-value="RANK_Thành viên Mới" data-label="⭐ Thành viên Mới">⭐ Thành viên Mới</div>
+                                    <div class="combo-item" data-value="RANK_Đồng" data-label="🥉 Hạng Đồng">🥉 Hạng Đồng</div>
+                                    <div class="combo-item" data-value="RANK_Bạc" data-label="🥈 Hạng Bạc">🥈 Hạng Bạc</div>
+                                    <div class="combo-item" data-value="RANK_Vàng" data-label="🥇 Hạng Vàng">🥇 Hạng Vàng</div>
+                                    <div class="combo-item" data-value="RANK_Kim Cương" data-label="💎 Hạng Kim Cương">💎 Hạng Kim Cương</div>
+                                </div>
+                                <!-- Search Results -->
+                                <div id="comboSearchResults" style="display: none;">
+                                    <div class="combo-group-label">Kết quả tìm kiếm Cá nhân</div>
+                                    <div id="comboSearchItems"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group-figma" style="grid-column: span 2; display: flex; gap: 12px; margin-top: 10px;">
@@ -170,26 +273,136 @@
             }, 3000);
         }
 
-        // Load users for select dropdown
-        async function loadTargetUsers() {
-            try {
-                const response = await fetch('http://127.0.0.1:5000/api/users/admin/all');
-                const data = await response.json();
-                if (data.success) {
-                    const select = document.getElementById('notiTargetUser');
-                    data.users.forEach(user => {
-                        const option = document.createElement('option');
-                        option.value = user._id;
-                        option.textContent = `👤 ${user.email} - ${user.fullName || user.userName || 'Chưa cập nhật tên'}`;
-                        select.appendChild(option);
-                    });
-                }
-            } catch (err) {
-                console.error("Lỗi tải danh sách users:", err);
+        // =====================================
+        // Super Combo Box Logic (Debounce Search)
+        // =====================================
+        const comboInput = document.getElementById('comboInput');
+        const comboDropdown = document.getElementById('comboDropdown');
+        const comboValue = document.getElementById('comboValue');
+        const comboSpinner = document.getElementById('comboSpinner');
+        const comboClear = document.getElementById('comboClear');
+        const comboDefaultOptions = document.getElementById('comboDefaultOptions');
+        const comboSearchResults = document.getElementById('comboSearchResults');
+        const comboSearchItems = document.getElementById('comboSearchItems');
+
+        let searchTimeout = null;
+        
+        // Cập nhật text input khi mới load
+        comboInput.value = document.querySelector('.combo-item.selected').dataset.label;
+
+        // Bật dropdown khi click input
+        comboInput.addEventListener('focus', () => {
+            comboDropdown.classList.add('show');
+            comboInput.select(); // Highlight text for easy clear
+            if (comboInput.value.length === 0 || comboValue.value.startsWith('RANK_')) {
+                comboDefaultOptions.style.display = 'block';
+                comboSearchResults.style.display = 'none';
             }
+        });
+
+        // Ẩn dropdown khi click ngoài
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('targetComboContainer').contains(e.target)) {
+                comboDropdown.classList.remove('show');
+                
+                // Nếu người dùng gõ linh tinh mà không chọn, khôi phục lại giá trị cũ
+                if (!comboValue.value.startsWith('USER_') && !comboValue.value.startsWith('RANK_')) {
+                     resetComboToDefault();
+                } else {
+                    // Hiển thị lại đúng label
+                    const activeItem = document.querySelector(`.combo-item[data-value="${comboValue.value}"]`);
+                    if(activeItem) comboInput.value = activeItem.dataset.label;
+                }
+            }
+        });
+
+        // Chọn item trong dropdown
+        comboDropdown.addEventListener('click', (e) => {
+            const item = e.target.closest('.combo-item');
+            if (item) {
+                // Xóa active cũ
+                comboDropdown.querySelectorAll('.combo-item').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+                
+                comboValue.value = item.dataset.value;
+                comboInput.value = item.dataset.label;
+                
+                comboDropdown.classList.remove('show');
+                comboClear.style.display = 'block';
+            }
+        });
+
+        // Nút Clear X
+        comboClear.addEventListener('click', () => {
+            resetComboToDefault();
+            comboDropdown.classList.add('show');
+            comboInput.focus();
+        });
+
+        function resetComboToDefault() {
+            comboValue.value = 'RANK_ALL';
+            const defaultItem = document.querySelector(`.combo-item[data-value="RANK_ALL"]`);
+            comboInput.value = defaultItem.dataset.label;
+            
+            comboClear.style.display = 'none';
+            comboDefaultOptions.style.display = 'block';
+            comboSearchResults.style.display = 'none';
+            
+            comboDropdown.querySelectorAll('.combo-item').forEach(el => {
+                if(el.dataset.value === 'RANK_ALL') el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
         }
 
-        // Fetch All Notifications
+        // Auto-search với Debounce
+        comboInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            comboClear.style.display = query.length > 0 ? 'block' : 'none';
+            
+            if (query.length === 0) {
+                comboDefaultOptions.style.display = 'block';
+                comboSearchResults.style.display = 'none';
+                return;
+            }
+
+            comboDefaultOptions.style.display = 'none';
+            comboSearchResults.style.display = 'block';
+            comboSearchItems.innerHTML = '<div style="padding: 10px 15px; color:#888; font-size:13px;">Đang tìm kiếm...</div>';
+            
+            comboSpinner.style.display = 'block';
+            comboClear.style.display = 'none'; // Ẩn X khi đang loading
+            
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`http://127.0.0.1:5000/api/users/admin/search?q=${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    
+                    comboSpinner.style.display = 'none';
+                    comboClear.style.display = 'block';
+                    
+                    if (data.success) {
+                        if (data.users.length === 0) {
+                            comboSearchItems.innerHTML = '<div style="padding: 10px 15px; color:#ef4444; font-size:13px;">Không tìm thấy khách hàng nào.</div>';
+                        } else {
+                            comboSearchItems.innerHTML = data.users.map(u => `
+                                <div class="combo-item" data-value="USER_${u._id}" data-label="👤 ${u.email} - ${u.fullName || u.userName}">
+                                    👤 ${u.email} - ${u.fullName || u.userName || 'Chưa cập nhật tên'}
+                                </div>
+                            `).join('');
+                        }
+                    }
+                } catch (error) {
+                    comboSpinner.style.display = 'none';
+                    comboClear.style.display = 'block';
+                    comboSearchItems.innerHTML = '<div style="padding: 10px 15px; color:red; font-size:13px;">Lỗi kết nối Server!</div>';
+                }
+            }, 300); // 300ms delay
+        });
+
+        // =====================================
+        // Fetch & Render Notifications
+        // =====================================
         async function fetchNotifications() {
             try {
                 const response = await fetch('http://127.0.0.1:5000/api/notifications/admin/all');
@@ -204,7 +417,6 @@
             }
         }
 
-        // Render Notifications to list
         function renderNotifications(notifications) {
             const container = document.getElementById('notiListContainer');
             if (notifications.length === 0) {
@@ -220,10 +432,21 @@
 
                 const dateStr = new Date(noti.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
                 
-                let targetHtml = `<span class="target-badge public"><i class="fa-solid fa-globe"></i> Tất cả người dùng</span>`;
+                let targetHtml = `<span class="target-badge public"><i class="fa-solid fa-globe"></i> Tất cả khách hàng</span>`;
+                
                 if (noti.userId) {
+                    // Cá nhân
                     const userName = noti.userId.email || noti.userId.userName || 'Người dùng';
                     targetHtml = `<span class="target-badge"><i class="fa-solid fa-user"></i> Gửi riêng: ${userName}</span>`;
+                } else if (noti.targetRank && noti.targetRank !== 'ALL') {
+                    // Theo Hạng (Rank)
+                    let rankIcon = '⭐';
+                    if (noti.targetRank === 'Đồng') rankIcon = '🥉';
+                    else if (noti.targetRank === 'Bạc') rankIcon = '🥈';
+                    else if (noti.targetRank === 'Vàng') rankIcon = '🥇';
+                    else if (noti.targetRank === 'Kim Cương') rankIcon = '💎';
+                    
+                    targetHtml = `<span class="target-badge" style="background:#fef3c7; color:#d97706"><i class="fa-solid fa-users"></i> Gửi nhóm: ${rankIcon} Hạng ${noti.targetRank}</span>`;
                 }
 
                 return `
@@ -245,7 +468,6 @@
             }).join('');
         }
 
-        // Delete Notification
         async function deleteNotification(id) {
             if (!confirm("Bạn có chắc muốn thu hồi/xóa thông báo này khỏi hệ thống không? (Khách hàng sẽ không nhìn thấy nữa)")) return;
             try {
@@ -262,20 +484,28 @@
             }
         }
 
-        // Create Notification
+        // =====================================
+        // Send Notification Trigger
+        // =====================================
         document.getElementById('btnSendNoti').addEventListener('click', async () => {
             const title = document.getElementById('notiTitle').value.trim();
             const content = document.getElementById('notiContent').value.trim();
             const type = document.getElementById('notiType').value;
-            const targetUser = document.getElementById('notiTargetUser').value;
+            const targetVal = document.getElementById('comboValue').value;
 
             if (!title || !content) {
                 showAdminToast("Vui lòng điền đủ Tiêu đề và Nội dung!", "error");
                 return;
             }
 
-            // Target user is now directly the ObjectId from the dropdown or empty for all.
-            let userId = targetUser || null;
+            let userId = null;
+            let targetRank = 'ALL';
+
+            if (targetVal.startsWith('RANK_')) {
+                targetRank = targetVal.replace('RANK_', '');
+            } else if (targetVal.startsWith('USER_')) {
+                userId = targetVal.replace('USER_', '');
+            }
 
             const btn = document.getElementById('btnSendNoti');
             btn.disabled = true;
@@ -285,7 +515,7 @@
                 const response = await fetch('http://127.0.0.1:5000/api/notifications/admin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, content, type, userId })
+                    body: JSON.stringify({ title, content, type, userId, targetRank })
                 });
                 const data = await response.json();
 
@@ -293,7 +523,7 @@
                     showAdminToast(data.message || "Đã phát hành thông báo thành công!", "success");
                     document.getElementById('notiTitle').value = '';
                     document.getElementById('notiContent').value = '';
-                    document.getElementById('notiTargetUser').value = '';
+                    resetComboToDefault(); // Reset selection
                     fetchNotifications();
                 } else {
                     showAdminToast(data.message || "Phát hành thất bại!", "error");
@@ -306,10 +536,9 @@
             }
         });
 
-        // Initialize page
+        // Khởi chạy
         document.addEventListener('DOMContentLoaded', () => {
             fetchNotifications();
-            loadTargetUsers();
         });
     </script>
 </body>

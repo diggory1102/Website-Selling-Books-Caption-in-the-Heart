@@ -4,8 +4,25 @@ const { Notification } = require('../models/database');
 const getUserNotifications = async (req, res) => {
     try {
         const userId = req.params.userId;
+        
+        // Tính toán hạng thành viên hiện tại của User
+        const { Bill } = require('../models/database');
+        const completedOrders = await Bill.find({ userId, status: 'Đã giao' });
+        let totalSpent = completedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+
+        let userTier = 'Thành viên Mới';
+        if (totalSpent >= 10000000) userTier = 'Kim Cương';
+        else if (totalSpent >= 5000000) userTier = 'Vàng';
+        else if (totalSpent >= 2000000) userTier = 'Bạc';
+        else if (totalSpent >= 500000) userTier = 'Đồng';
+
         let notifications = await Notification.find({
-            $or: [{ userId: userId }, { userId: null }]
+            $or: [
+                { userId: userId }, 
+                { userId: null, targetRank: { $exists: false } }, 
+                { userId: null, targetRank: 'ALL' },
+                { userId: null, targetRank: userTier }
+            ]
         }).sort({ createdAt: -1 }); // Mới nhất lên đầu
         
         // Tự động tạo 1 thông báo chào mừng nếu user chưa có gì để giao diện không bị trống
@@ -53,7 +70,7 @@ const getAllNotifications = async (req, res) => {
 // Admin chủ động tạo thông báo mới
 const createSystemNotification = async (req, res) => {
     try {
-        const { title, content, type, userId } = req.body;
+        const { title, content, type, userId, targetRank } = req.body;
         
         if (!title || !content) {
             return res.status(400).json({ success: false, message: "Vui lòng điền tiêu đề và nội dung thông báo!" });
@@ -63,7 +80,8 @@ const createSystemNotification = async (req, res) => {
             title, 
             content, 
             type: type || 'SYSTEM', 
-            userId: userId || null
+            userId: userId || null,
+            targetRank: targetRank || 'ALL'
         });
 
         res.json({ success: true, message: "Đã phát hành thông báo thành công!", notification: newNoti });

@@ -236,8 +236,28 @@ const toggleUserStatus = async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: "Lỗi Server" }); }
 };
 
+// Admin: Tìm kiếm người dùng nhanh (Smart Search)
+const searchUsers = async (req, res) => {
+    try {
+        const q = req.query.q || '';
+        if (!q) return res.json({ success: true, users: [] });
+
+        const regex = new RegExp(q, 'i');
+        // Tìm theo email, userName hoặc fullName, giới hạn 10 kết quả
+        const users = await User.find({
+            $or: [
+                { email: regex },
+                { userName: regex },
+                { fullName: regex }
+            ]
+        }).select('_id email fullName userName').limit(10);
+        
+        res.json({ success: true, users });
+    } catch (err) { res.status(500).json({ success: false, message: "Lỗi Server" }); }
+};
+
 module.exports = { 
     getUserProfile, updateUserProfile, syncCart, getCart, 
     changePassword, addAddress, updateAddress, deleteAddress, 
-    setDefaultAddress, getAllUsers, toggleUserStatus 
+    setDefaultAddress, getAllUsers, toggleUserStatus, searchUsers 
 };

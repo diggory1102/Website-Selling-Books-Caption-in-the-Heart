@@ -15,6 +15,7 @@ router.put('/:id/addresses/:addressId/default', userController.setDefaultAddress
 
 // Admin routes
 router.get('/admin/all', userController.getAllUsers);
+router.get('/admin/search', userController.searchUsers);
 router.put('/admin/toggle-status/:id', userController.toggleUserStatus);
 
 module.exports = router;

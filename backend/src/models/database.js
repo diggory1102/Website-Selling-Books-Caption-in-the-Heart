@@ -133,6 +133,7 @@ const Promotion = mongoose.model('Promotion', PromotionSchema);
 // --- BẢNG THÔNG BÁO (NOTIFICATION) ---
 const NotificationSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Dành riêng cho 1 user (Nếu null -> Báo toàn hệ thống)
+    targetRank: { type: String, default: 'ALL' }, // 'ALL', 'Thành viên Mới', 'Đồng', 'Bạc', 'Vàng', 'Kim Cương'
     title: { type: String, required: true },
     content: { type: String, required: true },
     isRead: { type: Boolean, default: false },

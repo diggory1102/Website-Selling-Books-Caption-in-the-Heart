@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiến dịch Email & Newsletter - Caption In The Heart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin-global.css">
+    <style>
+        .campaign-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        @media(max-width: 1024px) {
+            .campaign-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .form-control-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            background: #fff;
+            transition: 0.3s;
+            resize: vertical;
+        }
+        .form-control-textarea:focus {
+            outline: none;
+            border-color: #000;
+        }
+        .subscribers-list {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        .subscriber-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 13px;
+        }
+        .subscriber-row:hover {
+            background: #f8fafc;
+        }
+        .subscriber-email {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+        .subscriber-date {
+            color: #64748b;
+            font-size: 11px;
+        }
+        .btn-delete-sub {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+        .btn-delete-sub:hover {
+            background: #fee2e2;
+        }
+        .stat-card-campaign {
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .stat-card-campaign h3 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 5px;
+        }
+        .stat-card-campaign p {
+            font-size: 13px;
+            color: #64748b;
+        }
+        /* Custom Toast Notification inside Admin */
+        #adminToastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .admin-toast {
+            background: #000;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .admin-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    <div id="adminToastContainer"></div>
+
+    <main class="admin-main">
+        <div id="topbar-container" data-title="Chiến dịch Email & Newsletter"></div>
+
+        <div class="campaign-grid">
+            
+            <!-- Left Column: Compose Campaign -->
+            <div>
+                <div class="card-figma">
+                    <h3 class="card-title"><i class="fa-solid fa-pen-nib"></i> Soạn chiến dịch Email gửi hàng loạt</h3>
+                    <p style="font-size: 13px; color: #64748b; margin-top: -10px; margin-bottom: 25px;">
+                        Gửi bản tin giới thiệu sách mới, mã Voucher hoặc thông tin cập nhật đặc biệt đến tất cả khách hàng đăng ký Newsletter.
+                    </p>
+
+                    <div class="form-grid-figma" style="border: none; padding-top: 0;">
+                        <div class="form-group-figma" style="grid-column: span 2;">
+                            <label>Tiêu đề chiến dịch</label>
+                            <input type="text" class="form-control-figma" id="campaignSubject" placeholder="Ví dụ: [SÁCH MỚI] Siêu phẩm One Piece tập 105 chính thức ra mắt!">
+                        </div>
+
+                        <div class="form-group-figma" style="grid-column: span 2;">
+                            <label>Nội dung bản tin (Newsletter Content)</label>
+                            <textarea class="form-control-textarea" id="campaignContent" rows="12" placeholder="Nhập nội dung thư gửi khách hàng. Hỗ trợ mô tả chi tiết, mã voucher kèm theo..."></textarea>
+                        </div>
+
+                        <div class="form-group-figma" style="grid-column: span 2; display: flex; gap: 12px; margin-top: 15px;">
+                            <button id="btnSendCampaign" class="btn-figma" style="flex: 1;"><i class="fa-solid fa-paper-plane"></i> Bắt đầu gửi chiến dịch</button>
+                            <button id="btnClearComposer" class="btn-figma btn-figma-outline"><i class="fa-solid fa-trash-can"></i> Nhập lại</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Progress Card -->
+                <div id="sendingSimulator" class="card-figma" style="display: none; margin-top: 25px;">
+                    <h3 class="card-title" id="simulatorTitle"><i class="fa-solid fa-sync fa-spin"></i> Đang gửi chiến dịch giả lập...</h3>
+                    <div style="margin: 15px 0;">
+                        <div style="background: #f1f5f9; height: 10px; border-radius: 5px; overflow: hidden; position: relative;">
+                            <div id="sendingProgressBar" style="background: #000; height: 100%; width: 0%; transition: width 0.1s;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 5px; color: #555;">
+                            <span id="sendingProgressText">0/0 đã gửi</span>
+                            <span id="sendingPercentText">0%</span>
+                        </div>
+                    </div>
+                    <div id="sendingLogs" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; height: 160px; overflow-y: auto; font-family: monospace; font-size: 12px; line-height: 1.5; color: #334155;"></div>
+                </div>
+            </div>
+
+            <!-- Right Column: Subscribers List -->
+            <div>
+                <div class="stat-card-campaign">
+                    <p>Khách hàng đăng ký Newsletter</p>
+                    <h3 id="totalSubscribersCount">0</h3>
+                    <p style="font-size: 11px; margin-top: 5px;"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Đang hoạt động nhận tin</p>
+                </div>
+
+                <div class="card-figma">
+                    <h3 class="card-title"><i class="fa-solid fa-users"></i> Danh sách nhận tin</h3>
+                    <p style="font-size: 12px; color: #64748b; margin-top: -10px; margin-bottom: 15px;">
+                        Danh sách các email đã nhấn Đăng ký nhận tin tại Footer trang khách hàng.
+                    </p>
+
+                    <div class="search-pill" style="width: 100%; border: 1px solid var(--border-color); border-radius: 10px; display: flex; align-items: center; padding: 5px 12px; background: #fff;">
+                        <i class="fa-solid fa-magnifying-glass" style="color: #64748b; margin-right: 8px;"></i>
+                        <input type="text" id="searchSubscribers" placeholder="Tìm email..." style="border: none; outline: none; font-size: 13px; width: 100%;">
+                    </div>
+
+                    <div class="subscribers-list" id="subscribersListContainer">
+                        <!-- Loading state -->
+                        <div style="text-align: center; padding: 30px; color: #888;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="js/admin-layout.js"></script>
+    <script>
+        let allSubscribers = [];
+
+        // Custom Toast Helper
+        function showAdminToast(message, type = 'success') {
+            const container = document.getElementById('adminToastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'admin-toast';
+            const icon = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+            toast.innerHTML = `<i class="${icon}" style="color: ${type === 'success' ? '#10b981' : '#ef4444'}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 50);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Fetch all subscribers from backend
+        async function fetchSubscribers() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/subscribers');
+                const data = await response.json();
+                if (data.success) {
+                    allSubscribers = data.subscribers;
+                    document.getElementById('totalSubscribersCount').textContent = allSubscribers.length;
+                    renderSubscribers(allSubscribers);
+                }
+            } catch (err) {
+                console.error("Lỗi lấy danh sách subscriber:", err);
+                document.getElementById('subscribersListContainer').innerHTML = 
+                    `<div style="text-align: center; padding: 20px; color: red;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối Server!</div>`;
+            }
+        }
+
+        // Render subscribers to list
+        function renderSubscribers(subscribers) {
+            const container = document.getElementById('subscribersListContainer');
+            if (subscribers.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 30px; color: #888; font-size: 13px;">Không tìm thấy email nào.</div>`;
+                return;
+            }
+
+            container.innerHTML = subscribers.map(sub => {
+                const dateStr = new Date(sub.createdAt).toLocaleDateString('vi-VN');
+                return `
+                    <div class="subscriber-row">
+                        <div>
+                            <div class="subscriber-email">${sub.email}</div>
+                            <div class="subscriber-date">Đăng ký ngày: ${dateStr}</div>
+                        </div>
+                        <button class="btn-delete-sub" onclick="deleteSubscriber('${sub._id}', '${sub.email}')" title="Xóa nhận tin">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Delete (unsubscribe) email
+        async function deleteSubscriber(id, email) {
+            if (!confirm(`Bạn có chắc muốn xóa email [${email}] khỏi danh sách nhận tin?`)) return;
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/subscribers/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (data.success) {
+                    showAdminToast("Đã xóa subscriber thành công!");
+                    fetchSubscribers();
+                }
+            } catch (err) {
+                showAdminToast("Lỗi khi xóa email!", "error");
+            }
+        }
+
+        // Filter search input
+        document.getElementById('searchSubscribers').addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const filtered = allSubscribers.filter(sub => sub.email.toLowerCase().includes(query));
+            renderSubscribers(filtered);
+        });
+
+        // Clear Composer input
+        document.getElementById('btnClearComposer').addEventListener('click', () => {
+            document.getElementById('campaignSubject').value = '';
+            document.getElementById('campaignContent').value = '';
+        });
+
+        // Trigger Simulated Bulk Email Sending Campaign
+        document.getElementById('btnSendCampaign').addEventListener('click', async () => {
+            const subject = document.getElementById('campaignSubject').value.trim();
+            const content = document.getElementById('campaignContent').value.trim();
+
+            if (!subject || !content) {
+                showAdminToast("Vui lòng nhập đầy đủ tiêu đề và nội dung chiến dịch!", "error");
+                return;
+            }
+
+            if (allSubscribers.length === 0) {
+                showAdminToast("Không có email nào đăng ký nhận tin để gửi!", "error");
+                return;
+            }
+
+            // Lock inputs and button
+            document.getElementById('btnSendCampaign').disabled = true;
+            document.getElementById('campaignSubject').disabled = true;
+            document.getElementById('campaignContent').disabled = true;
+
+            // Open sending simulator
+            const simulator = document.getElementById('sendingSimulator');
+            const progress = document.getElementById('sendingProgressBar');
+            const progressText = document.getElementById('sendingProgressText');
+            const percentText = document.getElementById('sendingPercentText');
+            const logs = document.getElementById('sendingLogs');
+            const title = document.getElementById('simulatorTitle');
+
+            simulator.style.display = 'block';
+            progress.style.width = '0%';
+            progressText.textContent = `0/${allSubscribers.length} đã gửi`;
+            percentText.textContent = `0%`;
+            logs.innerHTML = `<div style="color: #0ea5e9;">[SYSTEM] Bắt đầu khởi tạo chiến dịch...</div>`;
+            title.innerHTML = `<i class="fa-solid fa-sync fa-spin"></i> Đang gửi chiến dịch giả lập...`;
+
+            try {
+                // Post backend to log to DB/notifications
+                const response = await fetch('http://127.0.0.1:5000/api/send-campaign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, content })
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showAdminToast(data.message || "Lỗi gửi chiến dịch!", "error");
+                    resetSendingState();
+                    return;
+                }
+
+                // Simulate beautiful step-by-step dispatch logs for premium wow effect!
+                let sentCount = 0;
+                const total = allSubscribers.length;
+
+                for (let i = 0; i < total; i++) {
+                    // Wait a short simulated interval for immersive look
+                    await new Promise(resolve => setTimeout(resolve, 350));
+                    sentCount++;
+                    const percent = Math.round((sentCount / total) * 100);
+                    
+                    progress.style.width = `${percent}%`;
+                    progressText.textContent = `${sentCount}/${total} đã gửi`;
+                    percentText.textContent = `${percent}%`;
+                    
+                    const logRow = document.createElement('div');
+                    logRow.innerHTML = `<span style="color: #22c55e;">[SUCCESS]</span> Đã chuyển phát thành công email tới: <strong>${allSubscribers[i].email}</strong>`;
+                    logs.appendChild(logRow);
+                    logs.scrollTop = logs.scrollHeight;
+                }
+
+                // Complete state
+                await new Promise(resolve => setTimeout(resolve, 500));
+                title.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #22c55e;"></i> Chiến dịch hoàn thành!`;
+                logs.innerHTML += `<div style="color: #22c55e; font-weight: bold; margin-top: 10px;">[SYSTEM] Đã hoàn thành gửi chiến dịch thành công tốt đẹp!</div>`;
+                showAdminToast("Chiến dịch gửi đi thành công mỹ mãn!");
+
+            } catch (err) {
+                console.error("Lỗi gửi chiến dịch:", err);
+                showAdminToast("Lỗi gửi chiến dịch!", "error");
+                resetSendingState();
+            } finally {
+                // Unlock input
+                setTimeout(() => {
+                    document.getElementById('btnSendCampaign').disabled = false;
+                    document.getElementById('campaignSubject').disabled = false;
+                    document.getElementById('campaignContent').disabled = false;
+                }, 1500);
+            }
+        });
+
+        function resetSendingState() {
+            document.getElementById('sendingSimulator').style.display = 'none';
+            document.getElementById('btnSendCampaign').disabled = false;
+            document.getElementById('campaignSubject').disabled = false;
+            document.getElementById('campaignContent').disabled = false;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchSubscribers();
+        });
+    </script>
+</body>
+</html>

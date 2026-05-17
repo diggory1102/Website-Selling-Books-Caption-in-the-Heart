@@ -173,15 +173,77 @@ async function fetchUserNotifications() {
         if (data.success && data.notifications) {
             const unreadCount = data.notifications.filter(n => !n.isRead).length;
             const notiBtnWrap = document.querySelector('#notiBtn .icon-wrap');
-            if (notiBtnWrap && unreadCount > 0) {
+            if (notiBtnWrap) {
                 let badge = notiBtnWrap.querySelector('.cart-count');
-                if (!badge) { badge = document.createElement('span'); badge.className = 'cart-count'; notiBtnWrap.appendChild(badge); }
-                badge.textContent = unreadCount;
-                badge.style.display = 'block';
+                if (unreadCount > 0) {
+                    if (!badge) { 
+                        badge = document.createElement('span'); 
+                        badge.className = 'cart-count'; 
+                        notiBtnWrap.appendChild(badge); 
+                    }
+                    badge.textContent = unreadCount;
+                    badge.style.display = 'block';
+                } else {
+                    if (badge) badge.style.display = 'none';
+                }
+            }
+
+            // Nâng cấp: Render Top 5 thông báo mới nhất vào dropdown
+            const notiList = document.querySelector('#notiDropdown .noti-list');
+            if (notiList) {
+                const recentNotis = data.notifications.slice(0, 5);
+                if (recentNotis.length === 0) {
+                    notiList.innerHTML = `<div style="padding: 20px; text-align: center; color: #888; font-size: 13px;">Không có thông báo mới.</div>`;
+                } else {
+                    notiList.innerHTML = recentNotis.map(noti => {
+                        let iconClass = 'fa-solid fa-bell'; // SYSTEM
+                        if (noti.type === 'ORDER') iconClass = 'fa-solid fa-box-open';
+                        else if (noti.type === 'PROMOTION') iconClass = 'fa-solid fa-ticket';
+
+                        const dateStr = new Date(noti.createdAt).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+                        return `
+                            <div class="noti-item ${!noti.isRead ? 'unread' : ''}" onclick="markDropdownNotiAsRead(event, '${noti._id}', this)" style="display: flex; align-items: flex-start; padding: 12px 15px; border-bottom: 1px solid var(--border-color, #eee); cursor: pointer; transition: background 0.2s; position: relative;">
+                                <div class="noti-icon ${noti.type || 'SYSTEM'}" style="margin-right: 12px; font-size: 14px; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.05); color: #555;">
+                                    <i class="${iconClass}"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 3px; color: var(--text-color, #333); padding-right: 15px;">${noti.title}</div>
+                                    <div style="font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 4px; line-height: 1.4;">${noti.content}</div>
+                                    <div style="font-size: 10px; color: #999;">${dateStr}</div>
+                                </div>
+                                ${!noti.isRead ? `<div class="noti-unread-dot" style="position: absolute; right: 15px; top: 15px; width: 8px; height: 8px; border-radius: 50%; background-color: #e74c3c;"></div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                }
             }
         }
     } catch (err) { console.error("Lỗi lấy thông báo:", err); }
 }
+
+// Hàm đánh dấu đã đọc trong dropdown
+window.markDropdownNotiAsRead = async function(event, id, element) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    if (!element.classList.contains('unread')) return;
+    try {
+        const res = await fetch(`http://127.0.0.1:5000/api/notifications/${id}/read`, { method: 'PUT' });
+        const data = await res.json();
+        if (data.success) {
+            element.classList.remove('unread');
+            const dot = element.querySelector('.noti-unread-dot');
+            if (dot) dot.remove();
+            
+            // Tải lại để cập nhật số lượng và dropdown
+            fetchUserNotifications();
+        }
+    } catch (err) {
+        console.error("Lỗi đánh dấu đã đọc dropdown:", err);
+    }
+};
 
 // ==========================================
 // KHI TRANG ĐÃ TẢI XONG (DOM LOADED)
@@ -610,6 +672,52 @@ if (searchInput && searchBtn) {
                     }
                     themeIcon.style.transform = 'scale(1) rotate(0)';
                 }, 150);
+            }
+        });
+    }
+
+    // ==========================================
+    // 9. LOGIC ĐĂNG KÝ NHẬN TIN NEWSLETTER (FOOTER)
+    // ==========================================
+    const subscribeEmailInput = document.getElementById('subscribeEmailInput');
+    const subscribeSubmitBtn = document.getElementById('subscribeSubmitBtn');
+    
+    if (subscribeSubmitBtn && subscribeEmailInput) {
+        const handleSubscribe = async () => {
+            const email = subscribeEmailInput.value.trim();
+            if (!email) {
+                if (typeof showToast === 'function') showToast("Vui lòng nhập email!", "error");
+                return;
+            }
+            // Basic email regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                if (typeof showToast === 'function') showToast("Định dạng email không hợp lệ!", "error");
+                return;
+            }
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    if (typeof showToast === 'function') showToast(data.message || "Đăng ký nhận tin thành công!", "success");
+                    subscribeEmailInput.value = '';
+                } else {
+                    if (typeof showToast === 'function') showToast(data.message || "Đăng ký nhận tin thất bại!", "error");
+                }
+            } catch (error) {
+                console.error("Lỗi đăng ký newsletter:", error);
+                if (typeof showToast === 'function') showToast("Lỗi kết nối máy chủ!", "error");
+            }
+        };
+
+        subscribeSubmitBtn.addEventListener('click', handleSubscribe);
+        subscribeEmailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSubscribe();
             }
         });
     }

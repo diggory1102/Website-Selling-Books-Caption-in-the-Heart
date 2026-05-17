@@ -12,6 +12,38 @@ exports.addPromotion = async (req, res) => {
 
         const newPromo = new Promotion(data); 
         await newPromo.save();
+
+        // Tự động tạo thông báo công khai cho ưu đãi mới
+        try {
+            const { Notification } = require('../models/database');
+            let notiTitle = '';
+            let notiContent = '';
+
+            if (newPromo.type === 'DIRECT') {
+                notiTitle = `🔥 Ưu đãi trực tiếp mới: ${newPromo.name}!`;
+                let targetText = 'toàn bộ sản phẩm';
+                if (newPromo.applyTo === 'CATEGORY') targetText = `danh mục ${newPromo.targetValues.join(', ')}`;
+                else if (newPromo.applyTo === 'PRODUCT') targetText = `một số truyện chọn lọc`;
+                else if (newPromo.applyTo === 'AUTHOR') targetText = `truyện của tác giả ${newPromo.targetValues.join(', ')}`;
+                else if (newPromo.applyTo === 'PUBLISHER') targetText = `truyện từ NXB ${newPromo.targetValues.join(', ')}`;
+
+                notiContent = `Giảm giá trực tiếp ${newPromo.discountValue}% áp dụng cho ${targetText}. Hãy nhanh tay săn ngay truyện yêu thích!`;
+            } else {
+                notiTitle = `🎫 Mã giảm giá mới: ${newPromo.name}!`;
+                let discountText = newPromo.discountType === 'PERCENT' ? `${newPromo.discountValue}%` : `${newPromo.discountValue.toLocaleString()}đ`;
+                notiContent = `Nhập mã [ ${newPromo.code} ] để được giảm ngay ${discountText} cho đơn hàng từ ${newPromo.minOrderValue.toLocaleString()}đ. Hạn dùng đến ${new Date(newPromo.endDate).toLocaleDateString('vi-VN')}.`;
+            }
+
+            await Notification.create({
+                userId: null, // Public cho tất cả
+                title: notiTitle,
+                content: notiContent,
+                type: 'PROMOTION'
+            });
+        } catch (notiError) {
+            console.error("Lỗi khi tự động tạo thông báo khuyến mãi:", notiError);
+        }
+
         res.status(201).json({ success: true, message: "Thêm khuyến mãi thành công!", data: newPromo });
     } catch (error) {
         console.error("Lỗi addPromotion:", error);

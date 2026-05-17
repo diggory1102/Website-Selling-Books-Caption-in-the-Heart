@@ -232,6 +232,66 @@ app.post('/api/subscribe', async (req, res) => {
 });
 
 // ==========================================
+// API: LẤY DANH SÁCH NEWSLETTER SUBSCRIBERS
+// ==========================================
+app.get('/api/subscribers', async (req, res) => {
+    try {
+        const list = await Subscriber.find().sort({ createdAt: -1 });
+        res.json({ success: true, subscribers: list });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi Server" });
+    }
+});
+
+// ==========================================
+// API: XÓA NEWSLETTER SUBSCRIBER
+// ==========================================
+app.delete('/api/subscribers/:id', async (req, res) => {
+    try {
+        await Subscriber.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Đã xóa email khỏi danh sách!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi khi xóa" });
+    }
+});
+
+// ==========================================
+// API: GỬI CHIẾN DỊCH EMAIL HÀNG LOẠT (GIẢ LẬP)
+// ==========================================
+app.post('/api/send-campaign', async (req, res) => {
+    try {
+        const { subject, content } = req.body;
+        if (!subject || !content) {
+            return res.status(400).json({ success: false, message: "Vui lòng điền đầy đủ tiêu đề và nội dung!" });
+        }
+
+        const list = await Subscriber.find();
+        if (list.length === 0) {
+            return res.status(400).json({ success: false, message: "Chưa có ai đăng ký nhận bản tin!" });
+        }
+
+        // Tạo tiến trình gửi giả lập
+        console.log(`\n📬 [MOCK EMAIL CAMPAIGN] Gửi bản tin: "${subject}"`);
+        list.forEach(sub => {
+            console.log(`- Gửi tới: ${sub.email}`);
+        });
+
+        // Tạo thông báo hệ thống tự động tương thích với bản tin mới để User cùng biết!
+        const { Notification } = require('./models/database');
+        await Notification.create({
+            userId: null, // Public cho toàn hệ thống
+            title: `📢 Bản tin: ${subject}`,
+            content: content,
+            type: 'SYSTEM'
+        });
+
+        res.json({ success: true, message: `Chiến dịch gửi thành công tới ${list.length} subscribers!` });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi gửi bản tin" });
+    }
+});
+
+// ==========================================
 // API: LẤY DANH SÁCH MÃ GIẢM GIÁ KHẢ DỤNG
 // ==========================================
 app.get('/api/promotions/available', async (req, res) => {

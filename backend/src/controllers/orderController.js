@@ -30,6 +30,22 @@ const createOrder = async (req, res) => {
         const newBill = await Bill.create(billData);
 
         if (promotionId) await Promotion.findByIdAndUpdate(promotionId, { $inc: { usedCount: 1 } });
+
+        // Tự động tạo thông báo đặt hàng thành công
+        try {
+            if (userId) {
+                const { Notification } = require('../models/database');
+                await Notification.create({
+                    userId: userId,
+                    title: "🛍️ Đặt hàng thành công!",
+                    content: `Đơn hàng #${newBill.billCode} trị giá ${newBill.totalPrice.toLocaleString()}đ của bạn đã được đặt thành công và đang chờ xử lý.`,
+                    type: "ORDER"
+                });
+            }
+        } catch (notiError) {
+            console.error("Lỗi khi tự động tạo thông báo đặt hàng:", notiError);
+        }
+
         res.json({ success: true, message: "Đặt hàng thành công!", orderId: newBill._id });
     } catch (err) { res.status(500).json({ success: false, message: "Lỗi tạo đơn hàng: " + err.message }); }
 };
@@ -60,6 +76,22 @@ const cancelOrder = async (req, res) => {
 
         order.status = 'Đã hủy';
         await order.save();
+
+        // Tự động tạo thông báo hủy đơn hàng
+        try {
+            if (order.userId) {
+                const { Notification } = require('../models/database');
+                await Notification.create({
+                    userId: order.userId,
+                    title: "❌ Hủy đơn hàng thành công",
+                    content: `Đơn hàng #${order.billCode} của bạn đã được hủy thành công theo yêu cầu.`,
+                    type: "ORDER"
+                });
+            }
+        } catch (notiError) {
+            console.error("Lỗi khi tự động tạo thông báo hủy đơn:", notiError);
+        }
+
         res.json({ success: true, message: "Đã hủy đơn hàng thành công!" });
     } catch (err) { res.status(500).json({ success: false, message: "Lỗi khi hủy đơn hàng: " + err.message }); }
 };
@@ -78,6 +110,36 @@ const updateOrderStatus = async (req, res) => {
         const { status } = req.body;
         const order = await Bill.findByIdAndUpdate(req.params.id, { status }, { new: true });
         if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+
+        // Tự động tạo thông báo cập nhật trạng thái đơn hàng
+        try {
+            if (order.userId) {
+                const { Notification } = require('../models/database');
+                let emoji = '📦';
+                let statusText = status;
+                
+                if (status === 'Đang giao') {
+                    emoji = '🚚';
+                    statusText = 'đang được vận chuyển đến bạn';
+                } else if (status === 'Đã giao') {
+                    emoji = '✅';
+                    statusText = 'đã giao thành công. Chúc bạn đọc truyện vui vẻ';
+                } else if (status === 'Đã hủy') {
+                    emoji = '❌';
+                    statusText = 'đã bị hủy';
+                }
+
+                await Notification.create({
+                    userId: order.userId,
+                    title: `${emoji} Cập nhật đơn hàng #${order.billCode}`,
+                    content: `Đơn hàng của bạn ${statusText}.`,
+                    type: "ORDER"
+                });
+            }
+        } catch (notiError) {
+            console.error("Lỗi khi tự động tạo thông báo cập nhật trạng thái đơn:", notiError);
+        }
+
         res.json({ success: true, message: "Cập nhật trạng thái thành công!", order });
     } catch (err) { res.status(500).json({ success: false, message: "Lỗi cập nhật trạng thái: " + err.message }); }
 };

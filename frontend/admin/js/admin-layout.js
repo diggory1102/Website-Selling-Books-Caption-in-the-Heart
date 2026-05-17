@@ -28,6 +28,7 @@ function renderSidebar() {
                 <li><a href="employees.html" data-page="employees"><i class="fa-solid fa-user-shield"></i> Nhân viên</a></li>
                 <li><a href="promotions.html" data-page="promotions"><i class="fa-solid fa-ticket"></i> Khuyến mãi</a></li>
                 <li><a href="reviews.html" data-page="reviews"><i class="fa-solid fa-star"></i> QL đánh giá</a></li>
+                <li><a href="campaigns.html" data-page="campaigns"><i class="fa-solid fa-paper-plane"></i> Chiến dịch Email</a></li>
                 <li><a href="statistics.html" data-page="statistics"><i class="fa-solid fa-chart-simple"></i> Thống kê</a></li>
             </ul>
         </aside>

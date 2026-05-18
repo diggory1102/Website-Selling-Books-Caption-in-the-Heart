@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const maxDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
     inputDob.max = maxDate.toISOString().split('T')[0];
 
-    let currentAvatarBase64 = null; // Biến lưu tạm chuỗi ảnh
+    let currentAvatarUrl = null; // Biến lưu tạm link ảnh đại diện
 
     // 1. Tải dữ liệu hồ sơ từ DB
     try {
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             if (u.avatar) {
                 avatarImg.src = u.avatar;
-                currentAvatarBase64 = u.avatar;
+                currentAvatarUrl = u.avatar;
             }
 
             // --- HIỂN THỊ THỐNG KÊ VÀ HẠNG THÀNH VIÊN ---
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof showToast === 'function') showToast("Không thể tải thông tin hồ sơ!", "error");
     }
 
-    // 1.5 Xử lý thao tác chọn Ảnh (Tự động nén ảnh bằng Canvas)
+    // 1.5 Xử lý thao tác chọn Ảnh (Tự động nén ảnh và upload lên Server lấy link vật lý)
     const avatarInput = document.getElementById('avatarInput');
     if (avatarInput) {
         avatarInput.addEventListener('change', function(e) {
@@ -107,8 +107,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    currentAvatarBase64 = canvas.toDataURL('image/jpeg', 0.8); // Nén JPEG chất lượng 80%
-                    avatarImg.src = currentAvatarBase64; // Hiển thị preview ngay
+                    // Nén thành Blob và tải lên cổng 5000
+                    canvas.toBlob(async function(blob) {
+                        const formData = new FormData();
+                        formData.append('image', blob, 'avatar.jpg');
+                        
+                        try {
+                            const uploadRes = await fetch('http://127.0.0.1:5000/api/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const uploadData = await uploadRes.json();
+                            if (uploadData.success) {
+                                currentAvatarUrl = uploadData.imageUrl;
+                                avatarImg.src = currentAvatarUrl; // Hiển thị preview ngay lập tức
+                                if (typeof showToast === 'function') showToast("Đã tải ảnh đại diện lên server!", "success");
+                            } else {
+                                if (typeof showToast === 'function') showToast("Lỗi tải ảnh đại diện!", "error");
+                            }
+                        } catch (err) {
+                            if (typeof showToast === 'function') showToast("Lỗi kết nối máy chủ khi tải ảnh!", "error");
+                        }
+                    }, 'image/jpeg', 0.8);
                 };
                 img.src = event.target.result;
             };
@@ -177,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             email: rawEmail,
             numberPhone: rawPhone,
             dateOfBirth: rawDob,
-            avatar: currentAvatarBase64
+            avatar: currentAvatarUrl
         };
 
         try {

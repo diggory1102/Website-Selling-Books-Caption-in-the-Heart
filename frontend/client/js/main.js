@@ -750,10 +750,48 @@ if (searchInput && searchBtn) {
     }
 
     // ==========================================
+    // ĐỒNG BỘ DỮ LIỆU USER TỪ DATABASE ĐỂ ĐỒNG BỘ AVATAR VÀ THÔNG TIN MỚI NHẤT
+    // ==========================================
+    async function syncUserDataAndUI() {
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr || userStr === 'undefined' || userStr === 'null') return;
+        
+        try {
+            const user = JSON.parse(userStr);
+            const userId = user.id || user._id;
+            if (!userId) return;
+            
+            const res = await fetch(`http://127.0.0.1:5000/api/users/${userId}`);
+            const data = await res.json();
+            
+            if (data.success && data.user) {
+                // Cập nhật lại localStorage với thông tin mới nhất từ DB
+                const uLocal = {
+                    id: data.user._id,
+                    _id: data.user._id,
+                    userName: data.user.userName,
+                    fullName: data.user.fullName,
+                    role: data.user.roleId,
+                    avatar: data.user.avatar,
+                    picture: data.user.avatar,
+                    photo: data.user.avatar
+                };
+                localStorage.setItem('currentUser', JSON.stringify(uLocal));
+                
+                // Vẽ lại giao diện Header để đồng bộ Avatar ngay lập tức
+                checkLoginStatus();
+            }
+        } catch (err) {
+            console.error("Lỗi đồng bộ dữ liệu người dùng từ database:", err);
+        }
+    }
+
+    // ==========================================
     // KHỞI CHẠY TẤT CẢ CÁC HÀM
     // ==========================================
     loadCategories();
     checkLoginStatus(); 
+    syncUserDataAndUI(); // Đồng bộ dữ liệu người dùng thời gian thực từ Database
     fetchUserWishlist(); // Khôi phục gọi hàm này để cập nhật số lượng yêu thích
     fetchUserNotifications(); // Gọi API lấy thông báo động
     updateCartCount();

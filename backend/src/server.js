@@ -78,6 +78,16 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
+// Thêm route tìm kiếm trực tiếp cho Client (tránh lỗi kết nối /api/search)
+app.get('/api/search', async (req, res) => {
+    try {
+        const productController = require('./controllers/productController');
+        await productController.searchProducts(req, res);
+    } catch (err) {
+        res.status(500).json({ error: "Lỗi Server" });
+    }
+});
+
 // ==========================================
 // CẤU HÌNH UPLOAD ẢNH CHO ADMIN (SỬ DỤNG MULTER)
 // ==========================================

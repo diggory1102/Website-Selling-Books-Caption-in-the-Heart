@@ -42,6 +42,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Mở thư mục tĩnh để trình duyệt có thể đọc được ảnh từ thư mục uploads của Server
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Cấu hình phục vụ toàn bộ giao diện Frontend tĩnh trực tiếp từ Backend (Cổng 5000)
+app.use(express.static(path.join(__dirname, '../../frontend')));
+
 // Cấu hình Session (bắt buộc để dùng Passport)
 app.use(session({ secret: 'caption-in-the-heart-secret', resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
@@ -358,6 +361,8 @@ app.post('/api/promotions/apply', async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi Server" });
     }
 });
+
+// nodemon trigger comment to reload new .env credentials
 
 // ==========================================
 // KHỞI ĐỘNG SERVER

@@ -135,7 +135,7 @@ function renderSidebar() {
                 <li><a href="customers.html" data-page="customers"><i class="fa-solid fa-users"></i> Khách hàng</a></li>
                 <li><a href="employees.html" data-page="employees"><i class="fa-solid fa-user-shield"></i> Nhân viên</a></li>
                 <li><a href="promotions.html" data-page="promotions"><i class="fa-solid fa-ticket"></i> Khuyến mãi</a></li>
-                <li><a href="reviews.html" data-page="reviews"><i class="fa-solid fa-star"></i> QL đánh giá</a></li>
+                <li><a href="reviews.html" data-page="reviews"><i class="fa-solid fa-star"></i> Quản lý đánh giá</a></li>
                 <li><a href="notifications.html" data-page="notifications"><i class="fa-solid fa-bell"></i> Quản lý Thông báo</a></li>
                 <li><a href="campaigns.html" data-page="campaigns"><i class="fa-solid fa-paper-plane"></i> Chiến dịch Email</a></li>
                 <li><a href="statistics.html" data-page="statistics"><i class="fa-solid fa-chart-simple"></i> Thống kê</a></li>
@@ -260,12 +260,12 @@ function renderSettingsModal() {
     document.body.appendChild(modal);
 }
 
-window.switchSettingsTab = function(tab) {
+window.switchSettingsTab = function (tab) {
     const profileForm = document.getElementById('adminProfileForm');
     const passwordForm = document.getElementById('adminPasswordForm');
     const tabProfile = document.getElementById('tabSetProfile');
     const tabPassword = document.getElementById('tabSetPassword');
-    
+
     if (tab === 'profile') {
         profileForm.style.display = 'block';
         passwordForm.style.display = 'none';
@@ -282,7 +282,7 @@ window.switchSettingsTab = function(tab) {
 function setActiveMenu() {
     const currentPath = window.location.pathname;
     const menuLinks = document.querySelectorAll('.sidebar-menu a');
-    
+
     menuLinks.forEach(link => {
         const href = link.getAttribute('href');
         if (currentPath.includes(href)) {
@@ -299,7 +299,7 @@ function setupTopbarLogic() {
         const user = JSON.parse(userStr);
         const avatarImg = document.getElementById('adminAvatar');
         const nameText = document.getElementById('adminNameTopbar');
-        
+
         if (avatarImg && user.avatar) avatarImg.src = user.avatar;
         if (nameText) nameText.textContent = user.fullName || user.userName;
     }
@@ -308,14 +308,14 @@ function setupTopbarLogic() {
     const profileBtn = document.getElementById('adminProfileBtn');
     const dropdown = document.getElementById('adminDropdown');
     const notiDropdown = document.getElementById('adminNotiDropdown');
-    
+
     if (profileBtn && dropdown) {
         profileBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             if (notiDropdown) notiDropdown.style.display = 'none';
             dropdown.classList.toggle('show');
         });
-        
+
         document.addEventListener('click', () => {
             dropdown.classList.remove('show');
         });
@@ -330,11 +330,11 @@ function setupTopbarLogic() {
             const isOpen = notiDropdown.style.display === 'block';
             notiDropdown.style.display = isOpen ? 'none' : 'block';
         });
-        
+
         document.addEventListener('click', () => {
             if (notiDropdown) notiDropdown.style.display = 'none';
         });
-        
+
         notiDropdown.addEventListener('click', (e) => {
             e.stopPropagation();
         });
@@ -377,7 +377,7 @@ function setupSettingsModalLogic() {
     const fileInput = document.getElementById('setAvatarFile');
     const previewImg = document.getElementById('setAvatarPreview');
     let uploadedAvatarUrl = '';
-    
+
     const openModal = () => {
         const userStr = localStorage.getItem('currentUser');
         if (userStr) {
@@ -385,7 +385,7 @@ function setupSettingsModalLogic() {
             document.getElementById('setFullName').value = user.fullName || '';
             document.getElementById('setPhone').value = user.numberPhone || '';
             document.getElementById('setEmail').value = user.email || '';
-            
+
             if (previewImg) {
                 previewImg.src = user.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix';
                 previewImg.style.display = 'block';
@@ -395,7 +395,7 @@ function setupSettingsModalLogic() {
         window.switchSettingsTab('profile');
         if (settingsModal) settingsModal.classList.add('show');
     };
-    
+
     if (gearBtn) gearBtn.addEventListener('click', openModal);
     if (profileItemMenu) {
         profileItemMenu.addEventListener('click', (e) => {
@@ -403,22 +403,22 @@ function setupSettingsModalLogic() {
             openModal();
         });
     }
-    
+
     if (closeBtn && settingsModal) {
         closeBtn.addEventListener('click', () => {
             settingsModal.classList.remove('show');
         });
     }
-    
+
     // File change handler
     if (fileInput) {
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
+
             const formData = new FormData();
             formData.append('image', file);
-            
+
             try {
                 if (previewImg) {
                     previewImg.style.opacity = '0.5';
@@ -444,7 +444,7 @@ function setupSettingsModalLogic() {
             }
         });
     }
-    
+
     // Form submit handlers
     const profileForm = document.getElementById('adminProfileForm');
     if (profileForm) {
@@ -454,12 +454,12 @@ function setupSettingsModalLogic() {
             if (!userStr) return;
             const user = JSON.parse(userStr);
             const userId = user.id || user._id;
-            
+
             const fullName = document.getElementById('setFullName').value.trim();
             const numberPhone = document.getElementById('setPhone').value.trim();
             const email = document.getElementById('setEmail').value.trim();
             const avatar = uploadedAvatarUrl;
-            
+
             try {
                 const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
                     method: 'PUT',
@@ -470,13 +470,13 @@ function setupSettingsModalLogic() {
                 if (data.success) {
                     // Update localStorage
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
-                    
+
                     // Update layout UI
                     const avatarImg = document.getElementById('adminAvatar');
                     const nameText = document.getElementById('adminNameTopbar');
                     if (avatarImg && data.user.avatar) avatarImg.src = data.user.avatar;
                     if (nameText) nameText.textContent = data.user.fullName || data.user.userName;
-                    
+
                     alert("Cập nhật thông tin thành công!");
                     settingsModal.classList.remove('show');
                 } else {
@@ -487,7 +487,7 @@ function setupSettingsModalLogic() {
             }
         });
     }
-    
+
     const passwordForm = document.getElementById('adminPasswordForm');
     if (passwordForm) {
         passwordForm.addEventListener('submit', async (e) => {
@@ -496,16 +496,16 @@ function setupSettingsModalLogic() {
             if (!userStr) return;
             const user = JSON.parse(userStr);
             const userId = user.id || user._id;
-            
+
             const currentPassword = document.getElementById('setCurrentPassword').value;
             const newPassword = document.getElementById('setNewPassword').value;
             const confirmPassword = document.getElementById('setConfirmPassword').value;
-            
+
             if (newPassword !== confirmPassword) {
                 alert("Mật khẩu mới không trùng khớp!");
                 return;
             }
-            
+
             try {
                 const res = await fetch(`http://localhost:5000/api/users/${userId}/password`, {
                     method: 'PUT',
@@ -536,13 +536,13 @@ async function loadAdminNotifications() {
             const notiCountEl = document.getElementById('adminNotiCount');
             const notiDot = document.getElementById('adminNotiDot');
             const notiListEl = document.getElementById('adminNotiList');
-            
+
             if (!notiListEl) return;
-            
+
             const unreadNotis = notifications.filter(n => !n.isRead);
             if (notiCountEl) notiCountEl.textContent = unreadNotis.length;
             if (notiDot) notiDot.style.display = unreadNotis.length > 0 ? 'block' : 'none';
-            
+
             if (notifications.length === 0) {
                 notiListEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">Không có thông báo mới</div>';
             } else {
@@ -564,7 +564,7 @@ async function loadAdminNotifications() {
     }
 }
 
-window.markAdminNotiAsRead = async function(notiId) {
+window.markAdminNotiAsRead = async function (notiId) {
     try {
         await fetch(`http://localhost:5000/api/notifications/${notiId}/read`, { method: 'PUT' });
         loadAdminNotifications();

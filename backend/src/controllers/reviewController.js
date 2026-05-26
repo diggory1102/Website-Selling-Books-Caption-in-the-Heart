@@ -4,7 +4,7 @@ const { Bill, Rate, Product } = require('../models/database');
 const getReviewableProducts = async (req, res) => {
     try {
         const userId = req.params.userId;
-        const completedOrders = await Bill.find({ userId: userId, status: 'Đã giao' }).populate('items.productId');
+        const completedOrders = await Bill.find({ userId: userId, status: { $in: ['Đã giao', 'Đã nhận được hàng'] } }).populate('items.productId');
         
         // Lấy tất cả các đánh giá user này đã thực hiện
         const reviewedRates = await Rate.find({ userId: userId });

@@ -94,8 +94,8 @@ exports.validateVoucher = async (req, res) => {
 
         // --- ĐỒNG BỘ LOGIC MEMBERSHIP ---
         if (promo.applyTo === 'RANK' && userId) {
-            // Lấy tất cả đơn hàng đã giao của khách để tính rank
-            const completedOrders = await Bill.find({ userId, status: 'Đã giao' });
+            // Lấy tất cả đơn hàng đã giao hoặc đã nhận hàng của khách để tính rank
+            const completedOrders = await Bill.find({ userId, status: { $in: ['Đã giao', 'Đã nhận được hàng'] } });
             let totalSpent = completedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
 
             let userTier = 'Thành viên Mới';
@@ -185,7 +185,7 @@ exports.applyVoucher = async (req, res) => {
                 return res.status(400).json({ success: false, message: "Vui lòng đăng nhập để sử dụng mã ưu đãi dành riêng cho thành viên!" });
             }
             
-            const completedOrders = await Bill.find({ userId, status: 'Đã giao' });
+            const completedOrders = await Bill.find({ userId, status: { $in: ['Đã giao', 'Đã nhận được hàng'] } });
             let totalSpent = completedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
 
             let userTier = 'Thành viên Mới';

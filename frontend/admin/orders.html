@@ -26,6 +26,8 @@
                     <div class="tab-separator"></div>
                     <div class="tab-item" onclick="filterOrders('Đã giao', this)">Đã giao</div>
                     <div class="tab-separator"></div>
+                    <div class="tab-item" onclick="filterOrders('Đã nhận được hàng', this)">Đã nhận hàng</div>
+                    <div class="tab-separator"></div>
                     <div class="tab-item" onclick="filterOrders('Đã hủy', this)">Đã hủy</div>
                 </div>
             </div>
@@ -77,7 +79,8 @@
                     <p>Hiện tại: <span id="modalCurrentStatus" class="status-badge">---</span></p>
                     <div class="btn-group-print" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn-figma btn-figma-primary" onclick="updateStatus('Đang giao')" style="padding: 5px 10px; font-size: 11px;">Xác nhận & Giao</button>
-                        <button class="btn-figma btn-figma-primary" onclick="updateStatus('Đã giao')" style="padding: 5px 10px; font-size: 11px; background: #16a34a;">Hoàn tất</button>
+                        <button class="btn-figma btn-figma-primary" onclick="updateStatus('Đã giao')" style="padding: 5px 10px; font-size: 11px; background: #16a34a;">Đã giao</button>
+                        <button class="btn-figma btn-figma-primary" onclick="updateStatus('Đã nhận được hàng')" style="padding: 5px 10px; font-size: 11px; background: #3b82f6;">Xác nhận Đã nhận hàng</button>
                         <button class="btn-figma btn-figma-danger" onclick="updateStatus('Đã hủy')" style="padding: 5px 10px; font-size: 11px;">Hủy đơn</button>
                     </div>
                 </div>
@@ -129,7 +132,7 @@
                 const dateStr = new Date(o.createdAt).toLocaleDateString('vi-VN');
                 let statusClass = 'status-pending';
                 if (o.status === 'Đang giao') statusClass = 'status-delivering';
-                if (o.status === 'Đã giao') statusClass = 'status-completed';
+                if (o.status === 'Đã giao' || o.status === 'Đã nhận được hàng') statusClass = 'status-completed';
                 if (o.status === 'Đã hủy') statusClass = 'status-cancelled';
 
                 return `
@@ -161,7 +164,7 @@
                 
                 const statusEl = document.getElementById('modalCurrentStatus');
                 statusEl.innerText = order.status;
-                statusEl.className = 'status-badge ' + (order.status === 'Đang giao' ? 'status-delivering' : (order.status === 'Đã giao' ? 'status-completed' : (order.status === 'Đã hủy' ? 'status-cancelled' : 'status-pending')));
+                statusEl.className = 'status-badge ' + (order.status === 'Đang giao' ? 'status-delivering' : (order.status === 'Đã giao' || order.status === 'Đã nhận được hàng' ? 'status-completed' : (order.status === 'Đã hủy' ? 'status-cancelled' : 'status-pending')));
 
                 document.getElementById('modalItemsBody').innerHTML = order.items.map(item => `
                     <tr>

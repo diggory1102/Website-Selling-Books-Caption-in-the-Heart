@@ -100,9 +100,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Cập nhật trạng thái nút
             const actionContainer = document.getElementById('odActions');
-            if (order.status === 'Đã giao') {
+            actionContainer.style.display = 'flex'; // Đảm bảo hiển thị vùng chứa nút
+            if (order.status === 'Đã nhận được hàng') {
                 actionContainer.innerHTML = `
                     <button class="btn-action btn-reorder" style="background-color: #2ecc71; color: white;" onclick="window.location.href='review.html'">Đánh giá sản phẩm</button>
+                    <button class="btn-action btn-reorder" onclick="reorder('${order._id}')">Mua lại đơn này</button>
+                `;
+            } else if (order.status === 'Đã giao') {
+                actionContainer.innerHTML = `
+                    <button class="btn-action btn-reorder" style="background-color: #3b82f6; color: white;" onclick="confirmReceived('${order._id}')">Đã nhận được hàng</button>
                     <button class="btn-action btn-reorder" onclick="reorder('${order._id}')">Mua lại đơn này</button>
                 `;
             } else if (order.status === 'Đã hủy') {
@@ -188,6 +194,48 @@ window.cancelOrder = function(orderId) {
             const data = await res.json();
             if (data.success) {
                 if (typeof showToast === 'function') showToast(data.message, "success");
+                setTimeout(() => window.location.reload(), 1500); // Tải lại trang để cập nhật trạng thái
+            } else {
+                if (typeof showToast === 'function') showToast(data.message, "error");
+            }
+        } catch (err) {
+            if (typeof showToast === 'function') showToast("Lỗi kết nối máy chủ!", "error");
+        }
+    });
+};
+
+window.confirmReceived = function(orderId) {
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'custom-confirm-overlay';
+    
+    const modalBox = document.createElement('div');
+    modalBox.className = 'custom-confirm-box';
+    modalBox.innerHTML = `
+        <div class="confirm-icon"><i class="fa-solid fa-circle-check" style="color: #3b82f6;"></i></div>
+        <h3>Xác nhận đã nhận hàng</h3>
+        <p>Bạn đã nhận được đơn hàng này đầy đủ và không có khiếu nại gì?</p>
+        <div class="custom-confirm-actions">
+            <button class="btn-cancel" id="btnCancelAction">Không</button>
+            <button class="btn-confirm" id="btnConfirmAction" style="background-color: #3b82f6; color: white;">Xác nhận</button>
+        </div>
+    `;
+    
+    modalOverlay.appendChild(modalBox);
+    document.body.appendChild(modalOverlay);
+    
+    document.getElementById('btnCancelAction').addEventListener('click', () => modalOverlay.remove());
+    
+    document.getElementById('btnConfirmAction').addEventListener('click', async () => {
+        modalOverlay.remove();
+        try {
+            const res = await fetch(`http://127.0.0.1:5000/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'Đã nhận được hàng' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (typeof showToast === 'function') showToast("Xác nhận đã nhận hàng thành công!", "success");
                 setTimeout(() => window.location.reload(), 1500); // Tải lại trang để cập nhật trạng thái
             } else {
                 if (typeof showToast === 'function') showToast(data.message, "error");

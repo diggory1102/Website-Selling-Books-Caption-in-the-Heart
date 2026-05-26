@@ -12,8 +12,8 @@ const getUserProfile = async (req, res) => {
         const currentYear = now.getFullYear();
         const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
         
-        // Lấy tất cả đơn hàng Đã giao của khách này
-        const completedOrders = await Bill.find({ userId: req.params.id, status: 'Đã giao' });
+        // Lấy tất cả đơn hàng Đã giao hoặc Đã nhận được hàng của khách này
+        const completedOrders = await Bill.find({ userId: req.params.id, status: { $in: ['Đã giao', 'Đã nhận được hàng'] } });
 
         let totalSpentAllTime = 0;
         let quarterOrderCount = 0;

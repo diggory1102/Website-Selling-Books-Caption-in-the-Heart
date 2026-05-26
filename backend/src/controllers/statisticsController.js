@@ -29,9 +29,9 @@ const getDashboardStats = async (req, res) => {
         const products = await Product.countDocuments();
         const users = await User.countDocuments();
 
-        // 1. Tổng doanh thu trong kỳ (Chỉ các đơn Đã giao)
+        // 1. Tổng doanh thu trong kỳ (Chỉ các đơn Đã giao hoặc Đã nhận được hàng)
         const totalRevenue = orders
-            .filter(o => o.status === 'Đã giao')
+            .filter(o => o.status === 'Đã giao' || o.status === 'Đã nhận được hàng')
             .reduce((sum, o) => sum + o.totalPrice, 0);
 
         // 2. Phân bố trạng thái đơn hàng trong kỳ
@@ -40,6 +40,7 @@ const getDashboardStats = async (req, res) => {
             'Chờ xử lý': 0,
             'Đang giao': 0,
             'Đã giao': 0,
+            'Đã nhận được hàng': 0,
             'Đã hủy': 0
         };
         orders.forEach(o => {
@@ -61,7 +62,7 @@ const getDashboardStats = async (req, res) => {
             currentDayEnd.setHours(23, 59, 59, 999);
 
             const dayRevenue = orders
-                .filter(o => o.status === 'Đã giao' && o.createdAt >= currentDay && o.createdAt <= currentDayEnd)
+                .filter(o => (o.status === 'Đã giao' || o.status === 'Đã nhận được hàng') && o.createdAt >= currentDay && o.createdAt <= currentDayEnd)
                 .reduce((sum, o) => sum + o.totalPrice, 0);
 
             revenueChart.push({

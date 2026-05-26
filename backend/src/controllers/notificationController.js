@@ -7,7 +7,7 @@ const getUserNotifications = async (req, res) => {
         
         // Tính toán hạng thành viên hiện tại của User
         const { Bill } = require('../models/database');
-        const completedOrders = await Bill.find({ userId, status: 'Đã giao' });
+        const completedOrders = await Bill.find({ userId, status: { $in: ['Đã giao', 'Đã nhận được hàng'] } });
         let totalSpent = completedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
 
         let userTier = 'Thành viên Mới';

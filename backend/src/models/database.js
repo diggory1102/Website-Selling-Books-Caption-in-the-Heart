@@ -103,7 +103,9 @@ const RateSchema = new mongoose.Schema({
     billId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bill' }, // Thêm trường billId để hỗ trợ đánh giá theo đơn hàng
     rating: { type: Number, required: true, min: 1, max: 5 },
     content: String,
-    status: { type: String, default: 'Đã duyệt' } // Để admin kiểm duyệt
+    adminReply: { type: String, default: '' }, // Thêm trường phản hồi của admin
+    repliedAt: { type: Date },                 // Ngày phản hồi
+    status: { type: String, default: 'Đã duyệt' } // Để admin kiểm duyệt: 'Đã duyệt', 'Đã ẩn'
 }, schemaOptions);
 const Rate = mongoose.model('Rate', RateSchema);
 

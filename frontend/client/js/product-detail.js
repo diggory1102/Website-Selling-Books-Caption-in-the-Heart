@@ -276,14 +276,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                             else if (rawName.length === 2) maskedName = rawName.substring(0, 1) + '*';
 
                             const rDate = new Date(r.createdAt).toLocaleDateString('vi-VN');
+                            
+                            let replyHtml = '';
+                            if (r.adminReply) {
+                                replyHtml = `
+                                    <div style="margin-top: 12px; margin-left: 20px; padding: 12px 15px; background-color: #f8fafc; border-left: 3px solid var(--primary-color, #e74c3c); border-radius: 6px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; font-weight: 600; color: #666;">
+                                            <span style="color: var(--primary-color, #e74c3c);"><i class="fa-solid fa-comment-dots"></i> Phản hồi từ cửa hàng</span>
+                                            <span>${new Date(r.repliedAt).toLocaleDateString('vi-VN')}</span>
+                                        </div>
+                                        <p style="font-size: 13px; color: #333; line-height: 1.45; margin: 0; font-weight: 500;">${r.adminReply}</p>
+                                    </div>
+                                `;
+                            }
+
                             reviewsHtml += `
-                                <div style="border-bottom: 1px dashed #eee; padding-bottom: 15px;">
+                                <div style="border-bottom: 1px dashed #eee; padding-bottom: 15px; margin-bottom: 15px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                         <span style="font-weight: 600; font-size: 14px; color: #333;"><i class="fa-solid fa-circle-user" style="color:#ccc; margin-right:5px;"></i> ${maskedName}</span>
                                         <span style="font-size: 12px; color: #999;">${rDate}</span>
                                     </div>
                                     <div style="margin-bottom: 10px;">${rStars}</div>
-                                    <p style="font-size: 14px; color: #555; line-height: 1.5; margin: 0;">${r.content || 'Người dùng không để lại nhận xét bằng chữ.'}</p>
+                                    <p style="font-size: 14px; color: #555; line-height: 1.5; margin: 0 0 10px 0;">${r.content || 'Người dùng không để lại nhận xét bằng chữ.'}</p>
+                                    ${replyHtml}
                                 </div>
                             `;
                         });

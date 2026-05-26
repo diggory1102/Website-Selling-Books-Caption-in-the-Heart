@@ -40,79 +40,315 @@
             </div>
         </div>
 
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <input type="text" class="filter-input" id="searchReviewInput" placeholder="Tìm tên sách, khách hàng, email..." autocomplete="off">
+            <select class="filter-select" id="starFilter" onchange="handleFilterChange()">
+                <option value="">Tất cả số sao</option>
+                <option value="5">5 sao ★★★★★</option>
+                <option value="4">4 sao ★★★★</option>
+                <option value="3">3 sao ★★★</option>
+                <option value="2">2 sao ★★</option>
+                <option value="1">1 sao ★</option>
+            </select>
+            <select class="filter-select" id="repliedFilter" onchange="handleFilterChange()">
+                <option value="">Trạng thái phản hồi</option>
+                <option value="false">Chưa phản hồi</option>
+                <option value="true">Đã phản hồi</option>
+            </select>
+            <button class="btn-figma btn-figma-primary" onclick="handleSearchClick()"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+            <button class="btn-figma btn-figma-outline" onclick="resetFilters()"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
+        </div>
+
         <h3 class="card-title" style="margin-bottom: 25px;">Các lượt đánh giá</h3>
         
         <div id="review-list-container">
-            <div style="text-align: center; padding: 50px; color: var(--text-light);">Đang tải dữ liệu...</div>
+            <div style="text-align: center; padding: 50px; color: var(--text-light);"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>
         </div>
 
-        <div class="pagination" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px;">
-            <a href="#" class="btn-figma btn-figma-outline" style="padding: 5px 15px;">Trước</a>
-            <a href="#" class="btn-figma btn-figma-primary" style="padding: 5px 15px;">1</a>
-            <a href="#" class="btn-figma btn-figma-outline" style="padding: 5px 15px;">Sau</a>
-        </div>
+        <!-- Dynamic Pagination Container -->
+        <div class="pagination-container" id="pagination-container"></div>
     </main>
 
-    <script>
-        const API_URL = 'http://localhost:5000/api/reviews/all';
+    <!-- Modal Phản hồi Đánh giá -->
+    <div class="modal-overlay" id="replyModal">
+        <div class="modal-figma">
+            <div class="modal-header">
+                <h3>Phản hồi đánh giá</h3>
+                <i class="fa-solid fa-xmark close-modal" onclick="closeReplyModal()"></i>
+            </div>
+            <div style="font-size: 13px; color: var(--text-light); margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 3px solid #ddd;">
+                <p style="margin: 0 0 5px 0;">Khách hàng: <strong id="modalCustomerName" style="color: #333;">...</strong></p>
+                <p style="margin: 0;">Nội dung: <span id="modalReviewContent" style="font-style: italic; color: #555;">...</span></p>
+            </div>
+            <div class="form-group-figma" style="margin-bottom: 20px;">
+                <label style="font-weight:600; margin-bottom:8px; display:block;">Nội dung phản hồi của cửa hàng</label>
+                <textarea class="form-control-figma" id="replyTextArea" rows="4" placeholder="Nhập câu trả lời từ cửa hàng..." style="width: 100%; box-sizing: border-box; font-family: inherit; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); outline: none;"></textarea>
+            </div>
+            <div class="btn-group-figma" style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn-figma btn-figma-outline" onclick="closeReplyModal()">Hủy bỏ</button>
+                <button class="btn-figma btn-figma-primary" id="btnSubmitReply" onclick="submitReply()">Gửi phản hồi</button>
+            </div>
+        </div>
+    </div>
 
-        async function fetchReviews() {
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api/reviews';
+        let currentPage = 1;
+        let currentSearch = '';
+        let currentRating = '';
+        let currentReplied = '';
+        let activeReviewId = null;
+
+        async function fetchReviews(page = 1) {
+            currentPage = page;
+            const container = document.getElementById('review-list-container');
+            container.innerHTML = `<div style="text-align: center; padding: 50px; color: var(--text-light);"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>`;
+            
             try {
-                const res = await fetch(API_URL);
+                let query = `?page=${page}&limit=10`;
+                if (currentSearch) query += `&search=${encodeURIComponent(currentSearch)}`;
+                if (currentRating) query += `&rating=${currentRating}`;
+                if (currentReplied) query += `&replied=${currentReplied}`;
+
+                const res = await fetch(`${API_BASE_URL}/all${query}`);
                 const data = await res.json();
+                
                 if(data.success) {
                     renderReviews(data.reviews);
-                    updateStats(data.reviews);
+                    renderPagination(data.currentPage, data.totalPages);
+                    updateStats(data.stats);
+                } else {
+                    container.innerHTML = `<div style="text-align: center; padding: 30px; color: red;">Lỗi: ${data.message}</div>`;
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error(err); 
+                container.innerHTML = `<div style="text-align: center; padding: 30px; color: red;">Lỗi kết nối máy chủ!</div>`;
+            }
         }
 
         function renderReviews(reviews) {
             const container = document.getElementById('review-list-container');
             if(!reviews || reviews.length === 0) {
-                container.innerHTML = '<div class="empty-chart"><i class="fa-regular fa-face-frown"></i><p>Chưa có đánh giá nào</p></div>';
+                container.innerHTML = '<div class="empty-chart"><i class="fa-regular fa-face-frown"></i><p>Không tìm thấy đánh giá nào</p></div>';
                 return;
             }
 
             container.innerHTML = reviews.map(r => {
                 const stars = Array(5).fill(0).map((_, i) => `<i class="${i < r.rating ? 'fa-solid' : 'fa-regular'} fa-star"></i>`).join('');
+                
+                const billCodeHtml = r.billId?.billCode 
+                    ? `<div style="font-size: 11px; color:#64748b; margin-top: 5px;"><i class="fa-solid fa-file-invoice"></i> Đơn hàng: <b style="color: #475569;">${r.billId.billCode}</b></div>` 
+                    : '';
+                
+                const statusText = r.status === 'Đã duyệt' ? 'Đang hiện' : 'Đang ẩn';
+                const statusClass = r.status === 'Đã duyệt' ? 'badge-approved' : 'badge-hidden';
+                
+                let adminReplyHtml = '';
+                if (r.adminReply) {
+                    const replyDateStr = new Date(r.repliedAt).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+                    adminReplyHtml = `
+                        <div class="admin-reply-box">
+                            <div class="reply-header">
+                                <span style="color: #3b82f6;"><i class="fa-solid fa-comment-dots"></i> Phản hồi từ cửa hàng</span>
+                                <span>${replyDateStr}</span>
+                            </div>
+                            <div class="reply-content">${r.adminReply}</div>
+                        </div>
+                    `;
+                }
+
+                // Nút Phê duyệt / Ẩn
+                const toggleStatusBtn = r.status === 'Đã duyệt'
+                    ? `<button onclick="toggleStatus('${r._id}', 'Đã ẩn')" class="btn-figma btn-figma-outline" style="padding: 5px 12px; color: #f59e0b; border-color: #fef3c7; font-size:12px;" title="Ẩn khỏi khách hàng"><i class="fa-solid fa-eye-slash"></i> Ẩn</button>`
+                    : `<button onclick="toggleStatus('${r._id}', 'Đã duyệt')" class="btn-figma btn-figma-outline" style="padding: 5px 12px; color: #10b981; border-color: #d1fae5; font-size:12px;" title="Hiển thị lại"><i class="fa-solid fa-eye"></i> Hiện</button>`;
+
+                const safeContent = (r.content || '').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
+                const safeCustomerName = (r.userId?.fullName || r.userId?.userName || 'Khách ẩn danh').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                const replyText = r.adminReply ? 'Sửa phản hồi' : 'Phản hồi';
+
                 return `
                     <div class="review-card-item">
-                        <div class="review-main-info">
-                            <div class="info-col" style="width: 180px;">
-                                <p>Tên khách hàng</p>
-                                <span>${r.userId?.fullName || r.userId?.userName || 'Khách ẩn danh'}</span>
+                        <div class="review-row-flex">
+                            <div class="review-main-info">
+                                <div class="info-col" style="width: 180px;">
+                                    <p>Khách hàng</p>
+                                    <span style="font-size: 13px;">${r.userId?.fullName || r.userId?.userName || 'Khách ẩn danh'}</span>
+                                    <small style="color: #64748b; font-size:11px; margin-top:2px;">${r.userId?.email || ''}</small>
+                                </div>
+                                <div class="info-col" style="width: 120px;">
+                                    <p>Đánh giá</p>
+                                    <div class="stars">${stars}</div>
+                                    ${billCodeHtml}
+                                </div>
+                                <div class="info-col" style="flex: 1; min-width: 200px;">
+                                    <p>Nội dung</p>
+                                    <span style="font-weight: 500; font-size: 13.5px; line-height: 1.4;">${r.content || '<span style="color:#aaa; font-style:italic; font-weight:normal;">Không để lại bình luận chữ</span>'}</span>
+                                </div>
+                                <div class="info-col" style="width: 180px;">
+                                    <p>Sản phẩm</p>
+                                    <span style="font-size: 13px; color: var(--primary-color);">${r.productId?.name || 'Sản phẩm đã xóa'}</span>
+                                </div>
+                                <div class="info-col" style="width: 90px; text-align: center;">
+                                    <p>Hiển thị</p>
+                                    <span class="badge-status ${statusClass}" style="margin-top: 5px;">${statusText}</span>
+                                </div>
                             </div>
-                            <div class="info-col" style="width: 120px;">
-                                <p>Đánh giá</p>
-                                <div class="stars">${stars}</div>
-                            </div>
-                            <div class="info-col" style="flex: 1;">
-                                <p>Nội dung</p>
-                                <span style="font-weight: 500;">${r.content || 'Không có nội dung'}</span>
-                            </div>
-                            <div class="info-col" style="width: 200px;">
-                                <p>Sản phẩm</p>
-                                <span>${r.productId?.name || 'Sản phẩm đã xóa'}</span>
+                            
+                            <!-- Action Buttons -->
+                            <div style="display: flex; flex-direction: column; gap: 8px; margin-left: 20px;">
+                                <button onclick="openReplyModal('${r._id}', '${safeCustomerName}', '${safeContent}', '${(r.adminReply || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" class="btn-figma btn-figma-outline" style="padding: 5px 12px; color: #3b82f6; border-color: #dbeafe; font-size:12px;" title="${replyText}"><i class="fa-solid fa-reply"></i> ${replyText}</button>
+                                ${toggleStatusBtn}
+                                <button onclick="deleteReview('${r._id}')" class="btn-figma btn-figma-outline" style="padding: 5px 12px; color: #ef4444; border-color: #fee2e2; font-size:12px;" title="Xóa đánh giá"><i class="fa-solid fa-trash-can"></i> Xóa</button>
                             </div>
                         </div>
-                        <button class="btn-figma btn-figma-outline" style="padding: 8px 25px; border-radius: 30px;">Phản hồi</button>
+                        
+                        ${adminReplyHtml}
                     </div>
                 `;
             }).join('');
         }
 
-        function updateStats(reviews) {
-            const total = reviews.length;
-            const positive = reviews.filter(r => r.rating >= 4).length;
-            const negative = reviews.filter(r => r.rating <= 2).length;
-
-            document.getElementById('totalCount').innerText = total;
-            document.getElementById('positiveCount').innerText = positive;
-            document.getElementById('negativeCount').innerText = negative;
+        function updateStats(stats) {
+            if(!stats) return;
+            document.getElementById('totalCount').innerText = stats.total || 0;
+            document.getElementById('positiveCount').innerText = stats.positive || 0;
+            document.getElementById('negativeCount').innerText = stats.negative || 0;
         }
 
-        window.onload = fetchReviews;
+        function renderPagination(page, totalPages) {
+            const container = document.getElementById('pagination-container');
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `<button class="page-btn" ${page === 1 ? 'disabled' : ''} onclick="fetchReviews(${page - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) {
+                    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="fetchReviews(${i})">${i}</button>`;
+                } else if (i === page - 3 || i === page + 3) {
+                    html += `<span style="color:#94a3b8">...</span>`;
+                }
+            }
+
+            html += `<button class="page-btn" ${page === totalPages ? 'disabled' : ''} onclick="fetchReviews(${page + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+            container.innerHTML = html;
+        }
+
+        // Xử lý Lọc & Tìm kiếm
+        function handleFilterChange() {
+            currentRating = document.getElementById('starFilter').value;
+            currentReplied = document.getElementById('repliedFilter').value;
+            fetchReviews(1);
+        }
+
+        function handleSearchClick() {
+            currentSearch = document.getElementById('searchReviewInput').value.trim();
+            fetchReviews(1);
+        }
+
+        document.getElementById('searchReviewInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleSearchClick();
+        });
+
+        function resetFilters() {
+            document.getElementById('searchReviewInput').value = '';
+            document.getElementById('starFilter').value = '';
+            document.getElementById('repliedFilter').value = '';
+            currentSearch = '';
+            currentRating = '';
+            currentReplied = '';
+            fetchReviews(1);
+        }
+
+        // Logic Modal Reply
+        function openReplyModal(reviewId, customerName, reviewContent, existingReply) {
+            activeReviewId = reviewId;
+            document.getElementById('modalCustomerName').textContent = customerName;
+            document.getElementById('modalReviewContent').textContent = reviewContent || 'Không có bình luận chữ';
+            document.getElementById('replyTextArea').value = existingReply;
+            document.getElementById('replyModal').style.display = 'flex';
+        }
+
+        function closeReplyModal() {
+            document.getElementById('replyModal').style.display = 'none';
+            activeReviewId = null;
+        }
+
+        async function submitReply() {
+            const replyContent = document.getElementById('replyTextArea').value.trim();
+            if (!replyContent) return alert("Vui lòng nhập nội dung phản hồi!");
+
+            const btn = document.getElementById('btnSubmitReply');
+            btn.disabled = true;
+            btn.textContent = "Đang gửi...";
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/${activeReviewId}/reply`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ replyContent })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert("Gửi phản hồi thành công!");
+                    closeReplyModal();
+                    fetchReviews(currentPage);
+                } else {
+                    alert("Lỗi: " + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối máy chủ!");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Gửi câu trả lời";
+            }
+        }
+
+        // Toggle Duyệt / Ẩn
+        async function toggleStatus(reviewId, newStatus) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/${reviewId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    fetchReviews(currentPage);
+                } else {
+                    alert("Lỗi: " + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối máy chủ!");
+            }
+        }
+
+        // Xóa đánh giá vĩnh viễn
+        async function deleteReview(reviewId) {
+            if(!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn đánh giá này? Hành động này sẽ tính toán lại điểm số trung bình của sản phẩm!")) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/${reviewId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if(data.success) {
+                    fetchReviews(currentPage);
+                } else {
+                    alert("Lỗi: " + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối máy chủ!");
+            }
+        }
+
+        window.onload = () => {
+            fetchReviews(1);
+        };
     </script>
     <script src="js/admin-layout.js"></script>
 </body>

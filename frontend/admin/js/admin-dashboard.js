@@ -3,8 +3,8 @@ let dashboardData = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Kiểm tra đăng nhập
-    const userStr = localStorage.getItem('currentUser');
-    const userRole = localStorage.getItem('userRole');
+    const userStr = localStorage.getItem('adminUser');
+    const userRole = localStorage.getItem('adminRole');
 
     if (!userStr || (userRole !== 'admin' && userRole !== 'staff')) {
         alert("Truy cập bị từ chối! Vui lòng đăng nhập bằng tài khoản Quản trị.");

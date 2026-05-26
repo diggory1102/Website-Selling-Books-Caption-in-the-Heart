@@ -109,6 +109,19 @@ settingsStyle.textContent = `
 document.head.appendChild(settingsStyle);
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Kiểm tra phân quyền truy cập Admin (Gatekeeper)
+    const currentPath = window.location.pathname;
+    if (!currentPath.includes('admin-login.html')) {
+        const adminUserStr = localStorage.getItem('adminUser');
+        const adminRoleVal = localStorage.getItem('adminRole');
+
+        if (!adminUserStr || (adminRoleVal !== 'admin' && adminRoleVal !== 'staff')) {
+            alert("Truy cập bị từ chối! Vui lòng đăng nhập bằng tài khoản Quản trị.");
+            window.location.href = "admin-login.html";
+            return;
+        }
+    }
+
     renderSidebar();
     renderTopbar();
     renderSettingsModal();
@@ -294,7 +307,7 @@ function setActiveMenu() {
 }
 
 function setupTopbarLogic() {
-    const userStr = localStorage.getItem('currentUser');
+    const userStr = localStorage.getItem('adminUser');
     if (userStr) {
         const user = JSON.parse(userStr);
         const avatarImg = document.getElementById('adminAvatar');
@@ -345,8 +358,8 @@ function setupTopbarLogic() {
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
             if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống Admin?")) {
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('userRole');
+                localStorage.removeItem('adminUser');
+                localStorage.removeItem('adminRole');
                 window.location.href = "admin-login.html";
             }
         });
@@ -379,7 +392,7 @@ function setupSettingsModalLogic() {
     let uploadedAvatarUrl = '';
 
     const openModal = () => {
-        const userStr = localStorage.getItem('currentUser');
+        const userStr = localStorage.getItem('adminUser');
         if (userStr) {
             const user = JSON.parse(userStr);
             document.getElementById('setFullName').value = user.fullName || '';
@@ -450,7 +463,7 @@ function setupSettingsModalLogic() {
     if (profileForm) {
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const userStr = localStorage.getItem('currentUser');
+            const userStr = localStorage.getItem('adminUser');
             if (!userStr) return;
             const user = JSON.parse(userStr);
             const userId = user.id || user._id;
@@ -469,7 +482,7 @@ function setupSettingsModalLogic() {
                 const data = await res.json();
                 if (data.success) {
                     // Update localStorage
-                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    localStorage.setItem('adminUser', JSON.stringify(data.user));
 
                     // Update layout UI
                     const avatarImg = document.getElementById('adminAvatar');
@@ -492,7 +505,7 @@ function setupSettingsModalLogic() {
     if (passwordForm) {
         passwordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const userStr = localStorage.getItem('currentUser');
+            const userStr = localStorage.getItem('adminUser');
             if (!userStr) return;
             const user = JSON.parse(userStr);
             const userId = user.id || user._id;

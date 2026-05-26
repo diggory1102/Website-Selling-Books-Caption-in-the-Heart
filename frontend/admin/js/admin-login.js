@@ -27,8 +27,8 @@ document.getElementById('adminLoginForm').addEventListener('submit', async funct
             messageBox.textContent = "✅ " + data.message;
 
             // Lưu thông tin vào bộ nhớ
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
-            localStorage.setItem('userRole', data.role); // 'admin' hoặc 'staff'
+            localStorage.setItem('adminUser', JSON.stringify(data.user));
+            localStorage.setItem('adminRole', data.role); // 'admin' hoặc 'staff'
 
             // Chuyển hướng sau 1.5 giây để kịp nhìn thông báo
             setTimeout(() => {

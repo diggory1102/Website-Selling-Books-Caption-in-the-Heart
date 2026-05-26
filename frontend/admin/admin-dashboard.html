@@ -36,13 +36,19 @@
             </div>
 
             <div class="card-figma">
-                <div class="card-tabs-header">
+                <div class="card-tabs-header" style="flex-wrap: wrap; gap: 15px;">
                     <div class="tabs-left">
                         <div class="tab-item active" id="tab-revenue" onclick="switchTab('revenue')">Doanh thu</div>
                         <div class="tab-separator"></div>
                         <div class="tab-item" id="tab-distribution" onclick="switchTab('distribution')">Tỷ trọng</div>
                     </div>
-                    <div class="tabs-right">Trong 7 ngày qua</div>
+                    <div class="tabs-right" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="font-size: 13px; color: var(--text-light, #888);">Từ:</span>
+                        <input type="date" id="filterStartDate" style="border: 1px solid var(--border-color, #ddd); border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: 13px; outline: none; background: #fff; color: var(--text-main, #333);">
+                        <span style="font-size: 13px; color: var(--text-light, #888);">Đến:</span>
+                        <input type="date" id="filterEndDate" style="border: 1px solid var(--border-color, #ddd); border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: 13px; outline: none; background: #fff; color: var(--text-main, #333);">
+                        <button id="btnFilterStats" style="background: var(--active-red, #e74c3c); color: #fff; border: none; border-radius: 8px; padding: 6px 15px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;">Lọc</button>
+                    </div>
                 </div>
                 
                 <div id="chart-container" style="height: 350px; width: 100%; padding: 20px;">

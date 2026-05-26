@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { createOrder, getUserOrders, getOrderById, cancelOrder, getAllOrders, updateOrderStatus } = require('../controllers/orderController');
+const { createOrder, getUserOrders, getOrderById, cancelOrder, getAllOrders, updateOrderStatus, vnpayReturn, vnpayIpn } = require('../controllers/orderController');
 
 router.post('/', createOrder);
+router.get('/vnpay/return', vnpayReturn);
+router.get('/vnpay/ipn', vnpayIpn);
 router.get('/user/:userId', getUserOrders);
 router.get('/:id', getOrderById);
 router.put('/:id/cancel', cancelOrder);

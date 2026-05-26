@@ -1,0 +1,109 @@
+.campaign-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 25px;
+    margin-top: 20px;
+}
+@media(max-width: 1024px) {
+    .campaign-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.form-control-textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    background: #fff;
+    transition: 0.3s;
+    resize: vertical;
+}
+.form-control-textarea:focus {
+    outline: none;
+    border-color: #000;
+}
+.subscribers-list {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    margin-top: 15px;
+}
+.subscriber-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    border-bottom: 1px solid #f8fafc;
+    font-size: 13px;
+}
+.subscriber-row:hover {
+    background: #f8fafc;
+}
+.subscriber-email {
+    font-weight: 500;
+    color: var(--text-main);
+}
+.subscriber-date {
+    color: #64748b;
+    font-size: 11px;
+}
+.btn-delete-sub {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: 0.2s;
+}
+.btn-delete-sub:hover {
+    background: #fee2e2;
+}
+.stat-card-campaign {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.stat-card-campaign h3 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 5px;
+}
+.stat-card-campaign p {
+    font-size: 13px;
+    color: #64748b;
+}
+/* Custom Toast Notification inside Admin */
+#adminToastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+.admin-toast {
+    background: #000;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-bottom: 10px;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: 0.3s;
+}
+.admin-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}

@@ -4,6 +4,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('id');
 
+    // Hiển thị thông báo kết quả thanh toán từ VNPay nếu có
+    const paymentStatus = urlParams.get('paymentStatus');
+    if (paymentStatus === 'success') {
+        if (typeof showToast === 'function') {
+            showToast("💳 Thanh toán đơn hàng qua VNPAY thành công!", "success");
+        } else {
+            alert("💳 Thanh toán đơn hàng qua VNPAY thành công!");
+        }
+
+        // Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
+        const clearCart = urlParams.get('clearCart');
+        if (clearCart === 'true') {
+            const latestCart = JSON.parse(localStorage.getItem(getCartKey())) || [];
+            localStorage.setItem(getCartKey(), JSON.stringify(latestCart.filter(item => item.selected === false)));
+            if (typeof updateCartCount === 'function') updateCartCount();
+        }
+
+        window.history.replaceState({}, document.title, window.location.pathname + `?id=${orderId}`);
+    } else if (paymentStatus === 'failed') {
+        if (typeof showToast === 'function') {
+            showToast("❌ Thanh toán qua VNPAY thất bại hoặc đã bị hủy!", "error");
+        } else {
+            alert("❌ Thanh toán qua VNPAY thất bại hoặc đã bị hủy!");
+        }
+        window.history.replaceState({}, document.title, window.location.pathname + `?id=${orderId}`);
+    }
+
     if (!orderId) {
         if (typeof showToast === 'function') showToast("Không tìm thấy mã đơn hàng!", "error");
         window.location.href = "orders.html";
@@ -32,7 +59,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Thanh toán
             let payMethod = "Chưa rõ";
             if (order.paymentId && order.paymentId.method) payMethod = order.paymentId.method;
-            document.getElementById('odPaymentMethod').textContent = payMethod === 'COD' ? 'Thanh toán tiền mặt (COD)' : (payMethod === 'MOMO' ? 'Ví MoMo' : 'Chuyển khoản Ngân hàng');
+            document.getElementById('odPaymentMethod').textContent = 
+                payMethod === 'COD' ? 'Thanh toán tiền mặt (COD)' : 
+                (payMethod === 'MOMO' ? 'Ví MoMo' : 
+                (payMethod === 'VNPAY' ? 'Cổng thanh toán VNPAY' : 'Chuyển khoản Ngân hàng'));
             
             // Sản phẩm
             const itemsContainer = document.getElementById('odItems');
@@ -70,9 +100,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Cập nhật trạng thái nút
             const actionContainer = document.getElementById('odActions');
-            if (order.status === 'Đã giao') {
+            if (order.status === 'Đã giao' || order.status === 'Đã hủy') {
                 actionContainer.innerHTML = `<button class="btn-action btn-reorder" onclick="reorder('${order._id}')">Mua lại đơn này</button>`;
-            } else if (order.status === 'Chờ xử lý') {
+            } else if (order.status === 'Chờ xử lý' || order.status === 'Chờ thanh toán') {
                 actionContainer.innerHTML = `<button class="btn-action btn-cancel" onclick="cancelOrder('${order._id}')">Hủy đơn hàng</button>`;
             } else {
                 actionContainer.style.display = 'none';

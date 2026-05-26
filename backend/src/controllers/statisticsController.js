@@ -2,17 +2,41 @@ const { Bill, Product, User } = require('../models/database');
 
 const getDashboardStats = async (req, res) => {
     try {
-        const orders = await Bill.find();
+        const { startDate, endDate } = req.query;
+        
+        let start, end;
+        if (startDate && endDate) {
+            start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            
+            end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+        } else {
+            // Mặc định 7 ngày qua
+            start = new Date();
+            start.setDate(start.getDate() - 6);
+            start.setHours(0, 0, 0, 0);
+            
+            end = new Date();
+            end.setHours(23, 59, 59, 999);
+        }
+
+        // Lấy các đơn hàng được tạo trong khoảng thời gian chọn
+        const orders = await Bill.find({
+            createdAt: { $gte: start, $lte: end }
+        });
+        
         const products = await Product.countDocuments();
         const users = await User.countDocuments();
 
-        // 1. Total Revenue (Completed only)
+        // 1. Tổng doanh thu trong kỳ (Chỉ các đơn Đã giao)
         const totalRevenue = orders
             .filter(o => o.status === 'Đã giao')
             .reduce((sum, o) => sum + o.totalPrice, 0);
 
-        // 2. Orders Status Distribution
+        // 2. Phân bố trạng thái đơn hàng trong kỳ
         const statusDistribution = {
+            'Chờ thanh toán': 0,
             'Chờ xử lý': 0,
             'Đang giao': 0,
             'Đã giao': 0,
@@ -24,22 +48,24 @@ const getDashboardStats = async (req, res) => {
             }
         });
 
-        // 3. Revenue for last 7 days
-        const last7Days = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            d.setHours(0,0,0,0);
+        // 3. Doanh thu theo từng ngày trong kỳ
+        const revenueChart = [];
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        for (let i = 0; i < diffDays; i++) {
+            const currentDay = new Date(start);
+            currentDay.setDate(start.getDate() + i);
             
-            const dayEnd = new Date(d);
-            dayEnd.setHours(23,59,59,999);
+            const currentDayEnd = new Date(currentDay);
+            currentDayEnd.setHours(23, 59, 59, 999);
 
             const dayRevenue = orders
-                .filter(o => o.status === 'Đã giao' && o.createdAt >= d && o.createdAt <= dayEnd)
+                .filter(o => o.status === 'Đã giao' && o.createdAt >= currentDay && o.createdAt <= currentDayEnd)
                 .reduce((sum, o) => sum + o.totalPrice, 0);
 
-            last7Days.push({
-                date: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+            revenueChart.push({
+                date: currentDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
                 revenue: dayRevenue
             });
         }
@@ -53,7 +79,7 @@ const getDashboardStats = async (req, res) => {
                 totalUsers: users
             },
             statusDistribution,
-            revenueChart: last7Days
+            revenueChart
         });
     } catch (err) {
         res.status(500).json({ success: false, message: "Lỗi lấy thống kê: " + err.message });

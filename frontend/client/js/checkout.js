@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Kiểm tra kết quả thanh toán VNPay thất bại/hủy bỏ từ URL trả về
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('paymentStatus');
+    if (paymentStatus === 'failed') {
+        if (typeof showToast === 'function') {
+            showToast("❌ Thanh toán VNPay thất bại hoặc đã bị hủy! Bạn có thể thử lại.", "error");
+        } else {
+            alert("❌ Thanh toán VNPay thất bại hoặc đã bị hủy! Bạn có thể thử lại.");
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // 1. Lọc chỉ lấy các sản phẩm đã được tích chọn trong giỏ hàng
     const allCart = JSON.parse(localStorage.getItem(getCartKey())) || [];
     const cart = allCart.filter(item => item.selected !== false);
@@ -442,12 +454,22 @@ async function loadProvinces(savedAddress = null) {
             const res = await fetch('http://127.0.0.1:5000/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
             const data = await res.json();
             if (data.success) {
-                // Chỉ giữ lại những sản phẩm chưa được chọn thanh toán
-                const latestCart = JSON.parse(localStorage.getItem(getCartKey())) || [];
-                localStorage.setItem(getCartKey(), JSON.stringify(latestCart.filter(item => item.selected === false)));
-                if (typeof showToast === 'function') showToast("🎉 " + data.message, "success"); else alert(data.message);
-                if (typeof updateCartCount === 'function') updateCartCount();
-                setTimeout(() => window.location.href = "index.html", 2000);
+                // Nếu có vnpUrl thì hiển thị thông báo chuyển hướng sang VNPay (Không xóa giỏ hàng ở đây, xóa ở trang return thành công)
+                if (data.vnpUrl) {
+                    if (typeof showToast === 'function') showToast("🚀 Đang chuyển hướng sang cổng thanh toán VNPAY...", "success"); 
+                    else alert("Đang chuyển hướng sang cổng thanh toán VNPAY...");
+                    if (typeof updateCartCount === 'function') updateCartCount();
+                    setTimeout(() => window.location.href = data.vnpUrl, 1500);
+                } else {
+                    // Nếu là COD: Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
+                    const latestCart = JSON.parse(localStorage.getItem(getCartKey())) || [];
+                    localStorage.setItem(getCartKey(), JSON.stringify(latestCart.filter(item => item.selected === false)));
+                    
+                    if (typeof showToast === 'function') showToast("🎉 " + data.message, "success"); 
+                    else alert(data.message);
+                    if (typeof updateCartCount === 'function') updateCartCount();
+                    setTimeout(() => window.location.href = "index.html", 2000);
+                }
             } else { 
                 console.error("Chi tiết lỗi từ Backend:", data.message);
                 if (typeof showToast === 'function') showToast(data.message, "error"); 

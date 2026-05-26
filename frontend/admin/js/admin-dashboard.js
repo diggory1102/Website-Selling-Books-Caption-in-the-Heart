@@ -12,19 +12,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 2. Tải dữ liệu Dashboard
+    // 2. Thiết lập ngày mặc định (7 ngày qua)
+    const today = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 6);
+
+    const pad = (num) => String(num).padStart(2, '0');
+    const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+    const startDateInput = document.getElementById('filterStartDate');
+    const endDateInput = document.getElementById('filterEndDate');
+    if (startDateInput && endDateInput) {
+        startDateInput.value = formatDate(sevenDaysAgo);
+        endDateInput.value = formatDate(today);
+    }
+
+    // 3. Đăng ký sự kiện lọc
+    const btnFilter = document.getElementById('btnFilterStats');
+    if (btnFilter) {
+        btnFilter.addEventListener('click', async () => {
+            await fetchDashboardData();
+        });
+    }
+
+    // 4. Tải dữ liệu Dashboard
     await fetchDashboardData();
 });
 
 async function fetchDashboardData() {
     try {
-        const res = await fetch('http://localhost:5000/api/stats/dashboard');
+        const startDateInput = document.getElementById('filterStartDate');
+        const endDateInput = document.getElementById('filterEndDate');
+        
+        let url = 'http://localhost:5000/api/stats/dashboard';
+        if (startDateInput && endDateInput && startDateInput.value && endDateInput.value) {
+            url += `?startDate=${startDateInput.value}&endDate=${endDateInput.value}`;
+        }
+
+        const res = await fetch(url);
         const data = await res.json();
 
         if (data.success) {
             dashboardData = data;
+            
+            // Hiện biểu đồ và ẩn thông báo trống
+            document.getElementById('empty-chart').style.display = 'none';
+            document.getElementById('chart-container').style.display = 'block';
+            
             updateSummaryCards(data.summary);
-            renderRevenueChart(); // Mặc định hiện biểu đồ doanh thu
+            
+            // Vẽ biểu đồ cho tab hiện đang active
+            const isRevenueActive = document.getElementById('tab-revenue').classList.contains('active');
+            if (isRevenueActive) {
+                renderRevenueChart();
+            } else {
+                renderDistributionChart();
+            }
         } else {
             document.getElementById('empty-chart').style.display = 'flex';
             document.getElementById('chart-container').style.display = 'none';
@@ -32,6 +75,7 @@ async function fetchDashboardData() {
     } catch (err) { 
         console.error("Lỗi Dashboard:", err); 
         document.getElementById('empty-chart').style.display = 'flex';
+        document.getElementById('chart-container').style.display = 'none';
     }
 }
 
@@ -101,7 +145,7 @@ function renderDistributionChart() {
             labels: labels,
             datasets: [{
                 data: values,
-                backgroundColor: ['#f97316', '#3b82f6', '#22c55e', '#ef4444'],
+                backgroundColor: ['#a855f7', '#f97316', '#3b82f6', '#22c55e', '#ef4444'],
                 borderWidth: 0
             }]
         },

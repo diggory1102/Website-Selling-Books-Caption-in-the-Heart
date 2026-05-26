@@ -6,21 +6,42 @@ const getReviewableProducts = async (req, res) => {
         const userId = req.params.userId;
         const completedOrders = await Bill.find({ userId: userId, status: 'Đã giao' }).populate('items.productId');
         
-        // Lấy tất cả các sản phẩm user này đã đánh giá rồi
+        // Lấy tất cả các đánh giá user này đã thực hiện
         const reviewedRates = await Rate.find({ userId: userId });
-        const reviewedProductIds = reviewedRates.map(r => r.productId.toString());
+        
+        // Tập hợp các sản phẩm đã đánh giá không kèm billId (để tương thích ngược)
+        const legacyReviewedProductIds = reviewedRates
+            .filter(r => !r.billId)
+            .map(r => r.productId.toString());
+            
+        // Tập hợp các cặp billId_productId đã đánh giá
+        const reviewedBillProductPairs = new Set(
+            reviewedRates
+                .filter(r => r.billId)
+                .map(r => `${r.billId.toString()}_${r.productId.toString()}`)
+        );
         
         let reviewableItems = [];
-        let addedProductIds = new Set();
 
         completedOrders.forEach(order => {
+            let addedProductIdsForThisOrder = new Set();
             order.items.forEach(item => {
-                if (item.productId && !reviewedProductIds.includes(item.productId._id.toString()) && !addedProductIds.has(item.productId._id.toString())) {
-                    reviewableItems.push({
-                        productId: item.productId._id, productName: item.productName,
-                        imageUrl: item.productId.imageUrl, orderDate: order.createdAt
-                    });
-                    addedProductIds.add(item.productId._id.toString());
+                if (item.productId) {
+                    const pIdStr = item.productId._id.toString();
+                    const pairStr = `${order._id.toString()}_${pIdStr}`;
+                    
+                    const isReviewed = reviewedBillProductPairs.has(pairStr) || legacyReviewedProductIds.includes(pIdStr);
+                    
+                    if (!isReviewed && !addedProductIdsForThisOrder.has(pIdStr)) {
+                        reviewableItems.push({
+                            productId: item.productId._id,
+                            productName: item.productName,
+                            imageUrl: item.productId.imageUrl,
+                            orderDate: order.createdAt,
+                            billId: order._id
+                        });
+                        addedProductIdsForThisOrder.add(pIdStr);
+                    }
                 }
             });
         });
@@ -32,13 +53,19 @@ const getReviewableProducts = async (req, res) => {
 // Gửi đánh giá mới
 const submitReview = async (req, res) => {
     try {
-        const { userId, productId, rating, content } = req.body;
+        const { userId, productId, billId, rating, content } = req.body;
         if (!rating || rating < 1 || rating > 5) return res.status(400).json({ success: false, message: "Vui lòng chọn số sao hợp lệ!" });
 
-        const existingReview = await Rate.findOne({ userId, productId });
-        if (existingReview) return res.status(400).json({ success: false, message: "Bạn đã đánh giá sản phẩm này rồi!" });
+        let existingReview = null;
+        if (billId) {
+            existingReview = await Rate.findOne({ userId, billId, productId });
+        } else {
+            existingReview = await Rate.findOne({ userId, productId });
+        }
+        
+        if (existingReview) return res.status(400).json({ success: false, message: "Bạn đã đánh giá sản phẩm này cho đơn hàng này rồi!" });
 
-        await Rate.create({ userId, productId, rating, content, status: 'Đã duyệt' });
+        await Rate.create({ userId, productId, billId, rating, content, status: 'Đã duyệt' });
 
         const allProductRates = await Rate.find({ productId });
         const totalReviews = allProductRates.length;

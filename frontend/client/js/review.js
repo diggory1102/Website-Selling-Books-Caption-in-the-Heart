@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div class="review-date">Mua ngày: ${new Date(item.orderDate).toLocaleDateString('vi-VN')}</div>
                         </div>
                     </div>
-                    <button class="btn-do-review" onclick="openReviewModal('${item.productId}', '${item.productName}')">Đánh giá ngay</button>
+                    <button class="btn-do-review" onclick="openReviewModal('${item.productId}', '${item.productName}', '${item.billId}')">Đánh giá ngay</button>
                 </div>
             `).join('');
         }
@@ -38,10 +38,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Lô-gic xử lý Modal Popup Đánh giá
 let currentReviewProductId = null;
+let currentReviewBillId = null;
 let currentRating = 5;
 
-window.openReviewModal = function(productId, productName) {
+window.openReviewModal = function(productId, productName, billId) {
     currentReviewProductId = productId;
+    currentReviewBillId = billId;
     document.getElementById('rvProductName').textContent = productName;
     document.getElementById('reviewContent').value = '';
     setRating(5); // Mặc định 5 sao
@@ -74,7 +76,7 @@ window.submitReview = async function() {
         const res = await fetch('http://127.0.0.1:5000/api/reviews/submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, productId: currentReviewProductId, rating: currentRating, content })
+            body: JSON.stringify({ userId, productId: currentReviewProductId, billId: currentReviewBillId, rating: currentRating, content })
         });
         const data = await res.json();
 

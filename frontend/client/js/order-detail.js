@@ -100,7 +100,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Cập nhật trạng thái nút
             const actionContainer = document.getElementById('odActions');
-            if (order.status === 'Đã giao' || order.status === 'Đã hủy') {
+            if (order.status === 'Đã giao') {
+                actionContainer.innerHTML = `
+                    <button class="btn-action btn-reorder" style="background-color: #2ecc71; color: white;" onclick="window.location.href='review.html'">Đánh giá sản phẩm</button>
+                    <button class="btn-action btn-reorder" onclick="reorder('${order._id}')">Mua lại đơn này</button>
+                `;
+            } else if (order.status === 'Đã hủy') {
                 actionContainer.innerHTML = `<button class="btn-action btn-reorder" onclick="reorder('${order._id}')">Mua lại đơn này</button>`;
             } else if (order.status === 'Chờ xử lý' || order.status === 'Chờ thanh toán') {
                 actionContainer.innerHTML = `<button class="btn-action btn-cancel" onclick="cancelOrder('${order._id}')">Hủy đơn hàng</button>`;

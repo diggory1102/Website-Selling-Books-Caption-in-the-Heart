@@ -100,6 +100,7 @@ const Product = mongoose.model('Product', ProductSchema);
 const RateSchema = new mongoose.Schema({
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    billId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bill' }, // Thêm trường billId để hỗ trợ đánh giá theo đơn hàng
     rating: { type: Number, required: true, min: 1, max: 5 },
     content: String,
     status: { type: String, default: 'Đã duyệt' } // Để admin kiểm duyệt

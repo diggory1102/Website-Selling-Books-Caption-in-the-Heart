@@ -69,6 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const dateStr = new Date(order.createdAt).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
 
+            const showReviewBtn = order.status === 'Đã giao';
+            const reviewBtnHtml = showReviewBtn ? `<button class="btn-detail" style="background-color: #2ecc71; margin-right: 10px;" onclick="window.location.href='review.html'">Đánh giá</button>` : '';
+
             return `
                 <div class="order-card">
                     <div class="order-header">
@@ -81,7 +84,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="order-items">${itemsHtml}</div>
                     <div class="order-footer">
                         <div class="order-total">Thành tiền: <span class="val">${Number(order.totalPrice).toLocaleString()}đ</span></div>
-                        <button class="btn-detail" onclick="viewOrderDetail('${order._id}')">Xem chi tiết</button>
+                        <div style="display: flex; gap: 10px;">
+                            ${reviewBtnHtml}
+                            <button class="btn-detail" onclick="viewOrderDetail('${order._id}')">Xem chi tiết</button>
+                        </div>
                     </div>
                 </div>
             `;

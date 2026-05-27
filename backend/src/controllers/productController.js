@@ -232,6 +232,14 @@ const addProduct = async (req, res) => {
     try {
         const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl, description } = req.body;
         
+        // Kiểm tra ngày xuất bản hợp lệ
+        if (publishDate) {
+            const pDate = new Date(publishDate);
+            if (isNaN(pDate.getTime())) {
+                return res.status(400).json({ success: false, message: "Ngày xuất bản không hợp lệ!" });
+            }
+        }
+        
         // Lookup Category
         const cat = await Category.findOne({ name: category });
         
@@ -262,6 +270,14 @@ const addProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const { name, nxb, author, category, publishDate, price, stock, isbn, imageUrl, description } = req.body;
+        
+        // Kiểm tra ngày xuất bản hợp lệ
+        if (publishDate) {
+            const pDate = new Date(publishDate);
+            if (isNaN(pDate.getTime())) {
+                return res.status(400).json({ success: false, message: "Ngày xuất bản không hợp lệ!" });
+            }
+        }
         
         const cat = await Category.findOne({ name: category });
         

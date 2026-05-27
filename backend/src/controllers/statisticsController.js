@@ -7,9 +7,16 @@ const getDashboardStats = async (req, res) => {
         let start, end;
         if (startDate && endDate) {
             start = new Date(startDate);
-            start.setHours(0, 0, 0, 0);
-            
             end = new Date(endDate);
+            
+            // Kiểm tra ngày hợp lệ, nếu không hợp lệ thì gán mặc định 7 ngày qua
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                start = new Date();
+                start.setDate(start.getDate() - 6);
+                end = new Date();
+            }
+            
+            start.setHours(0, 0, 0, 0);
             end.setHours(23, 59, 59, 999);
         } else {
             // Mặc định 7 ngày qua

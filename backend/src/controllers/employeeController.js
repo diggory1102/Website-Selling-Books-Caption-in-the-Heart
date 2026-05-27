@@ -22,6 +22,17 @@ const addEmployee = async (req, res) => {
     try {
         const { fullName, userName, password, email, phone, roleName, gender, dob, cccd, avatar } = req.body;
         
+        // Kiểm tra ngày sinh hợp lệ
+        if (dob) {
+            const dobDate = new Date(dob);
+            if (isNaN(dobDate.getTime())) {
+                return res.status(400).json({ success: false, message: "Ngày sinh không hợp lệ!" });
+            }
+            if (dobDate > new Date()) {
+                return res.status(400).json({ success: false, message: "Ngày sinh không thể ở tương lai!" });
+            }
+        }
+
         // Kiểm tra username/email tồn tại
         const existingUser = await User.findOne({ $or: [{ userName }, { email }] });
         if (existingUser) return res.status(400).json({ success: false, message: "Tên đăng nhập hoặc Email đã tồn tại!" });

@@ -69,6 +69,10 @@ const updateUserProfile = async (req, res) => {
 
         if (dateOfBirth) {
             const dobDate = new Date(dateOfBirth);
+            if (isNaN(dobDate.getTime())) {
+                return res.status(400).json({ success: false, message: "Ngày sinh không hợp lệ!" });
+            }
+            
             const ageInMs = Date.now() - dobDate.getTime();
             const ageDate = new Date(ageInMs);
             const age = Math.abs(ageDate.getUTCFullYear() - 1970);

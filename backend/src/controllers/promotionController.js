@@ -10,6 +10,25 @@ exports.addPromotion = async (req, res) => {
             data.targetValues = data.targetValues.split(',').map(v => v.trim()).filter(v => v !== '');
         }
 
+        // Kiểm tra xem Ngày bắt đầu và Ngày kết thúc có hợp lệ không
+        if (data.startDate && data.endDate) {
+            const start = new Date(data.startDate);
+            const end = new Date(data.endDate);
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                return res.status(400).json({ success: false, message: "Ngày bắt đầu hoặc ngày kết thúc không hợp lệ!" });
+            }
+            if (start > end) {
+                return res.status(400).json({ success: false, message: "Ngày bắt đầu không thể lớn hơn ngày kết thúc!" });
+            }
+
+            // Chuẩn hóa về 00:00:00 và 23:59:59.999 theo múi giờ Việt Nam (UTC+7)
+            start.setUTCHours(0 - 7, 0, 0, 0);
+            end.setUTCHours(23 - 7, 59, 59, 999);
+
+            data.startDate = start;
+            data.endDate = end;
+        }
+
         const newPromo = new Promotion(data); 
         await newPromo.save();
 

@@ -1,5 +1,37 @@
-const { Bill, Payment, Delivery, Promotion } = require('../models/database');
+const { Bill, Payment, Delivery, Promotion, Product } = require('../models/database');
 const crypto = require('crypto');
+
+// Hàm trừ kho và tăng số lượng bán khi đặt hàng thành công
+async function deductStock(items) {
+    try {
+        for (const item of items) {
+            await Product.findByIdAndUpdate(item.productId, {
+                $inc: { 
+                    stock: -item.quantity,
+                    sold: item.quantity
+                }
+            });
+        }
+    } catch (err) {
+        console.error("❌ Lỗi trừ kho sản phẩm:", err);
+    }
+}
+
+// Hàm hoàn kho và giảm số lượng bán khi hủy đơn hàng
+async function refundStock(items) {
+    try {
+        for (const item of items) {
+            await Product.findByIdAndUpdate(item.productId, {
+                $inc: { 
+                    stock: item.quantity,
+                    sold: -item.quantity
+                }
+            });
+        }
+    } catch (err) {
+        console.error("❌ Lỗi hoàn kho sản phẩm:", err);
+    }
+}
 
 const createOrder = async (req, res) => {
     try {
@@ -32,6 +64,11 @@ const createOrder = async (req, res) => {
         const newBill = await Bill.create(billData);
 
         if (promotionId) await Promotion.findByIdAndUpdate(promotionId, { $inc: { usedCount: 1 } });
+
+        // Trừ kho đối với đơn hàng không phải VNPay (ví dụ: COD) đặt hàng thành công ngay
+        if (paymentMethod !== 'VNPAY') {
+            await deductStock(newBill.items);
+        }
 
         // Tự động tạo thông báo đặt hàng thành công
         try {
@@ -120,6 +157,9 @@ const cancelOrder = async (req, res) => {
         order.status = 'Đã hủy';
         await order.save();
 
+        // Hoàn lại kho và lượng bán khi hủy đơn
+        await refundStock(order.items);
+
         // Tự động tạo thông báo hủy đơn hàng
         try {
             if (order.userId) {
@@ -151,8 +191,18 @@ const getAllOrders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     try {
         const { status } = req.body;
-        const order = await Bill.findByIdAndUpdate(req.params.id, { status }, { new: true });
+        
+        const order = await Bill.findById(req.params.id);
         if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+
+        const oldStatus = order.status;
+        order.status = status;
+        await order.save();
+
+        // Hoàn lại kho nếu đơn bị hủy từ một trạng thái đã trừ kho (Chờ xử lý, Đang giao, Đã giao)
+        if (status === 'Đã hủy' && oldStatus !== 'Đã hủy' && oldStatus !== 'Chờ thanh toán') {
+            await refundStock(order.items);
+        }
 
         // Tự động tạo thông báo cập nhật trạng thái đơn hàng
         try {
@@ -268,8 +318,11 @@ const vnpayReturn = async (req, res) => {
             if (responseCode === '00') {
                 // Thanh toán thành công
                 await Payment.findByIdAndUpdate(bill.paymentId, { status: 'Đã thanh toán' });
-                bill.status = 'Chờ xử lý';
-                await bill.save();
+                if (bill.status === 'Chờ thanh toán') {
+                    bill.status = 'Chờ xử lý';
+                    await bill.save();
+                    await deductStock(bill.items);
+                }
                 
                 try {
                     if (bill.userId) {
@@ -365,8 +418,11 @@ const vnpayIpn = async (req, res) => {
 
             if (responseCode === '00') {
                 await Payment.findByIdAndUpdate(bill.paymentId, { status: 'Đã thanh toán' });
-                bill.status = 'Chờ xử lý';
-                await bill.save();
+                if (bill.status === 'Chờ thanh toán') {
+                    bill.status = 'Chờ xử lý';
+                    await bill.save();
+                    await deductStock(bill.items);
+                }
                 
                 try {
                     if (bill.userId) {

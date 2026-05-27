@@ -288,6 +288,9 @@
         if(!promoData.name || !promoData.discountValue || !promoData.startDate || !promoData.endDate) {
             return alert("Vui lòng điền đầy đủ các thông tin bắt buộc!");
         }
+        if(new Date(promoData.startDate) > new Date(promoData.endDate)) {
+            return alert("Ngày bắt đầu không thể lớn hơn ngày kết thúc!");
+        }
         if(promoData.applyTo !== 'ALL' && selectedTargets.length === 0) {
             return alert("Vui lòng chọn ít nhất một đối tượng áp dụng!");
         }

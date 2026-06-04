@@ -162,6 +162,9 @@ const cancelOrder = async (req, res) => {
         if (order.status !== 'Chờ xử lý') return res.status(400).json({ success: false, message: "Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý" });
 
         order.status = 'Đã hủy';
+        if (!order.history) {
+            order.history = [];
+        }
         order.history.push({
             status: 'Đã hủy',
             changedBy: 'Khách hàng',
@@ -237,6 +240,9 @@ const updateOrderStatus = async (req, res) => {
             }
 
             order.status = status;
+            if (!order.history) {
+                order.history = [];
+            }
             order.history.push({
                 status: status,
                 changedBy: changedBy || 'Hệ thống',

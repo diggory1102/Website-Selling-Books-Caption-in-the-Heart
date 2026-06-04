@@ -273,20 +273,25 @@ async function loadProvinces(savedAddress = null) {
 
     const shippingFee = 30000; // Mặc định phí ship là 30k
     let discountValue = 0;
+    let shippingDiscount = 0;
     let appliedPromotionId = null;
 
     // Hàm tính lại tổng tiền
     function updateCheckoutTotal() {
-        let total = subTotal + shippingFee - discountValue;
+        let finalShippingFee = shippingFee - shippingDiscount;
+        if (finalShippingFee < 0) finalShippingFee = 0;
+        
+        let total = subTotal + finalShippingFee - discountValue;
         if (total < 0) total = 0;
         
         document.getElementById('chkSubtotal').textContent = Number(subTotal).toLocaleString() + 'đ';
-        document.getElementById('chkShipping').textContent = Number(shippingFee).toLocaleString() + 'đ';
+        document.getElementById('chkShipping').textContent = Number(finalShippingFee).toLocaleString() + 'đ';
         document.getElementById('chkTotal').textContent = Number(total).toLocaleString() + 'đ';
         
         const discountRow = document.getElementById('discountRow');
-        if (discountValue > 0) {
-            document.getElementById('chkDiscount').textContent = '-' + Number(discountValue).toLocaleString() + 'đ';
+        const totalDiscount = discountValue + shippingDiscount;
+        if (totalDiscount > 0) {
+            document.getElementById('chkDiscount').textContent = '-' + Number(totalDiscount).toLocaleString() + 'đ';
             discountRow.style.display = 'flex';
         } else {
             discountRow.style.display = 'none';
@@ -318,7 +323,12 @@ async function loadProvinces(savedAddress = null) {
             return;
         }
         voucherDropdown.innerHTML = availableVouchers.map(v => {
-            let desc = v.discountAmount > 0 ? `Giảm ${Number(v.discountAmount).toLocaleString()}đ` : `Giảm ${v.discountPercent}%`;
+            let desc = '';
+            if (v.discountType === 'FREE_SHIPPING') {
+                desc = `Miễn phí vận chuyển (Tối đa ${Number(v.discountValue).toLocaleString()}đ)`;
+            } else {
+                desc = v.discountAmount > 0 ? `Giảm ${Number(v.discountAmount).toLocaleString()}đ` : `Giảm ${v.discountPercent}%`;
+            }
             let condition = v.minOrderValue > 0 ? `Đơn tối thiểu ${Number(v.minOrderValue).toLocaleString()}đ` : 'Áp dụng cho mọi đơn hàng';
             
             // Kiểm tra xem đơn hàng hiện tại có đủ điều kiện chưa
@@ -376,8 +386,21 @@ async function loadProvinces(savedAddress = null) {
                 if (data.success) {
                     const promo = data.promotion;
                     appliedPromotionId = promo._id || promo.id;
-                    if (promo.discountAmount > 0) discountValue = promo.discountAmount;
-                    else if (promo.discountPercent > 0) discountValue = (subTotal * promo.discountPercent) / 100;
+                    
+                    if (promo.discountType === 'FREE_SHIPPING') {
+                        shippingDiscount = promo.discountValue || 30000;
+                        discountValue = 0;
+                    } else if (promo.discountAmount > 0) {
+                        discountValue = promo.discountAmount;
+                        shippingDiscount = 0;
+                    } else if (promo.discountPercent > 0) {
+                        discountValue = (subTotal * promo.discountPercent) / 100;
+                        shippingDiscount = 0;
+                    } else {
+                        discountValue = 0;
+                        shippingDiscount = 0;
+                    }
+                    
                     if (discountValue > subTotal) discountValue = subTotal;
 
                     voucherMessage.textContent = "✅ Áp dụng mã giảm giá thành công!";
@@ -389,6 +412,7 @@ async function loadProvinces(savedAddress = null) {
                     voucherMessage.style.color = "red";
                     voucherMessage.style.display = "block";
                     discountValue = 0;
+                    shippingDiscount = 0;
                     appliedPromotionId = null;
                     updateCheckoutTotal();
                 }

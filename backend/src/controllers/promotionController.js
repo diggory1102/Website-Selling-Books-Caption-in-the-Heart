@@ -10,6 +10,17 @@ exports.addPromotion = async (req, res) => {
             data.targetValues = data.targetValues.split(',').map(v => v.trim()).filter(v => v !== '');
         }
 
+        // Kiểm tra hợp lệ giá trị giảm giá
+        if (data.discountType === 'PERCENT') {
+            if (data.discountValue <= 0 || data.discountValue > 100) {
+                return res.status(400).json({ success: false, message: "Phần trăm giảm giá phải nằm trong khoảng từ 1% đến 100%!" });
+            }
+        } else {
+            if (data.discountValue <= 0) {
+                return res.status(400).json({ success: false, message: "Giá trị giảm giá phải lớn hơn 0!" });
+            }
+        }
+
         // Kiểm tra xem Ngày bắt đầu và Ngày kết thúc có hợp lệ không
         if (data.startDate && data.endDate) {
             const start = new Date(data.startDate);
@@ -155,6 +166,8 @@ exports.getAvailableVouchers = async (req, res) => {
                 _id: p._id,
                 id: p._id,
                 code: p.code,
+                discountType: p.discountType,
+                discountValue: p.discountValue,
                 discountAmount,
                 discountPercent,
                 minOrderValue: p.minOrderValue || 0,
@@ -228,6 +241,8 @@ exports.applyVoucher = async (req, res) => {
                 _id: promo._id,
                 id: promo._id,
                 code: promo.code,
+                discountType: promo.discountType,
+                discountValue: promo.discountValue,
                 discountAmount,
                 discountPercent,
                 minOrderValue: promo.minOrderValue || 0

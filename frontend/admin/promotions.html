@@ -43,6 +43,7 @@
                     <select id="discount-type" class="form-control-figma">
                         <option value="PERCENT">Phần trăm (%)</option>
                         <option value="AMOUNT">Số tiền cố định (đ)</option>
+                        <option value="FREE_SHIPPING">Miễn phí vận chuyển (Free Ship)</option>
                     </select>
                 </div>
 
@@ -118,6 +119,7 @@
                         <th>Áp dụng cho</th>
                         <th>Mức giảm</th>
                         <th>Thời hạn</th>
+                        <th>Trạng thái</th>
                         <th>Đã dùng</th>
                         <th style="text-align: right;">Hành động</th>
                     </tr>
@@ -243,7 +245,28 @@
                 emptyBox.style.display = 'none';
                 tableBody.innerHTML = data.map(p => {
                     const displayCode = p.type === 'VOUCHER' ? `<br><small style="color:#4F46E5; font-weight:bold;">Code: ${p.code}</small>` : '';
-                    const valueText = p.discountType === 'PERCENT' ? `-${p.discountValue}%` : `-${Number(p.discountValue).toLocaleString()}đ`;
+                    
+                    let valueText = '';
+                    if (p.discountType === 'PERCENT') {
+                        valueText = `-${p.discountValue}%`;
+                    } else if (p.discountType === 'AMOUNT') {
+                        valueText = `-${Number(p.discountValue).toLocaleString()}đ`;
+                    } else if (p.discountType === 'FREE_SHIPPING') {
+                        valueText = `Free Ship (Tối đa ${Number(p.discountValue).toLocaleString()}đ)`;
+                    }
+
+                    // Tính toán trạng thái thực tế dựa trên ngày bắt đầu và kết thúc
+                    const now = new Date();
+                    const start = new Date(p.startDate);
+                    const end = new Date(p.endDate);
+                    let statusBadge = '';
+                    if (now < start) {
+                        statusBadge = '<span class="badge-status pending" style="font-size:10px;">Chờ kích hoạt</span>';
+                    } else if (now > end) {
+                        statusBadge = '<span class="badge-status cancelled" style="font-size:10px;">Hết hạn</span>';
+                    } else {
+                        statusBadge = '<span class="badge-status completed" style="font-size:10px;">Đang chạy</span>';
+                    }
                     
                     return `
                         <tr>
@@ -252,6 +275,7 @@
                             <td><small>${p.applyTo}: ${p.targetValues.length > 2 ? p.targetValues.length + ' mục' : p.targetValues.join(', ')}</small></td>
                             <td style="color: #05CD99; font-weight: 700;">${valueText}</td>
                             <td style="font-size: 11px;">${new Date(p.endDate).toLocaleDateString()}</td>
+                            <td>${statusBadge}</td>
                             <td>${p.usedCount}/${p.usageLimit}</td>
                             <td style="text-align: right;">
                                 <button onclick="deletePromo('${p._id}')" class="btn-figma btn-figma-outline" style="padding: 5px 10px; color: var(--active-red); border-color: #ffe4e4;">
@@ -269,12 +293,16 @@
     }
 
     async function addPromotion() {
+        const typeSelect = document.getElementById('discount-type').value;
+        const rawValue = document.getElementById('discount-value').value;
+        const defaultVal = typeSelect === 'FREE_SHIPPING' ? 30000 : 0;
+        
         const promoData = {
             name: document.getElementById('promo-name').value,
             type: currentType,
             code: currentType === 'VOUCHER' ? document.getElementById('promo-code').value.toUpperCase() : undefined,
-            discountType: document.getElementById('discount-type').value,
-            discountValue: Number(document.getElementById('discount-value').value),
+            discountType: typeSelect,
+            discountValue: Number(rawValue || defaultVal),
             applyTo: document.getElementById('apply-to').value,
             targetValues: selectedTargets,
             minOrderValue: Number(document.getElementById('min-order').value),
@@ -288,6 +316,18 @@
         if(!promoData.name || !promoData.discountValue || !promoData.startDate || !promoData.endDate) {
             return alert("Vui lòng điền đầy đủ các thông tin bắt buộc!");
         }
+
+        // Kiểm tra hợp lệ giá trị giảm giá trên giao diện
+        if(promoData.discountType === 'PERCENT') {
+            if(promoData.discountValue <= 0 || promoData.discountValue > 100) {
+                return alert("Phần trăm giảm giá phải nằm trong khoảng từ 1% đến 100%!");
+            }
+        } else {
+            if(promoData.discountValue <= 0) {
+                return alert("Giá trị giảm giá phải lớn hơn 0!");
+            }
+        }
+
         if(new Date(promoData.startDate) > new Date(promoData.endDate)) {
             return alert("Ngày bắt đầu không thể lớn hơn ngày kết thúc!");
         }
@@ -328,11 +368,25 @@
         document.getElementById('min-order').value = 0;
         document.getElementById('usage-limit').value = 9999;
         document.getElementById('user-limit').value = 1;
+        document.getElementById('discount-value').placeholder = "10 (%) hoặc 50000 (đ)";
     }
     
     window.onload = async () => {
         await fetchMetadata();
         loadPromotions();
+
+        // Lắng nghe sự thay đổi loại giảm giá để đổi placeholder
+        document.getElementById('discount-type').addEventListener('change', function() {
+            const val = this.value;
+            const discountInput = document.getElementById('discount-value');
+            if (val === 'PERCENT') {
+                discountInput.placeholder = "Ví dụ: 10 (tương đương giảm 10%)";
+            } else if (val === 'AMOUNT') {
+                discountInput.placeholder = "Ví dụ: 50000 (tương đương giảm 50.000đ)";
+            } else if (val === 'FREE_SHIPPING') {
+                discountInput.placeholder = "Giảm tối đa phí ship (Ví dụ: 30000 hoặc để trống mặc định 30k)";
+            }
+        });
     };
     </script>
     <script src="js/admin-layout.js"></script>

@@ -31,6 +31,15 @@ const addEmployee = async (req, res) => {
             if (dobDate > new Date()) {
                 return res.status(400).json({ success: false, message: "Ngày sinh không thể ở tương lai!" });
             }
+            const today = new Date();
+            let age = today.getFullYear() - dobDate.getFullYear();
+            const m = today.getMonth() - dobDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+                age--;
+            }
+            if (age < 18) {
+                return res.status(400).json({ success: false, message: "Nhân viên phải từ 18 tuổi trở lên!" });
+            }
         }
 
         // Kiểm tra username/email tồn tại

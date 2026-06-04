@@ -144,6 +144,17 @@
             };
             
             if(!empData.userName || !empData.password) return alert("Vui lòng nhập Tài khoản và Mật khẩu!");
+            if(!empData.dob) return alert("Vui lòng nhập Ngày sinh!");
+            
+            const dobDate = new Date(empData.dob);
+            const today = new Date();
+            let age = today.getFullYear() - dobDate.getFullYear();
+            const m = today.getMonth() - dobDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+                age--;
+            }
+            if (age < 18) return alert("Nhân viên phải từ 18 tuổi trở lên!");
+            if (dobDate > today) return alert("Ngày sinh không thể ở tương lai!");
 
             try {
                 const res = await fetch(`${API_URL}/add`, {
@@ -178,9 +189,21 @@
         function resetForm() {
             document.querySelectorAll('input, select').forEach(i => i.value = '');
             document.getElementById('avatarPreview').innerHTML = `<i class="fa-regular fa-user"></i>`;
+            initDobLimit();
         }
 
-        window.onload = loadEmployees;
+        function initDobLimit() {
+            const today = new Date();
+            const maxYear = today.getFullYear() - 18;
+            const maxMonth = String(today.getMonth() + 1).padStart(2, '0');
+            const maxDay = String(today.getDate()).padStart(2, '0');
+            document.getElementById('emp-dob').max = `${maxYear}-${maxMonth}-${maxDay}`;
+        }
+
+        window.onload = () => {
+            loadEmployees();
+            initDobLimit();
+        };
     </script>
     <script src="js/admin-layout.js"></script>
 </body>

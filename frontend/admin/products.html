@@ -188,6 +188,10 @@
         };
 
         if(!productData.name || !productData.price) return alert("Vui lòng nhập Tên và Giá bán!");
+        if(productData.publishDate) {
+            const pDate = new Date(productData.publishDate);
+            if(pDate > new Date()) return alert("Ngày xuất bản không thể ở tương lai!");
+        }
 
         const method = currentEditId ? 'PUT' : 'POST';
         const url = currentEditId ? `${API_URL}/update/${currentEditId}` : `${API_URL}/add`;
@@ -308,11 +312,21 @@
         document.querySelectorAll('input:not([type="file"]), select, textarea').forEach(i => i.value = '');
         document.getElementById('imagePreview').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><p>Tải ảnh bìa</p>`;
         document.getElementById('btn-submit').innerText = "Lưu sản phẩm";
+        initPublishDateLimit();
+    }
+
+    function initPublishDateLimit() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById('p-date').max = `${yyyy}-${mm}-${dd}`;
     }
     
     window.onload = () => {
         loadMetadata();
         loadProducts();
+        initPublishDateLimit();
     };
     </script>
     <script src="js/admin-layout.js"></script>

@@ -115,7 +115,7 @@ const PromotionSchema = new mongoose.Schema({
     type: { type: String, enum: ['DIRECT', 'VOUCHER'], required: true }, // Loại: Giảm trực tiếp hoặc Mã nhập
     code: { type: String, unique: true, sparse: true },    // Mã (chỉ dùng nếu type = VOUCHER)
     
-    discountType: { type: String, enum: ['PERCENT', 'AMOUNT'], default: 'PERCENT' },
+    discountType: { type: String, enum: ['PERCENT', 'AMOUNT', 'FREE_SHIPPING'], default: 'PERCENT' },
     discountValue: { type: Number, required: true },      // % hoặc số tiền
     
     // Đối tượng áp dụng (Targeting)

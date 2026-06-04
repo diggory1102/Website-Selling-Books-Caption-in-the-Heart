@@ -238,6 +238,9 @@ const addProduct = async (req, res) => {
             if (isNaN(pDate.getTime())) {
                 return res.status(400).json({ success: false, message: "Ngày xuất bản không hợp lệ!" });
             }
+            if (pDate > new Date()) {
+                return res.status(400).json({ success: false, message: "Ngày xuất bản không thể ở tương lai!" });
+            }
         }
         
         // Lookup Category
@@ -276,6 +279,9 @@ const updateProduct = async (req, res) => {
             const pDate = new Date(publishDate);
             if (isNaN(pDate.getTime())) {
                 return res.status(400).json({ success: false, message: "Ngày xuất bản không hợp lệ!" });
+            }
+            if (pDate > new Date()) {
+                return res.status(400).json({ success: false, message: "Ngày xuất bản không thể ở tương lai!" });
             }
         }
         

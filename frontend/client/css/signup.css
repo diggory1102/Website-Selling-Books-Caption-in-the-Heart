@@ -5,7 +5,10 @@
     --primary-color: #9bd8fc; /* Đã đổi sang màu xanh bạn chọn */
     --secondary-color: #e74c3c;
     --bg-color: #f5f7f9;
-    --text-color: var(--text-color);
+    --text-color: #333333;
+    --surface-color: #ffffff;
+    --border-color: #dddddd;
+    --shadow-color: rgba(0, 0, 0, 0.1);
     --white: #ffffff;
 }
 

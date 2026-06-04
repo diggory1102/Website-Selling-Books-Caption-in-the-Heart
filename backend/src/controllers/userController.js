@@ -222,10 +222,39 @@ const setDefaultAddress = async (req, res) => {
 // Admin: Lấy tất cả người dùng (thường là khách hàng)
 const getAllUsers = async (req, res) => {
     try {
-        // Chỉ lấy những người có roleId tương ứng với 'customer' (tùy chọn)
-        const users = await User.find().populate('roleId', 'name').select('-password');
-        res.json({ success: true, users });
-    } catch (err) { res.status(500).json({ success: false, message: "Lỗi Server" }); }
+        const users = await User.find().populate('roleId', 'name').select('-password').lean();
+        
+        // Lấy tất cả đơn hàng đã giao hoặc đã nhận được hàng để tính tổng chi tiêu
+        const completedOrders = await Bill.find({ status: { $in: ['Đã giao', 'Đã nhận được hàng'] } });
+        
+        // Bản đồ hóa tổng chi tiêu theo userId
+        const spentMap = {};
+        completedOrders.forEach(order => {
+            if (order.userId) {
+                const uid = order.userId.toString();
+                spentMap[uid] = (spentMap[uid] || 0) + order.totalPrice;
+            }
+        });
+
+        // Gắn thêm thông tin chi tiêu và hạng thành viên cho mỗi tài khoản
+        const usersWithStats = users.map(user => {
+            const totalSpent = spentMap[user._id.toString()] || 0;
+            
+            let tier = 'Thành viên Mới';
+            if (totalSpent >= 10000000) tier = 'Kim Cương';
+            else if (totalSpent >= 5000000) tier = 'Vàng';
+            else if (totalSpent >= 2000000) tier = 'Bạc';
+            else if (totalSpent >= 500000) tier = 'Đồng';
+
+            return {
+                ...user,
+                totalSpent,
+                tier
+            };
+        });
+
+        res.json({ success: true, users: usersWithStats });
+    } catch (err) { res.status(500).json({ success: false, message: "Lỗi Server: " + err.message }); }
 };
 
 // Admin: Chặn/Bỏ chặn người dùng

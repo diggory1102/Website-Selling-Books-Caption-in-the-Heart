@@ -16,7 +16,7 @@
 
         <div class="card-figma">
             <h3 class="card-title">Thông tin chi tiết khách hàng</h3>
-            <div class="results-grid" id="selected-customer-box">
+            <div class="results-grid" id="selected-customer-box" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px;">
                 <div class="result-col">
                     <p>Tên khách hàng</p>
                     <h3 id="view-name">---</h3>
@@ -26,12 +26,20 @@
                     <h3 id="view-username">---</h3>
                 </div>
                 <div class="result-col">
+                    <p>Hạng thành viên</p>
+                    <h3 id="view-tier">---</h3>
+                </div>
+                <div class="result-col">
+                    <p>Tổng chi tiêu</p>
+                    <h3 id="view-spent" style="color: var(--active-red); font-weight: bold;">---</h3>
+                </div>
+                <div class="result-col">
                     <p>Trạng thái</p>
                     <h3 id="view-status">---</h3>
                 </div>
                 <div class="result-col">
                     <p>Thao tác</p>
-                    <button id="btn-block" class="btn-figma btn-figma-danger" style="margin-top: 5px; padding: 5px 20px;" disabled onclick="toggleBlock()">Chặn tài khoản</button>
+                    <button id="btn-block" class="btn-figma btn-figma-danger" style="margin-top: 5px; padding: 5px 20px; width: 100%;" disabled onclick="toggleBlock()">Chặn tài khoản</button>
                 </div>
             </div>
         </div>
@@ -45,6 +53,8 @@
                         <th>Tài khoản</th>
                         <th>Họ tên</th>
                         <th>Điện thoại</th>
+                        <th>Hạng thành viên</th>
+                        <th>Tổng chi tiêu</th>
                         <th>Trạng thái</th>
                         <th style="text-align: right;">Hành động</th>
                     </tr>
@@ -76,6 +86,32 @@
             } catch (err) { console.error(err); }
         }
 
+        function getTierBadgeHtml(tier) {
+            let bgColor = '#f1f5f9';
+            let textColor = '#64748b';
+            let icon = 'fa-solid fa-user';
+            
+            if (tier === 'Kim Cương') {
+                bgColor = '#e0f7fa';
+                textColor = '#006064';
+                icon = 'fa-solid fa-gem';
+            } else if (tier === 'Vàng') {
+                bgColor = '#fff8e1';
+                textColor = '#b78103';
+                icon = 'fa-solid fa-crown';
+            } else if (tier === 'Bạc') {
+                bgColor = '#f5f7fa';
+                textColor = '#475569';
+                icon = 'fa-solid fa-medal';
+            } else if (tier === 'Đồng') {
+                bgColor = '#fbe9e7';
+                textColor = '#a83c16';
+                icon = 'fa-solid fa-award';
+            }
+            
+            return `<span style="background: ${bgColor}; color: ${textColor}; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;"><i class="${icon}"></i> ${tier}</span>`;
+        }
+
         function renderUsers(users) {
             const tableBody = document.getElementById('customer-table-body');
             const emptyBox = document.getElementById('empty-box');
@@ -93,6 +129,8 @@
                     <td>@${u.userName}</td>
                     <td style="font-weight: 700; color: var(--text-main);">${u.fullName || '---'}</td>
                     <td>${u.numberPhone || '---'}</td>
+                    <td>${getTierBadgeHtml(u.tier || 'Thành viên Mới')}</td>
+                    <td style="font-weight: bold; color: var(--text-main);">${Number(u.totalSpent || 0).toLocaleString()} đ</td>
                     <td><span class="badge-status ${u.status === 'active' ? 'completed' : 'cancelled'}">${u.status === 'active' ? 'Hoạt động' : 'Đã chặn'}</span></td>
                     <td style="text-align: right;">
                         <button class="btn-figma btn-figma-outline" style="padding: 5px 15px; font-size: 12px;" onclick="viewDetail('${u._id}')">Chi tiết</button>
@@ -107,6 +145,8 @@
                 selectedUserId = id;
                 document.getElementById('view-name').innerText = user.fullName || 'Chưa đặt tên';
                 document.getElementById('view-username').innerText = '@' + user.userName;
+                document.getElementById('view-tier').innerHTML = getTierBadgeHtml(user.tier || 'Thành viên Mới');
+                document.getElementById('view-spent').innerText = Number(user.totalSpent || 0).toLocaleString() + ' đ';
                 document.getElementById('view-status').innerText = user.status === 'active' ? 'Đang hoạt động' : 'Đã bị chặn';
                 
                 const btnBlock = document.getElementById('btn-block');
@@ -132,6 +172,8 @@
                     selectedUserId = null;
                     document.getElementById('view-name').innerText = '---';
                     document.getElementById('view-username').innerText = '---';
+                    document.getElementById('view-tier').innerText = '---';
+                    document.getElementById('view-spent').innerText = '---';
                     document.getElementById('view-status').innerText = '---';
                     document.getElementById('btn-block').disabled = true;
                 }

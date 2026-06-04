@@ -1,3 +1,75 @@
+// Dynamically load Flatpickr CSS & JS for client profile page
+const fpCSS = document.createElement('link');
+fpCSS.rel = 'stylesheet';
+fpCSS.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css';
+document.head.appendChild(fpCSS);
+
+const fpJS = document.createElement('script');
+fpJS.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+document.head.appendChild(fpJS);
+
+const fpVN = document.createElement('script');
+fpVN.src = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js';
+
+fpJS.onload = () => {
+    document.head.appendChild(fpVN);
+};
+
+window.initClientDatePicker = function() {
+    const el = document.getElementById('pfDob');
+    if (!el) return;
+    if (typeof flatpickr === 'function') {
+        // Override HTMLInputElement.prototype.value setter so manual programmatic updates propagate to flatpickr
+        if (!window.hasOverrideFlatpickrValue) {
+            window.hasOverrideFlatpickrValue = true;
+            const originalValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+            Object.defineProperty(HTMLInputElement.prototype, 'value', {
+                set: function(val) {
+                    const oldVal = this.value;
+                    originalValueSetter.call(this, val);
+                    if (this._flatpickr && oldVal !== val) {
+                        if (!this._isFlatpickrUpdating) {
+                            this._isFlatpickrUpdating = true;
+                            this._flatpickr.setDate(val, false);
+                            this._isFlatpickrUpdating = false;
+                        }
+                    }
+                },
+                get: Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get,
+                configurable: true
+            });
+        }
+
+        const fpInstance = flatpickr(el, {
+            locale: typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.vn ? 'vn' : 'default',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            dateFormat: 'Y-m-d',
+            allowInput: true,
+            maxDate: new Date(new Date().getFullYear() - 13, new Date().getMonth(), new Date().getDate())
+        });
+
+        if (fpInstance && fpInstance.altInput) {
+            fpInstance.altInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/[^0-9/]/g, '');
+                if (e.inputType !== 'deleteContentBackward') {
+                    if (/^\d{2}$/.test(value)) {
+                        value += '/';
+                    } else if (/^\d{2}\/\d{2}$/.test(value)) {
+                        value += '/';
+                    }
+                }
+                if (value.length > 10) {
+                    value = value.slice(0, 10);
+                }
+                e.target.value = value;
+            });
+        }
+    } else {
+        setTimeout(window.initClientDatePicker, 100);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     const userId = getCurrentUserId();
     if (!userId) {
@@ -21,10 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const errPhone = document.getElementById('errPhone');
     const errDob = document.getElementById('errDob');
 
-    // Chặn lịch: ngày sinh <= 13 năm trước
-    const today = new Date();
-    const maxDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
-    inputDob.max = maxDate.toISOString().split('T')[0];
+    window.initClientDatePicker();
 
     let currentAvatarUrl = null; // Biến lưu tạm link ảnh đại diện
 

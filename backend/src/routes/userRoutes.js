@@ -13,9 +13,19 @@ router.put('/:id/addresses/:addressId', userController.updateAddress);
 router.delete('/:id/addresses/:addressId', userController.deleteAddress);
 router.put('/:id/addresses/:addressId/default', userController.setDefaultAddress);
 
+// Middleware chặn truy cập trái phép của nhân viên (staff)
+const adminOnly = (req, res, next) => {
+    const role = req.headers['x-role'];
+    if (role === 'admin') {
+        next();
+    } else {
+        return res.status(403).json({ success: false, message: "Truy cập bị từ chối! Quyền hạn không đủ." });
+    }
+};
+
 // Admin routes
 router.get('/admin/all', userController.getAllUsers);
 router.get('/admin/search', userController.searchUsers);
-router.put('/admin/toggle-status/:id', userController.toggleUserStatus);
+router.put('/admin/toggle-status/:id', adminOnly, userController.toggleUserStatus);
 
 module.exports = router;

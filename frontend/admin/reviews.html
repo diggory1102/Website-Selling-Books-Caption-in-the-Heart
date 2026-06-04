@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý đánh giá - Captain In One Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-global.css">
     <link rel="stylesheet" href="css/style-reviews.css">
 </head>
@@ -43,19 +43,34 @@
         <!-- Filter Bar -->
         <div class="filter-bar">
             <input type="text" class="filter-input" id="searchReviewInput" placeholder="Tìm tên sách, khách hàng, email..." autocomplete="off">
-            <select class="filter-select" id="starFilter" onchange="handleFilterChange()">
-                <option value="">Tất cả số sao</option>
-                <option value="5">5 sao ★★★★★</option>
-                <option value="4">4 sao ★★★★</option>
-                <option value="3">3 sao ★★★</option>
-                <option value="2">2 sao ★★</option>
-                <option value="1">1 sao ★</option>
-            </select>
-            <select class="filter-select" id="repliedFilter" onchange="handleFilterChange()">
-                <option value="">Trạng thái phản hồi</option>
-                <option value="false">Chưa phản hồi</option>
-                <option value="true">Đã phản hồi</option>
-            </select>
+            <div class="filter-dropdown-wrapper" style="flex: 1; min-width: 150px;">
+                <button type="button" class="filter-btn" id="btn-starFilter">
+                    <span>Tất cả số sao</span>
+                    <i class="fa-solid fa-chevron-down arrow"></i>
+                </button>
+                <ul class="filter-popup">
+                    <li><a href="#" data-value="">Tất cả số sao</a></li>
+                    <li><a href="#" data-value="5">5 sao ★★★★★</a></li>
+                    <li><a href="#" data-value="4">4 sao ★★★★</a></li>
+                    <li><a href="#" data-value="3">3 sao ★★★</a></li>
+                    <li><a href="#" data-value="2">2 sao ★★</a></li>
+                    <li><a href="#" data-value="1">1 sao ★</a></li>
+                </ul>
+                <input type="hidden" id="starFilter" value="" onchange="handleFilterChange()">
+            </div>
+
+            <div class="filter-dropdown-wrapper" style="flex: 1; min-width: 180px;">
+                <button type="button" class="filter-btn" id="btn-repliedFilter">
+                    <span>Trạng thái phản hồi</span>
+                    <i class="fa-solid fa-chevron-down arrow"></i>
+                </button>
+                <ul class="filter-popup">
+                    <li><a href="#" data-value="">Trạng thái phản hồi</a></li>
+                    <li><a href="#" data-value="false">Chưa phản hồi</a></li>
+                    <li><a href="#" data-value="true">Đã phản hồi</a></li>
+                </ul>
+                <input type="hidden" id="repliedFilter" value="" onchange="handleFilterChange()">
+            </div>
             <button class="btn-figma btn-figma-primary" onclick="handleSearchClick()"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
             <button class="btn-figma btn-figma-outline" onclick="resetFilters()"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
         </div>
@@ -256,7 +271,9 @@
         function resetFilters() {
             document.getElementById('searchReviewInput').value = '';
             document.getElementById('starFilter').value = '';
+            document.querySelector('#btn-starFilter span').textContent = 'Tất cả số sao';
             document.getElementById('repliedFilter').value = '';
+            document.querySelector('#btn-repliedFilter span').textContent = 'Trạng thái phản hồi';
             currentSearch = '';
             currentRating = '';
             currentReplied = '';

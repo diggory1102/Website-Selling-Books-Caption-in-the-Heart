@@ -140,6 +140,24 @@ exports.validateVoucher = async (req, res) => {
             }
         }
 
+        // --- ĐỐI TƯỢNG KHÁCH HÀNG CỤ THỂ ---
+        if (promo.applyTo === 'CUSTOMER') {
+            if (!userId) {
+                return res.status(400).json({ success: false, message: "Vui lòng đăng nhập để sử dụng mã ưu đãi dành riêng cho bạn!" });
+            }
+            const { User } = require('../models/database');
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ success: false, message: "Không tìm thấy thông tin tài khoản người dùng!" });
+            }
+            const isTargeted = promo.targetValues.includes(user._id.toString()) || 
+                               promo.targetValues.includes(user.userName) || 
+                               promo.targetValues.includes(user.email);
+            if (!isTargeted) {
+                return res.status(400).json({ success: false, message: "Mã giảm giá này chỉ dành riêng cho một số tài khoản nhất định!" });
+            }
+        }
+
         res.json({ success: true, promotion: promo });
     } catch (error) {
         console.error(error);
@@ -228,6 +246,24 @@ exports.applyVoucher = async (req, res) => {
 
             if (!promo.targetValues.includes(userTier)) {
                 return res.status(400).json({ success: false, message: `Mã giảm giá này chỉ dành cho thành viên hạng ${promo.targetValues.join(', ')}. Hạng hiện tại của bạn là: ${userTier}` });
+            }
+        }
+
+        // Kiểm tra Đối tượng khách hàng cụ thể (CUSTOMER)
+        if (promo.applyTo === 'CUSTOMER') {
+            if (!userId) {
+                return res.status(400).json({ success: false, message: "Vui lòng đăng nhập để sử dụng mã ưu đãi dành riêng cho bạn!" });
+            }
+            const { User } = require('../models/database');
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ success: false, message: "Không tìm thấy thông tin tài khoản người dùng!" });
+            }
+            const isTargeted = promo.targetValues.includes(user._id.toString()) || 
+                               promo.targetValues.includes(user.userName) || 
+                               promo.targetValues.includes(user.email);
+            if (!isTargeted) {
+                return res.status(400).json({ success: false, message: "Mã giảm giá này chỉ dành riêng cho một số tài khoản nhất định!" });
             }
         }
 

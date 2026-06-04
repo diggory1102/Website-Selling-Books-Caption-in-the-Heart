@@ -35,7 +35,7 @@ async function refundStock(items) {
 
 const createOrder = async (req, res) => {
     try {
-        const { userId, items, shippingInfo, paymentMethod, subTotal, shippingFee, totalPrice, promotionId, discountValue } = req.body;
+        const { userId, items, shippingInfo, paymentMethod, subTotal, shippingFee, totalPrice, promotionId, shippingPromotionId, discountValue } = req.body;
 
         if (!items || items.length === 0) return res.status(400).json({ success: false, message: "Giỏ hàng trống!" });
 
@@ -55,15 +55,22 @@ const createOrder = async (req, res) => {
             items: items.map(item => ({ 
                 productId: item.productId, productName: item.name, name: item.name,
                 quantity: item.quantity, priceAtPurchase: item.price, price: item.price 
-            }))
+            })),
+            history: [{
+                status: paymentMethod === 'VNPAY' ? 'Chờ thanh toán' : 'Chờ xử lý',
+                changedBy: 'Hệ thống',
+                note: paymentMethod === 'VNPAY' ? 'Tạo đơn hàng chờ thanh toán qua VNPay' : 'Khách hàng đặt hàng thành công'
+            }]
         };
 
         if (userId) billData.userId = userId;
         if (promotionId) billData.promotionId = promotionId;
+        if (shippingPromotionId) billData.shippingPromotionId = shippingPromotionId;
 
         const newBill = await Bill.create(billData);
 
         if (promotionId) await Promotion.findByIdAndUpdate(promotionId, { $inc: { usedCount: 1 } });
+        if (shippingPromotionId) await Promotion.findByIdAndUpdate(shippingPromotionId, { $inc: { usedCount: 1 } });
 
         // Trừ kho đối với đơn hàng không phải VNPay (ví dụ: COD) đặt hàng thành công ngay
         if (paymentMethod !== 'VNPAY') {
@@ -155,10 +162,23 @@ const cancelOrder = async (req, res) => {
         if (order.status !== 'Chờ xử lý') return res.status(400).json({ success: false, message: "Chỉ có thể hủy đơn hàng ở trạng thái Chờ xử lý" });
 
         order.status = 'Đã hủy';
+        order.history.push({
+            status: 'Đã hủy',
+            changedBy: 'Khách hàng',
+            note: 'Khách hàng chủ động hủy đơn'
+        });
         await order.save();
 
         // Hoàn lại kho và lượng bán khi hủy đơn
         await refundStock(order.items);
+
+        // Hoàn lại lượt sử dụng mã giảm giá & mã Free Ship
+        if (order.promotionId) {
+            await Promotion.findByIdAndUpdate(order.promotionId, { $inc: { usedCount: -1 } });
+        }
+        if (order.shippingPromotionId) {
+            await Promotion.findByIdAndUpdate(order.shippingPromotionId, { $inc: { usedCount: -1 } });
+        }
 
         // Tự động tạo thông báo hủy đơn hàng
         try {
@@ -190,18 +210,50 @@ const getAllOrders = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
     try {
-        const { status } = req.body;
+        const { status, changedBy, note } = req.body;
         
         const order = await Bill.findById(req.params.id);
         if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
 
         const oldStatus = order.status;
-        order.status = status;
-        await order.save();
+
+        // Định nghĩa bộ chuyển đổi trạng thái hợp lệ
+        const allowedTransitions = {
+            'Chờ thanh toán': ['Đã hủy'],
+            'Chờ xử lý': ['Đang giao', 'Đã hủy'],
+            'Đang giao': ['Đã giao', 'Đã hủy'],
+            'Đã giao': ['Đã nhận được hàng'],
+            'Đã nhận được hàng': [],
+            'Đã hủy': []
+        };
+
+        if (oldStatus !== status) {
+            const allowed = allowedTransitions[oldStatus] || [];
+            if (!allowed.includes(status)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Không thể chuyển trạng thái từ "${oldStatus}" sang "${status}"!` 
+                });
+            }
+
+            order.status = status;
+            order.history.push({
+                status: status,
+                changedBy: changedBy || 'Hệ thống',
+                note: note || `Đổi trạng thái từ ${oldStatus} sang ${status}`
+            });
+            await order.save();
+        }
 
         // Hoàn lại kho nếu đơn bị hủy từ một trạng thái đã trừ kho (Chờ xử lý, Đang giao, Đã giao)
         if (status === 'Đã hủy' && oldStatus !== 'Đã hủy' && oldStatus !== 'Chờ thanh toán') {
             await refundStock(order.items);
+            if (order.promotionId) {
+                await Promotion.findByIdAndUpdate(order.promotionId, { $inc: { usedCount: -1 } });
+            }
+            if (order.shippingPromotionId) {
+                await Promotion.findByIdAndUpdate(order.shippingPromotionId, { $inc: { usedCount: -1 } });
+            }
         }
 
         // Tự động tạo thông báo cập nhật trạng thái đơn hàng
@@ -320,6 +372,11 @@ const vnpayReturn = async (req, res) => {
                 await Payment.findByIdAndUpdate(bill.paymentId, { status: 'Đã thanh toán' });
                 if (bill.status === 'Chờ thanh toán') {
                     bill.status = 'Chờ xử lý';
+                    bill.history.push({
+                        status: 'Chờ xử lý',
+                        changedBy: 'Hệ thống (VNPay)',
+                        note: 'Thanh toán qua cổng VNPay thành công'
+                    });
                     await bill.save();
                     await deductStock(bill.items);
                 }
@@ -344,9 +401,17 @@ const vnpayReturn = async (req, res) => {
                 await Payment.findByIdAndUpdate(bill.paymentId, { status: 'Thanh toán thất bại' });
                 if (bill.status !== 'Đã hủy') {
                     bill.status = 'Đã hủy';
+                    bill.history.push({
+                        status: 'Đã hủy',
+                        changedBy: 'Hệ thống (VNPay)',
+                        note: 'Thanh toán qua cổng VNPay thất bại hoặc bị hủy'
+                    });
                     await bill.save();
                     if (bill.promotionId) {
                         await Promotion.findByIdAndUpdate(bill.promotionId, { $inc: { usedCount: -1 } });
+                    }
+                    if (bill.shippingPromotionId) {
+                        await Promotion.findByIdAndUpdate(bill.shippingPromotionId, { $inc: { usedCount: -1 } });
                     }
                 }
                 return res.redirect(`${process.env.FRONTEND_URL}/checkout.html?paymentStatus=failed`);
@@ -355,9 +420,17 @@ const vnpayReturn = async (req, res) => {
             console.error("VNPay Signature Verification Failed!");
             if (bill.status !== 'Đã hủy') {
                 bill.status = 'Đã hủy';
+                bill.history.push({
+                    status: 'Đã hủy',
+                    changedBy: 'Hệ thống (VNPay)',
+                    note: 'Xác thực chữ ký VNPay thất bại'
+                });
                 await bill.save();
                 if (bill.promotionId) {
                     await Promotion.findByIdAndUpdate(bill.promotionId, { $inc: { usedCount: -1 } });
+                }
+                if (bill.shippingPromotionId) {
+                    await Promotion.findByIdAndUpdate(bill.shippingPromotionId, { $inc: { usedCount: -1 } });
                 }
             }
             return res.redirect(`${process.env.FRONTEND_URL}/checkout.html?paymentStatus=failed&reason=checksum`);
@@ -420,6 +493,11 @@ const vnpayIpn = async (req, res) => {
                 await Payment.findByIdAndUpdate(bill.paymentId, { status: 'Đã thanh toán' });
                 if (bill.status === 'Chờ thanh toán') {
                     bill.status = 'Chờ xử lý';
+                    bill.history.push({
+                        status: 'Chờ xử lý',
+                        changedBy: 'Hệ thống (VNPay IPN)',
+                        note: 'Thanh toán qua cổng VNPay thành công (IPN)'
+                    });
                     await bill.save();
                     await deductStock(bill.items);
                 }
@@ -450,9 +528,17 @@ const vnpayIpn = async (req, res) => {
                 await Payment.findByIdAndUpdate(bill.paymentId, { status: 'Thanh toán thất bại' });
                 if (bill.status !== 'Đã hủy') {
                     bill.status = 'Đã hủy';
+                    bill.history.push({
+                        status: 'Đã hủy',
+                        changedBy: 'Hệ thống (VNPay IPN)',
+                        note: 'Thanh toán qua cổng VNPay thất bại (IPN)'
+                    });
                     await bill.save();
                     if (bill.promotionId) {
                         await Promotion.findByIdAndUpdate(bill.promotionId, { $inc: { usedCount: -1 } });
+                    }
+                    if (bill.shippingPromotionId) {
+                        await Promotion.findByIdAndUpdate(bill.shippingPromotionId, { $inc: { usedCount: -1 } });
                     }
                 }
                 return res.status(200).json({ RspCode: '00', Message: 'Confirm Success' });

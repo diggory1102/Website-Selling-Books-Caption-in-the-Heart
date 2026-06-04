@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Thông báo - Caption In The Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-global.css">
     <link rel="stylesheet" href="css/style-notifications.css">
 </head>
@@ -38,11 +38,18 @@
 
                     <div class="form-group-figma">
                         <label>Loại thông báo</label>
-                        <select id="notiType" class="form-control-figma">
-                            <option value="SYSTEM">🔔 Cập nhật hệ thống</option>
-                            <option value="PROMOTION">🎫 Sự kiện / Ưu đãi</option>
-                            <option value="WARNING">⚠️ Cảnh báo</option>
-                        </select>
+                        <div class="filter-dropdown-wrapper">
+                            <button type="button" class="filter-btn" id="btn-notiType">
+                                <span>🔔 Cập nhật hệ thống</span>
+                                <i class="fa-solid fa-chevron-down arrow"></i>
+                            </button>
+                            <ul class="filter-popup">
+                                <li><a href="#" data-value="SYSTEM">🔔 Cập nhật hệ thống</a></li>
+                                <li><a href="#" data-value="PROMOTION">🎫 Sự kiện / Ưu đãi</a></li>
+                                <li><a href="#" data-value="WARNING">⚠️ Cảnh báo</a></li>
+                            </ul>
+                            <input type="hidden" id="notiType" value="SYSTEM">
+                        </div>
                     </div>
 
                     <div class="form-group-figma">
@@ -368,6 +375,8 @@
                     showAdminToast(data.message || "Đã phát hành thông báo thành công!", "success");
                     document.getElementById('notiTitle').value = '';
                     document.getElementById('notiContent').value = '';
+                    document.getElementById('notiType').value = 'SYSTEM';
+                    document.querySelector('#btn-notiType span').textContent = '🔔 Cập nhật hệ thống';
                     resetComboToDefault(); // Reset selection
                     fetchNotifications();
                 } else {

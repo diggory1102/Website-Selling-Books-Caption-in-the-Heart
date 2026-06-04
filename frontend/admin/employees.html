@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý nhân viên - Captain In One Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-global.css">
 </head>
 <body>
@@ -34,10 +34,17 @@
                     <div class="form-group-figma"><label>Email</label><input type="email" id="emp-email" class="form-control-figma" placeholder="example@gmail.com"></div>
                     <div class="form-group-figma">
                         <label>Chức vụ</label>
-                        <select id="emp-role" class="form-control-figma">
-                            <option value="staff">Nhân viên (Staff)</option>
-                            <option value="admin">Quản trị viên (Admin)</option>
-                        </select>
+                        <div class="filter-dropdown-wrapper">
+                            <button type="button" class="filter-btn" id="btn-emp-role">
+                                <span>Nhân viên (Staff)</span>
+                                <i class="fa-solid fa-chevron-down arrow"></i>
+                            </button>
+                            <ul class="filter-popup">
+                                <li><a href="#" data-value="staff">Nhân viên (Staff)</a></li>
+                                <li><a href="#" data-value="admin">Quản trị viên (Admin)</a></li>
+                            </ul>
+                            <input type="hidden" id="emp-role" value="staff">
+                        </div>
                     </div>
                 </div>
                 <div class="btn-group-figma">
@@ -187,7 +194,9 @@
         }
 
         function resetForm() {
-            document.querySelectorAll('input, select').forEach(i => i.value = '');
+            document.querySelectorAll('input').forEach(i => i.value = '');
+            document.getElementById('emp-role').value = 'staff';
+            document.querySelector('#btn-emp-role span').textContent = 'Nhân viên (Staff)';
             document.getElementById('avatarPreview').innerHTML = `<i class="fa-regular fa-user"></i>`;
             initDobLimit();
         }

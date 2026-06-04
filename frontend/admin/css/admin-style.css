@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Itim&display=swap');
 @import url('sidebar.css');
 @import url('topbar.css');
 @import url('components.css');
@@ -13,7 +14,7 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); }
+body { font-family: 'Itim', cursive, sans-serif; background: var(--bg); color: var(--text); }
 a { text-decoration: none; color: inherit; }
 
 .admin-container { display: flex; min-height: 100vh; }

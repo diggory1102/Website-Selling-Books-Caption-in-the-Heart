@@ -3,6 +3,95 @@
  * Synchronizes Sidebar and Topbar across all admin pages.
  */
 
+// Intercept global fetch to attach role headers for backend authorization
+const originalFetch = window.fetch;
+window.fetch = function(url, options) {
+    options = options || {};
+    options.headers = options.headers || {};
+    const adminRole = localStorage.getItem('adminRole');
+    if (adminRole) {
+        if (options.headers instanceof Headers) {
+            options.headers.set('x-role', adminRole);
+        } else {
+            options.headers['x-role'] = adminRole;
+        }
+    }
+    return originalFetch(url, options);
+};
+
+// Dynamically load Flatpickr CSS & JS for beautiful calendar datepicker
+const fpCSS = document.createElement('link');
+fpCSS.rel = 'stylesheet';
+fpCSS.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css';
+document.head.appendChild(fpCSS);
+
+const fpJS = document.createElement('script');
+fpJS.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+document.head.appendChild(fpJS);
+
+const fpVN = document.createElement('script');
+fpVN.src = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js';
+
+fpJS.onload = () => {
+    document.head.appendChild(fpVN);
+};
+
+window.initAdminDatePicker = function() {
+    if (typeof flatpickr === 'function') {
+        // Override HTMLInputElement.prototype.value setter so manual programmatic updates propagate to flatpickr
+        if (!window.hasOverrideFlatpickrValue) {
+            window.hasOverrideFlatpickrValue = true;
+            const originalValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+            Object.defineProperty(HTMLInputElement.prototype, 'value', {
+                set: function(val) {
+                    const oldVal = this.value;
+                    originalValueSetter.call(this, val);
+                    if (this._flatpickr && oldVal !== val) {
+                        if (!this._isFlatpickrUpdating) {
+                            this._isFlatpickrUpdating = true;
+                            this._flatpickr.setDate(val, false);
+                            this._isFlatpickrUpdating = false;
+                        }
+                    }
+                },
+                get: Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get,
+                configurable: true
+            });
+        }
+
+        document.querySelectorAll('input[type="date"]').forEach(el => {
+            if (!el.classList.contains('flatpickr-input')) {
+                const fpInstance = flatpickr(el, {
+                    locale: typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.vn ? 'vn' : 'default',
+                    altInput: true,
+                    altFormat: 'd/m/Y',
+                    dateFormat: 'Y-m-d',
+                    allowInput: true
+                });
+
+                if (fpInstance && fpInstance.altInput) {
+                    fpInstance.altInput.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/[^0-9/]/g, '');
+                        if (e.inputType !== 'deleteContentBackward') {
+                            if (/^\d{2}$/.test(value)) {
+                                value += '/';
+                            } else if (/^\d{2}\/\d{2}$/.test(value)) {
+                                value += '/';
+                            }
+                        }
+                        if (value.length > 10) {
+                            value = value.slice(0, 10);
+                        }
+                        e.target.value = value;
+                    });
+                }
+            }
+        });
+    } else {
+        setTimeout(window.initAdminDatePicker, 100);
+    }
+};
+
 // Inject Settings CSS Styles
 const settingsStyle = document.createElement('style');
 settingsStyle.textContent = `
@@ -26,7 +115,7 @@ settingsStyle.textContent = `
         padding: 25px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         position: relative;
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Itim', cursive, sans-serif;
     }
     .admin-settings-header {
         display: flex;
@@ -111,13 +200,20 @@ document.head.appendChild(settingsStyle);
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Kiểm tra phân quyền truy cập Admin (Gatekeeper)
     const currentPath = window.location.pathname;
-    if (!currentPath.includes('admin-login.html')) {
-        const adminUserStr = localStorage.getItem('adminUser');
-        const adminRoleVal = localStorage.getItem('adminRole');
+    const adminUserStr = localStorage.getItem('adminUser');
+    const adminRoleVal = localStorage.getItem('adminRole');
 
+    if (!currentPath.includes('admin-login.html')) {
         if (!adminUserStr || (adminRoleVal !== 'admin' && adminRoleVal !== 'staff')) {
             alert("Truy cập bị từ chối! Vui lòng đăng nhập bằng tài khoản Quản trị.");
             window.location.href = "admin-login.html";
+            return;
+        }
+
+        // Chặn nhân viên (staff) tự ý vào trang quản lý nhân sự (employees.html)
+        if (currentPath.includes('employees.html') && adminRoleVal === 'staff') {
+            alert("Bạn không có quyền truy cập trang này!");
+            window.location.href = "admin-dashboard.html";
             return;
         }
     }
@@ -130,11 +226,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearchLogic();
     setupSettingsModalLogic();
     loadAdminNotifications();
+    window.initAdminDatePicker();
 });
 
 function renderSidebar() {
     const sidebarContainer = document.getElementById('sidebar-container');
     if (!sidebarContainer) return;
+
+    const adminRoleVal = localStorage.getItem('adminRole');
+    const isStaff = (adminRoleVal === 'staff');
 
     sidebarContainer.innerHTML = `
         <aside class="admin-sidebar">
@@ -146,7 +246,7 @@ function renderSidebar() {
                 <li><a href="orders.html" data-page="orders"><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</a></li>
                 <li><a href="products.html" data-page="products"><i class="fa-solid fa-book"></i> Sản phẩm</a></li>
                 <li><a href="customers.html" data-page="customers"><i class="fa-solid fa-users"></i> Khách hàng</a></li>
-                <li><a href="employees.html" data-page="employees"><i class="fa-solid fa-user-shield"></i> Nhân viên</a></li>
+                ${isStaff ? '' : '<li><a href="employees.html" data-page="employees"><i class="fa-solid fa-user-shield"></i> Nhân viên</a></li>'}
                 <li><a href="promotions.html" data-page="promotions"><i class="fa-solid fa-ticket"></i> Khuyến mãi</a></li>
                 <li><a href="reviews.html" data-page="reviews"><i class="fa-solid fa-star"></i> Quản lý đánh giá</a></li>
                 <li><a href="notifications.html" data-page="notifications"><i class="fa-solid fa-bell"></i> Quản lý Thông báo</a></li>
@@ -179,14 +279,14 @@ function renderTopbar() {
                     <span class="notification-dot" id="adminNotiDot" style="display: none;"></span>
                     
                     <div class="admin-dropdown-menu noti-dropdown" id="adminNotiDropdown" style="width: 320px; right: 0; padding: 10px 0; display: none; position: absolute; top: 100%; background: #fff; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 1000; text-align: left;">
-                        <div style="padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; font-family: 'Montserrat', sans-serif;">
+                        <div style="padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; font-family: 'Itim', cursive, sans-serif;">
                             <span>Thông báo mới</span>
                             <span id="adminNotiCount" style="background: #ef4444; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 10px;">0</span>
                         </div>
-                        <div id="adminNotiList" style="max-height: 250px; overflow-y: auto; font-size: 13px; font-family: 'Montserrat', sans-serif;">
+                        <div id="adminNotiList" style="max-height: 250px; overflow-y: auto; font-size: 13px; font-family: 'Itim', cursive, sans-serif;">
                             <div style="padding: 20px; text-align: center; color: #888;">Không có thông báo mới</div>
                         </div>
-                        <a href="notifications.html" style="display: block; text-align: center; padding: 10px; border-top: 1px solid #eee; font-size: 12px; color: #3b82f6; font-weight: 600; text-decoration: none; font-family: 'Montserrat', sans-serif;">Xem tất cả thông báo</a>
+                        <a href="notifications.html" style="display: block; text-align: center; padding: 10px; border-top: 1px solid #eee; font-size: 12px; color: #3b82f6; font-weight: 600; text-decoration: none; font-family: 'Itim', cursive, sans-serif;">Xem tất cả thông báo</a>
                     </div>
                 </div>
                 
@@ -583,5 +683,202 @@ window.markAdminNotiAsRead = async function (notiId) {
         loadAdminNotifications();
     } catch (err) {
         console.error("Lỗi đọc thông báo:", err);
+    }
+};
+
+// Global Custom Dropdowns Handler
+document.addEventListener('click', (e) => {
+    // 1. Click vào nút chọn của dropdown
+    const btn = e.target.closest('.filter-btn');
+    if (btn) {
+        e.stopPropagation();
+        const wrapper = btn.closest('.filter-dropdown-wrapper');
+        const popup = wrapper.querySelector('.filter-popup');
+        const isOpen = popup.classList.contains('show');
+        
+        // Đóng các dropdown khác đang mở
+        document.querySelectorAll('.filter-popup').forEach(p => {
+            if (p !== popup) p.classList.remove('show');
+        });
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            if (b !== btn) b.classList.remove('active');
+        });
+        
+        if (!isOpen) {
+            popup.classList.add('show');
+            btn.classList.add('active');
+        } else {
+            popup.classList.remove('show');
+            btn.classList.remove('active');
+        }
+        return;
+    }
+
+    // 2. Click chọn item trong list
+    const item = e.target.closest('.filter-popup li a');
+    if (item) {
+        e.preventDefault();
+        const wrapper = item.closest('.filter-dropdown-wrapper');
+        const popup = item.closest('.filter-popup');
+        const btn = wrapper.querySelector('.filter-btn');
+        const input = wrapper.querySelector('input[type="hidden"]');
+        
+        const value = item.getAttribute('data-value');
+        const text = item.textContent;
+
+        const textSpan = btn.querySelector('span:first-child') || btn;
+        if (textSpan) textSpan.textContent = text;
+
+        if (input) {
+            const oldValue = input.value;
+            input.value = value;
+            if (oldValue !== value) {
+                // Dispatch change event to trigger callbacks
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                if (typeof input.onchange === 'function') {
+                    input.onchange();
+                }
+            }
+        }
+
+        popup.classList.remove('show');
+        btn.classList.remove('active');
+        return;
+    }
+
+    // 3. Click ra ngoài đóng hết
+    document.querySelectorAll('.filter-popup').forEach(p => p.classList.remove('show'));
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+});
+
+// Inject Custom Global Toast styles
+const globalToastStyles = document.createElement('style');
+globalToastStyles.textContent = `
+#adminToastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.admin-toast {
+    pointer-events: auto;
+    background: #fff;
+    color: #1e293b;
+    padding: 14px 22px;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08), 0 3px 6px rgba(0,0,0,0.04);
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+    border-left: 5px solid #10b981;
+    font-family: 'Itim', cursive, sans-serif !important;
+}
+.admin-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+.admin-toast.error {
+    border-left-color: #ef4444;
+}
+.admin-toast i {
+    font-size: 16px;
+}
+.input-error-highlight {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+    transition: all 0.2s ease-in-out;
+}
+`;
+document.head.appendChild(globalToastStyles);
+
+// Global Toast Helper for Admin
+window.showAdminToast = function(message, type = 'success') {
+    let container = document.getElementById('adminToastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'adminToastContainer';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `admin-toast ${type}`;
+    
+    let icon = 'fa-solid fa-circle-check';
+    let iconColor = '#10b981';
+    if (type === 'error') {
+        icon = 'fa-solid fa-circle-xmark';
+        iconColor = '#ef4444';
+    }
+    
+    toast.innerHTML = `<i class="${icon}" style="color: ${iconColor}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => toast.classList.add('show'), 50);
+    
+    // Auto remove
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
+};
+
+// Overwrite window.alert with beautiful toasts and input highlighting
+window.alert = function(message) {
+    let type = 'success';
+    if (message.toLowerCase().includes('lỗi') || 
+        message.toLowerCase().includes('thất bại') || 
+        message.toLowerCase().includes('vui lòng') || 
+        message.toLowerCase().includes('yêu cầu') || 
+        message.toLowerCase().includes('chưa') || 
+        message.toLowerCase().includes('không') ||
+        message.toLowerCase().includes('phải từ') ||
+        message.toLowerCase().includes('tương lai') ||
+        message.toLowerCase().includes('lớn hơn')) {
+        type = 'error';
+    }
+    
+    window.showAdminToast(message, type);
+    
+    if (type === 'error') {
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            const isPromoCodeEmpty = input.id === 'promo-code' && document.getElementById('promo-type-btn-VOUCHER')?.classList.contains('active') && !input.value;
+            const isGeneralEmpty = (input.id === 'promo-name' || input.id === 'discount-value' || input.id === 'start-date' || input.id === 'end-date' || input.id === 'emp-name' || input.id === 'emp-username' || input.id === 'emp-password' || input.id === 'emp-dob' || input.id === 'p-name' || input.id === 'p-price' || input.id === 'p-date') && !input.value;
+            
+            if (isGeneralEmpty || isPromoCodeEmpty || (input.hasAttribute('required') && !input.value)) {
+                let targetEl = input;
+                if (input._flatpickr && input._flatpickr.altInput) {
+                    targetEl = input._flatpickr.altInput;
+                }
+                
+                targetEl.classList.add('input-error-highlight');
+                
+                const clearHighlight = () => {
+                    targetEl.classList.remove('input-error-highlight');
+                    input.removeEventListener('input', clearHighlight);
+                    input.removeEventListener('change', clearHighlight);
+                    if (input._flatpickr && input._flatpickr.altInput) {
+                        targetEl.removeEventListener('input', clearHighlight);
+                        targetEl.removeEventListener('change', clearHighlight);
+                    }
+                };
+                
+                input.addEventListener('input', clearHighlight);
+                input.addEventListener('change', clearHighlight);
+                if (input._flatpickr && input._flatpickr.altInput) {
+                    targetEl.addEventListener('input', clearHighlight);
+                    targetEl.addEventListener('change', clearHighlight);
+                }
+            }
+        });
     }
 };

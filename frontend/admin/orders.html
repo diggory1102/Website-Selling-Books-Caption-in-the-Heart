@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý đơn hàng - Captain In One Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-global.css">
     <link rel="stylesheet" href="css/style-orders.css">
 </head>
@@ -77,11 +77,8 @@
                 <div class="info-box">
                     <h4>Trạng thái đơn hàng</h4>
                     <p>Hiện tại: <span id="modalCurrentStatus" class="status-badge">---</span></p>
-                    <div class="btn-group-print" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn-figma btn-figma-primary" onclick="updateStatus('Đang giao')" style="padding: 5px 10px; font-size: 11px;">Xác nhận & Giao</button>
-                        <button class="btn-figma btn-figma-primary" onclick="updateStatus('Đã giao')" style="padding: 5px 10px; font-size: 11px; background: #16a34a;">Đã giao</button>
-                        <button class="btn-figma btn-figma-primary" onclick="updateStatus('Đã nhận được hàng')" style="padding: 5px 10px; font-size: 11px; background: #3b82f6;">Xác nhận Đã nhận hàng</button>
-                        <button class="btn-figma btn-figma-danger" onclick="updateStatus('Đã hủy')" style="padding: 5px 10px; font-size: 11px;">Hủy đơn</button>
+                    <div id="modalStatusActions" class="btn-group-print" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <!-- Các nút chuyển đổi trạng thái sẽ được render động ở đây -->
                     </div>
                 </div>
             </div>
@@ -95,10 +92,18 @@
                 </tbody>
             </table>
 
-            <div style="text-align: right; margin-top: 20px;">
-                <p style="font-size: 16px;">Tạm tính: <span id="modalSubTotal">0 đ</span></p>
-                <p style="font-size: 16px;">Phí ship: <span id="modalShip">0 đ</span></p>
-                <h3 style="font-size: 20px; color: var(--active-red); margin-top: 10px;">Tổng tiền: <span id="modalTotal">0 đ</span></h3>
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-top: 20px; align-items: start;">
+                <div>
+                    <h4 style="margin-bottom: 10px;"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử trạng thái</h4>
+                    <div id="modalHistoryTimeline" style="background: #f8fafc; border-radius: 12px; padding: 15px; max-height: 180px; overflow-y: auto; font-family: inherit;">
+                        <!-- Timeline items will go here -->
+                    </div>
+                </div>
+                <div style="text-align: right; font-family: inherit;">
+                    <p style="font-size: 15px; color: #64748b;">Tạm tính: <span id="modalSubTotal" style="font-weight: 600; color: #1e293b;">0 đ</span></p>
+                    <p style="font-size: 15px; color: #64748b; margin-top: 5px;">Phí ship: <span id="modalShip" style="font-weight: 600; color: #1e293b;">0 đ</span></p>
+                    <h3 style="font-size: 18px; color: var(--active-red); margin-top: 10px;">Tổng tiền: <span id="modalTotal">0 đ</span></h3>
+                </div>
             </div>
         </div>
     </div>
@@ -166,6 +171,92 @@
                 statusEl.innerText = order.status;
                 statusEl.className = 'status-badge ' + (order.status === 'Đang giao' ? 'status-delivering' : (order.status === 'Đã giao' || order.status === 'Đã nhận được hàng' ? 'status-completed' : (order.status === 'Đã hủy' ? 'status-cancelled' : 'status-pending')));
 
+                // Render các nút chuyển đổi trạng thái hợp lệ
+                const actionsContainer = document.getElementById('modalStatusActions');
+                actionsContainer.innerHTML = '';
+                
+                const allowedTransitions = {
+                    'Chờ thanh toán': [
+                        { status: 'Đã hủy', label: 'Hủy đơn', class: 'btn-figma-danger' }
+                    ],
+                    'Chờ xử lý': [
+                        { status: 'Đang giao', label: 'Xác nhận & Giao', class: 'btn-figma-primary', style: 'padding: 5px 10px; font-size: 11px;' },
+                        { status: 'Đã hủy', label: 'Hủy đơn', class: 'btn-figma-danger', style: 'padding: 5px 10px; font-size: 11px;' }
+                    ],
+                    'Đang giao': [
+                        { status: 'Đã giao', label: 'Đã giao', class: 'btn-figma-primary', style: 'padding: 5px 10px; font-size: 11px; background: #16a34a;' },
+                        { status: 'Đã hủy', label: 'Hủy đơn', class: 'btn-figma-danger', style: 'padding: 5px 10px; font-size: 11px;' }
+                    ],
+                    'Đã giao': [
+                        { status: 'Đã nhận được hàng', label: 'Xác nhận Đã nhận hàng', class: 'btn-figma-primary', style: 'padding: 5px 10px; font-size: 11px; background: #3b82f6;' }
+                    ],
+                    'Đã nhận được hàng': [],
+                    'Đã hủy': []
+                };
+
+                const nextActions = allowedTransitions[order.status] || [];
+                if (nextActions.length > 0) {
+                    actionsContainer.innerHTML = nextActions.map(action => {
+                        const styleAttr = action.style ? `style="${action.style}"` : '';
+                        return `<button class="btn-figma ${action.class}" ${styleAttr} onclick="updateStatus('${action.status}')">${action.label}</button>`;
+                    }).join('');
+                } else {
+                    actionsContainer.innerHTML = '<span style="color: #64748b; font-size: 12px; font-style: italic;">Đơn hàng đã hoàn thành hoặc đã bị hủy.</span>';
+                }
+
+                // Render lịch sử trạng thái đơn hàng
+                const historyTimeline = document.getElementById('modalHistoryTimeline');
+                const historyList = order.history || [];
+                
+                if (historyList.length > 0) {
+                    const sortedHistory = [...historyList].sort((a, b) => new Date(b.changedAt) - new Date(a.changedAt));
+                    historyTimeline.innerHTML = sortedHistory.map(h => {
+                        const dateFormatted = new Date(h.changedAt).toLocaleString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                        });
+                        return `
+                            <div style="display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;">
+                                <div style="width: 8px; height: 8px; border-radius: 50%; background: ${h.status === 'Đã hủy' ? '#ef4444' : (h.status === 'Đã nhận được hàng' ? '#10b981' : '#3b82f6')}; margin-top: 5px; flex-shrink: 0;"></div>
+                                <div style="flex-grow: 1; text-align: left;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="font-weight: 700; color: var(--text-main); font-size: 12px;">${h.status}</span>
+                                        <span style="color: #94a3b8; font-size: 10px;">${dateFormatted}</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 11px; margin-top: 2px;">
+                                        Phụ trách: <strong style="color: #475569;">${h.changedBy}</strong>
+                                    </div>
+                                    ${h.note ? `<div style="color: #64748b; font-size: 11px; font-style: italic; margin-top: 2px;">Ghi chú: ${h.note}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    const createDate = new Date(order.createdAt).toLocaleString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                    historyTimeline.innerHTML = `
+                        <div style="display: flex; gap: 10px; align-items: flex-start;">
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; margin-top: 5px; flex-shrink: 0;"></div>
+                            <div style="flex-grow: 1; text-align: left;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: 700; color: var(--text-main); font-size: 12px;">Chờ xử lý</span>
+                                    <span style="color: #94a3b8; font-size: 10px;">${createDate}</span>
+                                </div>
+                                <div style="color: #64748b; font-size: 11px; margin-top: 2px;">Phụ trách: <strong>Hệ thống</strong></div>
+                                <div style="color: #64748b; font-size: 11px; font-style: italic; margin-top: 2px;">Ghi chú: Khách hàng đặt hàng thành công</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 document.getElementById('modalItemsBody').innerHTML = order.items.map(item => `
                     <tr>
                         <td><img src="${item.productId?.imageUrl || 'https://via.placeholder.com/40x60'}" style="width: 40px; border-radius: 5px;"></td>
@@ -187,15 +278,25 @@
         async function updateStatus(newStatus) {
             if(!confirm(`Xác nhận chuyển trạng thái sang: ${newStatus}?`)) return;
             try {
+                let changedBy = 'Quản trị viên';
+                const adminUserStr = localStorage.getItem('adminUser');
+                if (adminUserStr) {
+                    const admin = JSON.parse(adminUserStr);
+                    changedBy = admin.fullName || admin.userName || changedBy;
+                }
+
                 const res = await fetch(`${API_URL}/${currentOrderId}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({ status: newStatus, changedBy: changedBy })
                 });
                 if(res.ok) {
                     alert("Cập nhật thành công!");
                     closeModal();
                     fetchOrders();
+                } else {
+                    const errorData = await res.json();
+                    alert("Cập nhật thất bại: " + errorData.message);
                 }
             } catch (err) { alert("Lỗi cập nhật!"); }
         }

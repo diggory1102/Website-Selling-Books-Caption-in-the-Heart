@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý khuyến mãi - Captain In One Heart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-global.css">
     <link rel="stylesheet" href="css/style-promotions.css">
 </head>
@@ -40,11 +40,18 @@
 
                 <div class="form-group-figma">
                     <label>Loại giảm giá</label>
-                    <select id="discount-type" class="form-control-figma">
-                        <option value="PERCENT">Phần trăm (%)</option>
-                        <option value="AMOUNT">Số tiền cố định (đ)</option>
-                        <option value="FREE_SHIPPING">Miễn phí vận chuyển (Free Ship)</option>
-                    </select>
+                    <div class="filter-dropdown-wrapper">
+                        <button type="button" class="filter-btn" id="btn-discount-type">
+                            <span>Phần trăm (%)</span>
+                            <i class="fa-solid fa-chevron-down arrow"></i>
+                        </button>
+                        <ul class="filter-popup">
+                            <li><a href="#" data-value="PERCENT">Phần trăm (%)</a></li>
+                            <li><a href="#" data-value="AMOUNT">Số tiền cố định (đ)</a></li>
+                            <li><a href="#" data-value="FREE_SHIPPING">Miễn phí vận chuyển (Free Ship)</a></li>
+                        </ul>
+                        <input type="hidden" id="discount-type" value="PERCENT">
+                    </div>
                 </div>
 
                 <div class="form-group-figma">
@@ -54,14 +61,22 @@
 
                 <div class="form-group-figma">
                     <label>Áp dụng cho</label>
-                    <select id="apply-to" class="form-control-figma" onchange="handleApplyToChange()">
-                        <option value="ALL">Toàn bộ sản phẩm</option>
-                        <option value="PRODUCT">Danh sách sách cụ thể</option>
-                        <option value="CATEGORY">Theo Thể loại</option>
-                        <option value="AUTHOR">Theo Tác giả</option>
-                        <option value="PUBLISHER">Theo Nhà xuất bản</option>
-                        <option value="RANK">Theo Hạng thành viên</option>
-                    </select>
+                    <div class="filter-dropdown-wrapper">
+                        <button type="button" class="filter-btn" id="btn-apply-to">
+                            <span>Toàn bộ sản phẩm</span>
+                            <i class="fa-solid fa-chevron-down arrow"></i>
+                        </button>
+                        <ul class="filter-popup">
+                            <li><a href="#" data-value="ALL">Toàn bộ sản phẩm</a></li>
+                            <li><a href="#" data-value="PRODUCT">Danh sách sách cụ thể</a></li>
+                            <li><a href="#" data-value="CATEGORY">Theo Thể loại</a></li>
+                            <li><a href="#" data-value="AUTHOR">Theo Tác giả</a></li>
+                            <li><a href="#" data-value="PUBLISHER">Theo Nhà xuất bản</a></li>
+                            <li><a href="#" data-value="RANK">Theo Hạng thành viên</a></li>
+                            <li><a href="#" data-value="CUSTOMER">Theo Khách hàng cụ thể</a></li>
+                        </ul>
+                        <input type="hidden" id="apply-to" value="ALL" onchange="handleApplyToChange()">
+                    </div>
                 </div>
 
                 <div class="form-group-figma" id="target-btn-group" style="display: none;">
@@ -183,6 +198,33 @@
         const applyTo = document.getElementById('apply-to').value;
         const list = document.getElementById('options-list');
         document.getElementById('modal-title').innerText = `Chọn ${applyTo}`;
+
+        if (applyTo === 'CUSTOMER') {
+            list.innerHTML = '<div style="padding: 20px; text-align: center;">Đang tải danh sách khách hàng...</div>';
+            document.getElementById('targetModal').style.display = 'flex';
+            
+            fetch('http://localhost:5000/api/users/admin/all')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.users) {
+                        // Lọc bỏ những tài khoản admin chính hoặc staff không phải khách hàng (tùy chọn)
+                        const customers = data.users.filter(u => u.roleId?.name !== 'admin' && u.roleId?.name !== 'staff');
+                        list.innerHTML = customers.map(u => `
+                            <label class="multi-select-item" data-search="${(u.fullName || '').toLowerCase()} ${u.userName.toLowerCase()} ${u.email.toLowerCase()}">
+                                <input type="checkbox" value="${u._id}" onchange="toggleSelect('${u._id}')" ${selectedTargets.includes(u._id) ? 'checked' : ''}>
+                                <span>${u.fullName || u.userName} (${u.email})</span>
+                            </label>
+                        `).join('');
+                    } else {
+                        list.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Lỗi tải danh sách khách hàng!</div>';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    list.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Lỗi kết nối máy chủ!</div>';
+                });
+            return;
+        }
 
         let items = [];
         if (applyTo === 'PRODUCT') items = metadata.products.map(p => ({ id: p.id, name: p.name }));
@@ -369,22 +411,49 @@
         document.getElementById('usage-limit').value = 9999;
         document.getElementById('user-limit').value = 1;
         document.getElementById('discount-value').placeholder = "10 (%) hoặc 50000 (đ)";
+        
+        // Reset Custom Dropdowns
+        document.getElementById('discount-type').value = 'PERCENT';
+        document.querySelector('#btn-discount-type span').textContent = 'Phần trăm (%)';
+        document.getElementById('apply-to').value = 'ALL';
+        document.querySelector('#btn-apply-to span').textContent = 'Toàn bộ sản phẩm';
+        handleApplyToChange();
     }
     
     window.onload = async () => {
         await fetchMetadata();
         loadPromotions();
 
-        // Lắng nghe sự thay đổi loại giảm giá để đổi placeholder
-        document.getElementById('discount-type').addEventListener('change', function() {
+        const discountInput = document.getElementById('discount-value');
+        const typeSelect = document.getElementById('discount-type');
+
+        // Lắng nghe sự thay đổi loại giảm giá để đổi placeholder và max attribute
+        typeSelect.addEventListener('change', function() {
             const val = this.value;
-            const discountInput = document.getElementById('discount-value');
             if (val === 'PERCENT') {
                 discountInput.placeholder = "Ví dụ: 10 (tương đương giảm 10%)";
+                discountInput.max = "100";
+                if (Number(discountInput.value) > 100) {
+                    discountInput.value = 100;
+                }
             } else if (val === 'AMOUNT') {
                 discountInput.placeholder = "Ví dụ: 50000 (tương đương giảm 50.000đ)";
+                discountInput.removeAttribute('max');
             } else if (val === 'FREE_SHIPPING') {
                 discountInput.placeholder = "Giảm tối đa phí ship (Ví dụ: 30000 hoặc để trống mặc định 30k)";
+                discountInput.removeAttribute('max');
+            }
+        });
+
+        // Chặn nhập số lớn hơn 100 khi chọn phần trăm trực tiếp lúc gõ phím
+        discountInput.addEventListener('input', function() {
+            if (typeSelect.value === 'PERCENT') {
+                if (Number(this.value) > 100) {
+                    this.value = 100;
+                }
+                if (Number(this.value) < 0) {
+                    this.value = 0;
+                }
             }
         });
     };

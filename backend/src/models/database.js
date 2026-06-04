@@ -119,7 +119,7 @@ const PromotionSchema = new mongoose.Schema({
     discountValue: { type: Number, required: true },      // % hoặc số tiền
     
     // Đối tượng áp dụng (Targeting)
-    applyTo: { type: String, enum: ['ALL', 'PRODUCT', 'CATEGORY', 'AUTHOR', 'PUBLISHER', 'RANK'], default: 'ALL' },
+    applyTo: { type: String, enum: ['ALL', 'PRODUCT', 'CATEGORY', 'AUTHOR', 'PUBLISHER', 'RANK', 'CUSTOMER'], default: 'ALL' },
     targetValues: [{ type: String }], // Mảng chứa ID sản phẩm hoặc Tên Tác giả/Thể loại/NXB/Hạng TV
     
     minOrderValue: { type: Number, default: 0 },
@@ -162,6 +162,13 @@ const LineItemSchema = new mongoose.Schema({
     priceAtPurchase: { type: Number, required: true } 
 }, { _id: false }); 
 
+const OrderHistorySchema = new mongoose.Schema({
+    status: { type: String, required: true },
+    changedBy: { type: String, required: true }, // Tên admin, staff hoặc "Khách hàng", "Hệ thống"
+    changedAt: { type: Date, default: Date.now },
+    note: { type: String }
+}, { _id: false });
+
 const BillSchema = new mongoose.Schema({
     billCode: { type: String, unique: true }, 
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },      
@@ -175,15 +182,17 @@ const BillSchema = new mongoose.Schema({
     note: String,
     expectedDeliveryDate: String, // Thêm ngày giao hàng dự kiến
     expectedDeliveryTime: String, // Thêm khung giờ giao hàng dự kiến
-
+ 
     // Bổ sung thông tin tính tiền và khuyến mãi
     subTotal: { type: Number, required: true }, // Tổng tiền hàng chưa giảm
     promotionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Promotion' }, // Mã đã xài
+    shippingPromotionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Promotion' }, // Mã free ship đã xài
     discountValue: { type: Number, default: 0 }, // Số tiền được giảm
     totalPrice: { type: Number, required: true }, // Khách phải trả cuối cùng
     
     status: { type: String, default: 'Chờ xử lý' },
-    items: [LineItemSchema] 
+    items: [LineItemSchema],
+    history: [OrderHistorySchema]
 }, schemaOptions);
 
 BillSchema.pre('save', function() {

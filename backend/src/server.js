@@ -121,7 +121,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID, // Sẽ lấy từ Google Cloud Console
     clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Sẽ lấy từ Google Cloud Console
-    callbackURL: "http://127.0.0.1:5000/api/auth/google/callback"
+    callbackURL: "http://localhost:5000/api/auth/google/callback"
   },
   async (accessToken, refreshToken, profile, done) => {
       try {

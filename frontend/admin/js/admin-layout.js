@@ -16,7 +16,7 @@ window.fetch = function(url, options) {
             options.headers['x-role'] = adminRole;
         }
     }
-    return originalFetch(url, options);
+    return originalFetch.call(window, url, options);
 };
 
 // Dynamically load Flatpickr CSS & JS for beautiful calendar datepicker
@@ -797,6 +797,76 @@ globalToastStyles.textContent = `
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
     transition: all 0.2s ease-in-out;
 }
+.admin-confirm-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10005;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.admin-confirm-overlay.show {
+    opacity: 1;
+}
+.admin-confirm-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-family: 'Itim', cursive, sans-serif !important;
+}
+.admin-confirm-box.show {
+    transform: scale(1);
+}
+.admin-confirm-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #1e293b;
+    font-weight: 700;
+}
+.admin-confirm-body p {
+    margin: 16px 0 24px;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+.admin-confirm-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+.admin-confirm-footer button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    border: none;
+}
+.btn-confirm-cancel {
+    background: #f1f5f9;
+    color: #475569;
+}
+.btn-confirm-cancel:hover {
+    background: #e2e8f0;
+}
+.btn-confirm-ok {
+    background: #3b82f6;
+    color: #fff;
+}
+.btn-confirm-ok:hover {
+    opacity: 0.9;
+}
 `;
 document.head.appendChild(globalToastStyles);
 
@@ -825,11 +895,21 @@ window.showAdminToast = function(message, type = 'success') {
     // Animate in
     setTimeout(() => toast.classList.add('show'), 50);
     
-    // Auto remove
-    setTimeout(() => {
+    // Allow manual dismiss on click
+    toast.style.cursor = 'pointer';
+    toast.addEventListener('click', () => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 400);
-    }, 3500);
+    });
+
+    // Auto remove
+    const duration = (type === 'error') ? 30000 : 3500;
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }
+    }, duration);
 };
 
 // Overwrite window.alert with beautiful toasts and input highlighting
@@ -881,4 +961,54 @@ window.alert = function(message) {
             }
         });
     }
+};
+
+// Global Custom Confirm Dialog
+window.showAdminConfirm = function(title, message) {
+    return new Promise((resolve) => {
+        let container = document.getElementById('adminConfirmContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'adminConfirmContainer';
+            document.body.appendChild(container);
+        }
+        
+        container.innerHTML = `
+            <div class="admin-confirm-overlay">
+                <div class="admin-confirm-box">
+                    <div class="admin-confirm-header">
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="admin-confirm-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="admin-confirm-footer">
+                        <button class="btn-confirm-cancel">Hủy</button>
+                        <button class="btn-confirm-ok">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const overlay = container.querySelector('.admin-confirm-overlay');
+        const box = container.querySelector('.admin-confirm-box');
+        
+        // Show animation
+        setTimeout(() => {
+            overlay.classList.add('show');
+            box.classList.add('show');
+        }, 10);
+        
+        const close = (result) => {
+            overlay.classList.remove('show');
+            box.classList.remove('show');
+            setTimeout(() => {
+                container.innerHTML = '';
+                resolve(result);
+            }, 300);
+        };
+        
+        container.querySelector('.btn-confirm-cancel').addEventListener('click', () => close(false));
+        container.querySelector('.btn-confirm-ok').addEventListener('click', () => close(true));
+    });
 };

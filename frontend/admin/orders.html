@@ -109,7 +109,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:5000/api/orders';
+        const API_URL = '/api/orders';
         let allOrders = [];
         let currentOrderId = null;
 
@@ -198,7 +198,7 @@
                 if (nextActions.length > 0) {
                     actionsContainer.innerHTML = nextActions.map(action => {
                         const styleAttr = action.style ? `style="${action.style}"` : '';
-                        return `<button class="btn-figma ${action.class}" ${styleAttr} onclick="updateStatus('${action.status}')">${action.label}</button>`;
+                        return `<button class="btn-figma ${action.class}" ${styleAttr} onclick="updateStatus(event, '${action.status}')">${action.label}</button>`;
                     }).join('');
                 } else {
                     actionsContainer.innerHTML = '<span style="color: #64748b; font-size: 12px; font-style: italic;">Đơn hàng đã hoàn thành hoặc đã bị hủy.</span>';
@@ -275,8 +275,13 @@
             } catch (err) { alert("Lỗi khi tải chi tiết!"); }
         }
 
-        async function updateStatus(newStatus) {
-            if(!confirm(`Xác nhận chuyển trạng thái sang: ${newStatus}?`)) return;
+        async function updateStatus(event, newStatus) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const confirmed = await window.showAdminConfirm("Xác nhận trạng thái", `Bạn có chắc chắn muốn chuyển trạng thái đơn hàng sang "${newStatus}" không?`);
+            if (!confirmed) return;
             try {
                 let changedBy = 'Quản trị viên';
                 const adminUserStr = localStorage.getItem('adminUser');
@@ -298,7 +303,10 @@
                     const errorData = await res.json();
                     alert("Cập nhật thất bại: " + errorData.message);
                 }
-            } catch (err) { alert("Lỗi cập nhật!"); }
+            } catch (err) { 
+                console.error(err);
+                alert("Lỗi cập nhật: " + err.message + "\n" + err.stack); 
+            }
         }
 
         window.handleSearch = function(query) {
